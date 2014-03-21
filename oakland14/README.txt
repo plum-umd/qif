@@ -16,6 +16,6 @@ Everything has been already set up in this image. Login as
 debian/debian and look in the ~/qif/oakland14 folder for more
 information. The root password is toor if you need it. The optional
 gnuplot package for generating the graphs in the paper is not
-installed keep the image smaller. You can easily install it:
+installed to keep the image smaller. You can easily install it:
 
   > sudo apt-get install gnuplot
