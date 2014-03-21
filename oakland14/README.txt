@@ -1,0 +1,16 @@
+Quantifying Information Flow for Dynamic Secrets
+Oakland 14 and Tech-Report Experiments
+Piotr Mardziel <piotrm@gmail.com>
+
+There are two options for running the experiments.
+
+1. On your own computer. This requires to install various
+prerequisites and has only been tested on Debian Linux and Mac OSX.
+See experiments.tar.gz for further instruction.
+
+2. Inside provided VirtualBox image (in debian.tar.gz). Everything has
+been already set up in this image. Login as debian/debian and look in
+the qif/oakland14 folder for more information. The root password is
+toor if you need it. The optional gnuplot package for generating the
+graphs in the paper is not installed keep the image smaller. You can
+easily install it: > sudo apt-get install gnuplot
