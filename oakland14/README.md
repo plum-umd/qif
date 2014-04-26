@@ -1,8 +1,7 @@
 # Quantifying Information Flow for Dynamic Secrets
 
-## Oakland 14 and Tech-Report Implementation and Experiments
-
-Piotr Mardziel <piotrm@gmail.com>
+**Oakland 14 and Tech-Report Implementation and Experiments**
+**Piotr Mardziel <piotrm@gmail.com>**
 
 There are two options for running the experiments.
 
@@ -20,4 +19,6 @@ There are two options for running the experiments.
     package for generating the graphs in the paper is not installed to
     keep the image smaller. You can easily install it:
 
-    > sudo apt-get install gnuplot
+   ```sh
+    sudo apt-get install gnuplot
+   ```
