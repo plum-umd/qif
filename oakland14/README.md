@@ -2,7 +2,7 @@
 
 **Oakland 14 and Tech-Report Implementation and Experiments**
 
-**Piotr Mardziel <piotrm@gmail.com>**
+Contact: Piotr Mardziel <piotrm@gmail.com> http://www.cs.umd.edu/~piotrm
 
 There are two options for running the experiments.
 
