@@ -1,7 +1,8 @@
 Quantifying Information Flow for Dynamic Secrets
+===
 Oakland 14 and Tech-Report Experiments
+---
 Piotr Mardziel <piotrm@gmail.com>
-=================================
 
 There are two options for running the experiments.
 
@@ -11,7 +12,7 @@ There are two options for running the experiments.
 
  2. Inside a VirtualBox image, located at:
 
-   (http://www.cs.umd.edu/~piotrm/oakland14/debian.tar.gz)
+    http://www.cs.umd.edu/~piotrm/oakland14/debian.tar.gz
 
     Everything has been already set up in this image. Login as
     user/user and look in the ~/oakland14 folder for more information.
