@@ -1,7 +1,7 @@
-## Quantifying Information Flow for Dynamic Secrets
-Piotr Mardziel, Mario S. Alvim, Michael Hicks, Michael R. Clarkson
+## Adversary Gain vs. Defender Loss in Quantified Information Flow
+Piotr Mardziel, Mario S. Alvim, Michael Hicks
 
-**Oakland 14 and Tech-Report Implementation and Experiments**
+**FCS 2014 Implementation and Experiments**
 
 ### Installation
 
@@ -15,7 +15,7 @@ There are two options for running the experiments.
 
  2. Inside a VirtualBox image, located at:
 
-    http://www.cs.umd.edu/~piotrm/oakland14/debian.tar.gz
+    http://www.cs.umd.edu/~piotrm/fcs14/debian.tar.gz
 
     Everything has been already set up in this image. Login as
     *user*/*user* and look in the *~/oakland14* folder for more
@@ -29,4 +29,3 @@ There are two options for running the experiments.
 ### Contact
 Piotr Mardziel: email: [piotrm@gmail.com](mailto:piotrm@gmail.com),
 website: [http://www.cs.umd.edu/~piotrm](http://www.cs.umd.edu~/piotrm)
-
