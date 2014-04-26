@@ -13,12 +13,12 @@ There are two options for running the experiments.
     [experiments.tar.gz](experiments.tar.gz) for
     further instruction.
 
- 2. Inside a VirtualBox image, located at:
+ 2. (soon) Inside a VirtualBox image, located at:
 
     http://www.cs.umd.edu/~piotrm/fcs14/debian.tar.gz
 
     Everything has been already set up in this image. Login as
-    *user*/*user* and look in the *~/oakland14* folder for more
+    *user*/*user* and look in the *~/fcs14* folder for more
     information. The root password is *toor* if you need it. The
     optional gnuplot package for generating the graphs in the paper is
     not installed to keep the image smaller. You can easily install
