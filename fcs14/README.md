@@ -27,5 +27,4 @@ There are two options for running the experiments.
     > sudo apt-get install gnuplot
 
 ### Contact
-Piotr Mardziel: email: [piotrm@gmail.com](mailto:piotrm@gmail.com),
-website: [http://www.cs.umd.edu/~piotrm](http://www.cs.umd.edu~/piotrm)
+Piotr Mardziel: [piotrm@gmail.com](mailto:piotrm@gmail.com), [http://www.cs.umd.edu/~piotrm](http://www.cs.umd.edu/~piotrm)
