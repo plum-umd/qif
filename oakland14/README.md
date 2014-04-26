@@ -1,6 +1,6 @@
-Quantifying Information Flow for Dynamic Secrets
-------------------------------------------------
-Oakland 14 and Tech-Report Implementation and Experiments
+# Quantifying Information Flow for Dynamic Secrets
+
+## Oakland 14 and Tech-Report Implementation and Experiments
 
 Piotr Mardziel <piotrm@gmail.com>
 
