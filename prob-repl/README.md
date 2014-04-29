@@ -7,7 +7,7 @@ There are two options for running the demo.
 
  1. On your own computer. This requires to install various
     prerequisites and has only been tested on Debian Linux and Mac
-    OSX. See [INSTALL.txt](INSTALL.txt) for further instruction.
+    OSX. See [INSTALL.md](INSTALL.md) for further instruction.
 
  2. (soon) Inside a VirtualBox image, located at:
 
