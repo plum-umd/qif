@@ -1,0 +1,2 @@
+real x = rand_real 5.0;
+real y = rand_real 10.0;

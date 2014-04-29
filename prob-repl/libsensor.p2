@@ -1,0 +1,29 @@
+type sensor = {
+ location: coord;
+ range: int;
+ sensitivity: int
+};
+
+coord detect(sensor s, coord b) {
+  if (
+      (dist(s.location, b) <= s.range) &&
+      (rand_int 100 <= s.sensitivity)
+      ) {
+
+    (* sensor correctly reports reading *)
+    return b; 
+
+  } else {
+    if (rand_int 100 <= s.sensitivity) {
+
+      (* sensor reports noise *)
+      return rand_coord (); 
+
+    } else {
+
+      (* sensor correctly reports no reading *)
+      return {x = -1; y = -1}; 
+
+    }
+  }
+}

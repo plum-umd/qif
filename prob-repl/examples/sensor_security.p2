@@ -1,0 +1,45 @@
+/* Just setting up the visualization, do not change. */
+#reset 100000
+#view s.location.x s.location.y s.range
+
+type sensor = {
+ location: coord;
+ range: int;
+ sensitivity: int
+};
+
+
+/* "detect" is the sensor model. It is a forward model; given facts about
+   the real world (sensor and boogey), it simulates/models the
+   sensor's reading.
+*/
+coord detect(sensor s, coord b) {
+  if (
+      (dist(s.location, b) <= s.range) &&
+      (rand_int 100 <= s.sensitivity)
+      ) {
+
+    (* sensor correctly reports reading *)
+    return b; 
+
+  } else {
+    if (rand_int 100 <= s.sensitivity) {
+
+      (* sensor reports noise *)
+      return rand_coord (); 
+
+    } else {
+
+      (* sensor correctly reports no reading *)
+      return {x = -1; y = -1}; 
+
+    }
+  }
+}
+
+sensor s = {location = rand_coord ();
+            range = rand 20 40;
+            sensitivity = 80};
+
+bool o1 = detect(s, {x=20; y=50}) = {x= 20; y=50};
+bool o2 = detect(s, {x=80; y=50}) = {x= 80; y=50};

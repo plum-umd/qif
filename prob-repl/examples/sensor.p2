@@ -1,0 +1,68 @@
+/* Just setting up the visualization, do not change. */
+#reset 10000
+#view b.x b.y z
+
+/* In this example we are attempting to infer the location of a bogey
+ given sensor readings. Unknown os the location of the bogey, but
+ known are the sensor parameters in each of three scenarios: one in
+ which the sensor reports no reading, one in which it reports a
+ reading outside of its range, and one in which it reports a reading
+ inside its range. Test your intuition about these scenarios and
+ uncomment the assertions below to verify (uncomment only one at a
+ time. */
+
+type sensor = {
+ location: coord;
+ range: int;
+ sensitivity: int
+};
+
+
+/* "detect" is the sensor model. It is a forward model; given facts about
+   the real world (sensor and boogey), it simulates/models the
+   sensor's reading.
+*/
+coord detect(sensor s, coord b) {
+  if (
+      (dist(s.location, b) <= s.range) &&
+      (rand_int 100 <= s.sensitivity)
+      ) {
+
+    (* sensor correctly reports reading *)
+    return b; 
+
+  } else {
+    if (rand_int 100 <= s.sensitivity) {
+
+      (* sensor reports noise *)
+      return rand_coord (); 
+
+    } else {
+
+      (* sensor correctly reports no reading *)
+      return {x = -1; y = -1}; 
+
+    }
+  }
+}
+
+sensor s = {location = {x = 50; y = 50};
+            range = 50;
+            sensitivity = 80};
+
+coord b = rand_coord ();
+
+/*coord r = detect(s, b);*/
+
+/* Scenario 1: Sensor reports no reading. */
+/* assert r = {x = -1; y = -1}; */
+
+/* Scenario 2: Sensor reports reading at a particular out of range
+   location. */
+/* assert r = {x = 90; y = 90}; */
+
+
+/* Scenario 3: Sensor reports reading at a particular in range
+   location. */
+/* assert = r = {x = 55; y = 55}; */
+

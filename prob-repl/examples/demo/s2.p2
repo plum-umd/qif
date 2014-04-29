@@ -1,0 +1,33 @@
+#reset 10000 3
+#view b.x b.y z
+
+type sensor = {
+ location: coord;
+ range: int
+};
+
+coord detect(sensor s, coord b) {
+  if (dist(s.location, b) <= s.range) {
+    (* sensor correctly reports reading *)
+    return b;
+  } else {
+    return rand_coord (); 
+  }
+}
+
+coord fuse (coord reading1, coord reading2) {
+  if (reading1 = reading2) {
+    return reading1;
+  } else {
+    return {x=-1;y=-1};
+  }
+}
+
+sensor s1 = {location = {x = 20; y = 50}; range = 50};
+sensor s2 = {location = {x = 80; y = 50}; range = 50};
+
+coord b = rand_coord ();
+
+coord r = fuse(detect(s1, b), detect(s2, b));
+/* assert r = {x = 90; y = 90}; */
+/* assert r = {x = 55; y = 55}; */

@@ -1,0 +1,24 @@
+#reset 10000
+#view b.x b.y z
+
+type sensor = {
+ location: coord;
+ range: int
+};
+
+coord detect(sensor s, coord b) {
+  if (dist(s.location, b) <= s.range) {
+    (* sensor correctly reports reading *)
+    return b;
+  } else {
+    return rand_coord (); 
+  }
+}
+
+sensor s = {location = {x = 50; y = 50}; range = 50};
+
+coord b = rand_coord ();
+
+/* coord r = detect(s, b); */
+/* assert r = {x = 90; y = 90}; */
+/* assert r = {x = 55; y = 55}; */

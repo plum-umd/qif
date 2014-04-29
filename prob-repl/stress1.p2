@@ -1,0 +1,7 @@
+#ui reset 100000
+
+int x = rand -100 100;
+int y = rand -100 100;
+int z = rand -100 100;
+
+assert x * x + y * y + z * z <= 100 * 100;

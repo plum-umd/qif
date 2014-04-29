@@ -1,0 +1,9 @@
+#reset 100000 1
+
+int x = rand -100 100;
+int y = rand -100 100;
+int z = rand -100 100;
+int r = x * x + y * y + z * z;
+
+assert r <= 9000 and r >= 8000;
+assert r <= 9000 and r >= 8000;

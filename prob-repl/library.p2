@@ -1,0 +1,20 @@
+type coord = {x: int; y: int};
+
+int abs(int a) {
+  if (a < 0) return -1 * a; else return a;
+}
+
+int dist(coord a, coord b) {
+  return abs(a.x - b.x) + abs(a.y - b.y);
+}
+
+coord rand_coord() {
+  return {x = rand_int 100; y = rand_int 100};
+}
+
+(*
+internal int sqrt(int a) = "sqrt";
+internal int sin(int a) = "sin";
+internal int cos(int a) = "cos";
+internal int tan(int a) = "tan";
+ *)

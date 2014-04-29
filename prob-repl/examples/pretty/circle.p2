@@ -1,0 +1,10 @@
+#reset 100000 1
+
+int x = rand -100 100;
+int y = rand -100 100;
+int r = x * x + y * y;
+
+int w = rand_int 10;
+assert w <= rand_int 10;
+
+assert abs(r -  100 * 10 * w) <= 15 * 15;
