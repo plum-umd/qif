@@ -1,10 +1,16 @@
-open Printf
 open GL
 open Glu
 open Glut
+open Sdl
+open Sdlimage
+open Printf
 open Global
+open Sdldefs
 
 let (sender: (Netlog.level -> string -> unit) Global.t) = empty "";;
+
+let string_of_version (a,b,c) = 
+  sprintf "sdl version %d.%d.%d" a b c;;
 
 let logf level (form: ('a, unit, string, unit) format4) =
   ksprintf (fun s -> if isdef sender then
@@ -20,7 +26,9 @@ let w_heightf = ref (float_of_int !w_height);;
 let w_aspect = ref 1.0;;
 let fullscreen = ref false;;
 
-type tex_info = {surface: Sdlvideo.surface;
+let window_main = ref None;;
+
+type tex_info = {surface: Sdlsurface.t;
                  mutable tid: texture_id option;
                  width: int;
                  height: int;
@@ -28,7 +36,7 @@ type tex_info = {surface: Sdlvideo.surface;
                  heightf: float
                 }
 
-let font = empty "font";;
+(*let font = empty "font";;*)
 
 let (init_handler: ((unit -> unit) Global.t))  = empty "";;
 let reinit_handler = empty "";;
@@ -36,7 +44,7 @@ let reinit_handler = empty "";;
 let exec_handler h = if isdef h then (get h) ()
 
 let get_viewport_position (x, y, z) =
-  gluProjectUtil
+  Glu.gluProjectUtil
     ~obj_x: x
     ~obj_y: y
     ~obj_z: z
@@ -46,16 +54,17 @@ let (textures: (string, tex_info) Hashtbl.t) = Hashtbl.create 8;;
 let load_texture filename =
   try Hashtbl.find textures filename
   with Not_found ->
-    let surface = Sdlloader.load_image filename in
+    let rwo = Sdlrwops.from_file ~filename:filename ~mode: "rb" in
+    let surface = Sdlimage.load_png_rw rwo in
 
-    let sinfo = Sdlvideo.surface_info surface in
+    (*let sinfo = Sdlsurface_ba.surface_info surface in*)
 
     let temp = {surface = surface;
                 tid = None;
-                width = sinfo.Sdlvideo.w;
-                height = sinfo.Sdlvideo.h;
-                widthf = float_of_int (sinfo.Sdlvideo.w);
-                heightf = float_of_int (sinfo.Sdlvideo.h)} in
+                width = Sdlsurface.get_width surface;
+                height = Sdlsurface.get_height surface;
+                widthf = float_of_int (Sdlsurface.get_width surface);
+                heightf = float_of_int (Sdlsurface.get_height surface)} in
 
     Hashtbl.replace textures filename temp;
 
@@ -70,15 +79,12 @@ let texture_get_tid t =
 
 let make_gl_texture t =
   let tid = glGenTexture () in
-  let surface = t.surface in
-
-  let sform = Sdlvideo.surface_format surface in
-  let sinfo = Sdlvideo.surface_info surface in
+  let s = t.surface in
 
   glBindTexture ~target: BindTex.GL_TEXTURE_2D ~texture: tid;
 
   let (intmode, mode) =
-    (if sform.Sdlvideo.bytes_pp = 4 then
+    (if (Sdlsurface.get_bits_per_pixel s) = 32 then
         (InternalFormat.GL_RGBA, GL_RGBA) else 
         (InternalFormat.GL_RGB, GL_RGB)) in
 
@@ -86,11 +92,11 @@ let make_gl_texture t =
     ~target: TexTarget.GL_TEXTURE_2D
     ~level: 0
     ~internal_format: intmode
-    ~width: sinfo.Sdlvideo.w
-    ~height: sinfo.Sdlvideo.h
+    ~width: t.width
+    ~height: t.height
     ~format_: mode
     ~type_: GL_UNSIGNED_BYTE
-    ~pixels: (Bigarray.genarray_of_array1 (Sdlvideo.pixel_data surface));
+    ~pixels: (Bigarray.genarray_of_array1 (Sdlsurface_ba.get_pixels s));
 
   glTexParameter
     ~target: TexParam.GL_TEXTURE_2D
@@ -102,6 +108,7 @@ let make_gl_texture t =
   t.tid <- Some tid
 ;;
 
+(*
 let make_ttf_text s =
   try Hashtbl.find textures s
   with Not_found ->
@@ -117,6 +124,7 @@ let make_ttf_text s =
     Hashtbl.replace textures s temp;
     temp
 ;;
+*)
 
 let enable2d () =
   (* http://www.gamedev.net/community/forums/topic.asp?topic_id=104791*)
@@ -225,27 +233,72 @@ let set_window_size w h =
 let toggle_fullscreen () =
   fullscreen := not !fullscreen;
 
+  (*
   if !fullscreen then begin
     match Sdlvideo.list_modes [`FULLSCREEN; `OPENGL] with
-    | Sdlvideo.DIM (modes) ->
-      begin match List.rev modes with
-      | (w,h) :: _ -> set_window_size w h
+      | Sdlvideo.DIM (modes) ->
+        begin match List.rev modes with
+          | (w,h) :: _ -> set_window_size w h
+          | _ -> failwith "could not get any video modes"
+        end
       | _ -> failwith "could not get any video modes"
-      end
-    | _ -> failwith "could not get any video modes"
   end;
+  *)
 
   exec_handler reinit_handler
 ;;
 
 let init () =
-  logf `Info "sdl = %s" (Sdl.string_of_version (Sdl.version ()));
+  logf `Info "sdl = %s" (string_of_version (Sdl.Version.get_runtime_version ()));
 
-  Sdl.init [`VIDEO]; Sdlttf.init ();
+  Sdl.init [`VIDEO];
 
-  (*set font (Sdlttf.open_font "gfx/BemboStd.otf" 40);*)
+
+  let w = Sdl.Window.create
+    ~title: "ffi test"
+    ~pos: (`centered, `centered) 
+    ~dims: (640, 480)
+    ~flags: [Sdlwindow.OpenGL;
+             Sdlwindow.Resizable
+            ] in
+
+  let win = {W.width= 640;
+             W.height= 480;
+             W.widthf= 640.0;
+             W.heightf= 480.0;
+             W.aspect=640.0 /. 480.0;
+             W.win= w} in
+
+  window_main := Some win;
+
+  let r = Sdl.Render.create_renderer
+    ~win: w
+    ~index: 0
+    ~flags: [Sdl.Render.Accelerated] in
+
+  let c = Sdl.GL.create_context ~win: w in
+  ignore (Sdl.GL.make_current ~win: w ~ctx: c);
+  let x = Sdl.GL.get_swap_interval () in
+
+  (*
+    let dname = (Sdl.Audio.get_drivers ()).(0) in
+    printf "initializing audio: %s\n%!" dname;
+    Sdl.Audio.init ~driver_name: dname;
+    printf "initializing mixer: %d.%d\n%!"
+    (Sdlmixer.get_major_version ())
+    (Sdlmixer.get_minor_version ());
+    Sdlmixer.init [`OGG];
   
-  Sdlgl.set_attr [Sdlgl.DOUBLEBUFFER true];
+    Sdlmixer.open_audio
+    (Sdlmixer.get_default_frequency ())
+    (Sdlmixer.get_default_format ())
+    (Sdlmixer.get_default_channels ())
+    4096;
+  *)
+
+  (*Sdlttf.init ();*)
+  (*set font (Sdlttf.open_font "gfx/BemboStd.otf" 40);*)
+  (*Sdlgl.set_attr [Sdlgl.DOUBLEBUFFER true];*)
 
   exec_handler init_handler;
   exec_handler reinit_handler

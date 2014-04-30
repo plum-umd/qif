@@ -1,8 +1,6 @@
-OCAMLFIND := ~/.opam/system/bin/ocamlfind
+OCAMLFIND := ocamlfind
 
 MLLIB := $(shell ocamlc -where)
-
-REQPREFIX := ~/probreq
 
 OCAMLC := $(OCAMLFIND) ocamlopt
 OCAMLLEX := ocamllex.opt
@@ -10,29 +8,22 @@ OCAMLYACC := ocamlyacc
 OCAMLDEP := ocamldep -ml-synonym .mll -ml-synonym .mly -native
 OEXT := cmx
 
-LIBS_GFX := glMLite glMLite.glut glMLite.glu \
-            sdl sdl.sdlimage sdl.sdlttf
+#LIBS_GFX := glMLite glMLite.glut glMLite.glu sdl sdl.sdlimage sdl.sdlttf
+LIBS_GFX := extlib sdl2.ba sdl2 sdl2_img glMLite glMLite.glut glMLite.glu 
 LIBS_MULTICORE := netmulticore
-LIBS_UTIL := core_extended lambda-term \
-             unix extlib
+LIBS_UTIL := core_extended lambda-term unix 
 LIBS_ALL := $(LIBS_GFX) $(LIBS_MULTICORE) $(LIBS_UTIL)
-#LIBS += lwt.syntax
 
-BUILD_FLAGS_COMMON := -I $(REQPREFIX)/lib/ocaml/gmp gmp.cmxa \
-                      -I $(REQPREFIX)/lib/ppl ppl_ocaml.cmxa \
-                      -thread -g -linkpkg
+BUILD_FLAGS_COMMON := -linkpkg -linkall -I $(MLLIB)/gmp gmp.cmxa -I /usr/local/lib/ppl ppl_ocaml.cmxa -thread -g
 BUILD_FLAGS_ALL := $(BUILD_FLAGS_COMMON) $(LIBS_ALL:%=-package %)
-#BUILD_CMD += -syntax camlp4o
 
-LINK_PPL := -cc g++ \
-            -I $(REQPREFIX)/lib -cclib -lppl -cclib -lm -cclib -lgmpxx -cclib -lgmp
-LINK_GFX := $(LIBS_GFX:%=-package %) \
-            -cclib "-framework CoreFoundation -framework Cocoa"
+LINK_PPL := -cclib -lppl -cclib -lm -cclib -lgmpxx -cclib -lgmp
+LINK_GFX :=  -cclib "-framework CoreFoundation -framework Cocoa" $(LIBS_GFX:%=-package %)
 LINK_MULTICORE := $(LIBS_MULTICORE:%=-package %)
 LINK_UTIL := $(LIBS_UTIL:%=-package %)
 
-LINK_FLAGS_REPL    := $(BUILD_FLAGS_COMMON) $(LINK_PPL) $(LINK_GFX) $(LINK_MULTICORE) $(LINK_UTIL) \
- -cclib "-stdlib=libstdc++"
+LINK_FLAGS_REPL := $(BUILD_FLAGS_COMMON) $(LINK_PPL) $(LINK_GFX) $(LINK_MULTICORE) $(LINK_UTIL)
+
 LINK_FLAGS_CINTERP := $(BUILD_FLAGS_COMMON) $(LINK_UTIL)
 LINK_FLAGS_AINTERP := $(BUILD_FLAGS_COMMON) $(LINK_PPL) $(LINK_UTIL)
 
@@ -44,7 +35,7 @@ repl:\
  eval.$(OEXT) preprocess.$(OEXT) stateconcrete.$(OEXT) library.$(OEXT) evalconcrete.$(OEXT) \
  librarylinear.$(OEXT) stateabstract.$(OEXT) evalabstract.$(OEXT) \
  ipc.$(OEXT) worker.$(OEXT) cmd.$(OEXT) master.$(OEXT) \
- glutil.$(OEXT) uigl.$(OEXT) ui.$(OEXT) \
+ sdldefs.$(OEXT) glutil.$(OEXT) uigl.$(OEXT) ui.$(OEXT) \
  repl.$(OEXT)
 	$(OCAMLC) $(LINK_FLAGS_REPL) $^ -o repl
 

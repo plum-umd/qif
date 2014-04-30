@@ -6,6 +6,9 @@ open Lang
 open Global
 open Glutil
 open Ipc
+open Sdldefs
+
+(*let surf = ref None;;*)
 
 let lid = GL_LIGHT 0;;
 
@@ -262,6 +265,7 @@ let set_view f1 f2 f3 =
 
 let init () = 
   target_samples := !Worker.num_samples * Config.num_cores;
+
 ;;
 
 let reinit () =
@@ -270,14 +274,18 @@ let reinit () =
   samples_have_changed := true;
   abssamples_have_changed := true;
 
-  Sdlwm.set_caption ~title: "alphaProb" ~icon: "alphaProb";
-  Sdlwm.set_icon icon.surface;
+  (*
+    Sdlwm.set_caption ~title: "alphaProb" ~icon: "alphaProb";
+    Sdlwm.set_icon icon.surface;
+  *)
 
-  ignore begin if !fullscreen then
+  (*
+  (begin if !fullscreen then
       Sdlvideo.set_video_mode !w_width !w_height [`OPENGL; `RESIZABLE; `FULLSCREEN]
     else begin
       Sdlvideo.set_video_mode !w_width !w_height [`OPENGL; `RESIZABLE]
-    end end;
+    end end);
+  *)
 
   samples_call_list := glGenList ();
   abssamples_call_list := glGenList ();
@@ -405,8 +413,8 @@ let draw_abssamples () =
 
 
 let draw_samples () =
-  (*  glClear [GL_DEPTH_BUFFER_BIT];
-      glEnable GL_DEPTH_TEST;*)
+  (*glClear [GL_DEPTH_BUFFER_BIT];
+    glEnable GL_DEPTH_TEST;*)
 
   glDisable GL_LIGHTING;
   glDisable GL_DEPTH_TEST;
@@ -836,7 +844,7 @@ let render () =
   glMatrixMode GL_MODELVIEW;
   glLoadIdentity ();
 
-  (*draw_light ();*)
+  draw_light ();
 
   draw_guides ();
 
@@ -851,7 +859,7 @@ let render () =
   
   if DynArray.length samples_view = 0 then
     begin
-      (* draw_cube ();*)
+      draw_cube ();
       draw_range ()
     end
   else begin
@@ -865,9 +873,11 @@ let render () =
   draw_logo ();
   draw_hud ();
 
-  mark ();
+  let win = (Option.get !window_main).W.win in
+  Sdl.GL.swap_window win;
 
-  Sdlgl.swap_buffers ()
+  mark ()
+
 ;;
 
 

@@ -3,34 +3,61 @@ open Uigl
 open Ipc
 open Global
 open Glutil
+open Sdlevent
+open Sdlscancode
+open Sdldefs
 
-let process_events ~sender_to_master ~working =
-  let has_events = ref (Sdlevent.has_event ()) in
-  while !has_events do
-    let e = Sdlevent.wait_event () in
-    begin
-      match e with
-        | Sdlevent.KEYUP ke ->
-          begin match ke.Sdlevent.keysym with
-            | Sdlkey.KEY_ESCAPE -> 
-              sender_to_master#send (UiAction (UiQuit true))
-            | Sdlkey.KEY_f -> begin
-              Glutil.toggle_fullscreen ();
-            end
-            | Sdlkey.KEY_1 -> Uigl.toggle_show_samples ()
-            | Sdlkey.KEY_2 -> Uigl.toggle_show_abssamples ()
-            | _ -> ()
-          end
-        | Sdlevent.VIDEORESIZE (w,h) -> begin
-          Glutil.set_window_size w h
-        end
-        | Sdlevent.QUIT ->
-          sender_to_master#send (UiAction (UiQuit true))
-        | _ -> ()
-    end;
-    has_events := Sdlevent.has_event () 
-  done
+let proc_events ~sender_to_master ev = match ev with
+  | KeyDown { scancode = Sdlscancode.ESCAPE } ->
+    sender_to_master#send (UiAction (UiQuit true))    
+  | Window_Event { kind = WindowEvent_Resized p } ->
+    let w = Option.get !window_main in
+    w.W.width <- p.win_x;
+    w.W.height <- p.win_y;
+    w.W.widthf <- float_of_int p.win_x;
+    w.W.heightf <- float_of_int p.win_y;
+    w.W.aspect <- w.W.widthf /. w.W.heightf
+    (*Glutil.resize w*)
+  | Quit e ->
+    sender_to_master#send (UiAction (UiQuit true))
+  | _ -> () (*!callback_proc_events ev*)
+;;  
+
+let rec process_events ~sender_to_master ~working =
+  match Sdlevent.poll_event() with
+    | Some ev ->
+      proc_events sender_to_master ev;
+      process_events ~sender_to_master ~working
+    | None -> ()
 ;;
+
+(*
+  let e = Sdlevent.poll_event () in
+  match e with
+    | Some ev ->
+      begin
+        match e with
+          | Sdlevent.KeyUp ke ->
+            begin match ke.Sdlevent.keysym with
+              | Sdlscancode.ESCAPE -> 
+                sender_to_master#send (UiAction (UiQuit true))
+              | Sdlkey.KEY_f -> begin
+                Glutil.toggle_fullscreen ();
+              end
+              | Sdlkey.KEY_1 -> Uigl.toggle_show_samples ()
+              | Sdlkey.KEY_2 -> Uigl.toggle_show_abssamples ()
+              | _ -> ()
+            end
+          | Sdlevent.VIDEORESIZE (w,h) -> begin
+            Glutil.set_window_size w h
+          end
+          | Sdlevent.QUIT ->
+            sender_to_master#send (UiAction (UiQuit true))
+          | _ -> ()
+      end
+    | None -> ()
+;;
+*)
 
 let ui_loop ~receiver ~sender_to_master =
   let working = ref true in
