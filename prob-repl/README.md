@@ -14,7 +14,7 @@ There are two options for running the demo.
     http://www.cs.umd.edu/~piotrm/virtualboxes/debian_x11_prob_repl.gz
 
     Everything has been already set up in this image. Login as
-    *user*/*user* and look in the *~/prob-reple* folder for more
+    *user*/*user* and look in the *~/prob-repl* folder for more
     information. The root password is *toor* if you need it.
 
 ### Contact
