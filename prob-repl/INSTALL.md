@@ -1,5 +1,3 @@
-# WORK IN PROGRESS
-
 ## Probabilistic Programming Demo for ITA
 
 ### Installation
