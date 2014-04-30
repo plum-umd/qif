@@ -5,17 +5,10 @@
 ### Installation
 
     These instructions are for an installation on Debian Linux (Jessie
-    amd64). They should adaptable to *nix variants. Otherwise, a
-    VirtualBox image that has the entire demo installed and ready to
-    go can be found at:
-
-    http://www.cs.umd.edu/~piotrm/virtualboxes/debian_x11_prob_repl.gz
-
-    Everything has been already set up in this image. Login as
-    *user*/*user* and look in the *~/prob-repl* folder for more
-    information. The root password is *toor* if you need it.
+    amd64). They should adaptable to *nix variants. 
 
 * Install with apt-get:
+
         git
 
         autoconf

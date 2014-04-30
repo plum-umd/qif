@@ -9,7 +9,7 @@ There are two options for running the demo.
     prerequisites and has only been tested on Debian Linux and Mac
     OSX. See [INSTALL.md](INSTALL.md) for further instruction.
 
- 2. Inside a VirtualBox image, located at:
+ 2. (**soon**) Inside a VirtualBox image, located at:
 
     http://www.cs.umd.edu/~piotrm/virtualboxes/debian_x11_prob_repl.gz
 
