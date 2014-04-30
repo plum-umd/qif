@@ -253,7 +253,6 @@ let init () =
 
   Sdl.init [`VIDEO];
 
-
   let w = Sdl.Window.create
     ~title: "ffi test"
     ~pos: (`centered, `centered) 
@@ -299,6 +298,8 @@ let init () =
   (*Sdlttf.init ();*)
   (*set font (Sdlttf.open_font "gfx/BemboStd.otf" 40);*)
   (*Sdlgl.set_attr [Sdlgl.DOUBLEBUFFER true];*)
+
+  glutInit [||];
 
   exec_handler init_handler;
   exec_handler reinit_handler

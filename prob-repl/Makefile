@@ -8,7 +8,6 @@ OCAMLYACC := ocamlyacc
 OCAMLDEP := ocamldep -ml-synonym .mll -ml-synonym .mly -native
 OEXT := cmx
 
-#LIBS_GFX := glMLite glMLite.glut glMLite.glu sdl sdl.sdlimage sdl.sdlttf
 LIBS_GFX := extlib sdl2.ba sdl2 sdl2_img glMLite glMLite.glut glMLite.glu 
 LIBS_MULTICORE := netmulticore
 LIBS_UTIL := core_extended lambda-term unix 
@@ -18,7 +17,8 @@ BUILD_FLAGS_COMMON := -linkpkg -linkall -I $(MLLIB)/gmp gmp.cmxa -I /usr/local/l
 BUILD_FLAGS_ALL := $(BUILD_FLAGS_COMMON) $(LIBS_ALL:%=-package %)
 
 LINK_PPL := -cclib -lppl -cclib -lm -cclib -lgmpxx -cclib -lgmp
-LINK_GFX :=  -cclib "-framework CoreFoundation -framework Cocoa" $(LIBS_GFX:%=-package %)
+LINK_GFX := $(LIBS_GFX:%=-package %)
+LINK_GFX += -cclib "-framework CoreFoundation -framework Cocoa" 
 LINK_MULTICORE := $(LIBS_MULTICORE:%=-package %)
 LINK_UTIL := $(LIBS_UTIL:%=-package %)
 

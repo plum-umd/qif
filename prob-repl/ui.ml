@@ -7,9 +7,15 @@ open Sdlevent
 open Sdlscancode
 open Sdldefs
 
-let proc_events ~sender_to_master ev = match ev with
+let target_delay = ref 0
+
+let set_target_fps f =
+  target_delay := int_of_float (1000.0 /. f)
+
+let proc_events ~sender_to_master ~working ev = match ev with
   | KeyDown { scancode = Sdlscancode.ESCAPE } ->
-    sender_to_master#send (UiAction (UiQuit true))    
+    sender_to_master#send (UiAction (UiQuit true));
+    working := false
   | Window_Event { kind = WindowEvent_Resized p } ->
     let w = Option.get !window_main in
     w.W.width <- p.win_x;
@@ -19,14 +25,15 @@ let proc_events ~sender_to_master ev = match ev with
     w.W.aspect <- w.W.widthf /. w.W.heightf
     (*Glutil.resize w*)
   | Quit e ->
-    sender_to_master#send (UiAction (UiQuit true))
+    sender_to_master#send (UiAction (UiQuit true));
+    working := false
   | _ -> () (*!callback_proc_events ev*)
 ;;  
 
 let rec process_events ~sender_to_master ~working =
   match Sdlevent.poll_event() with
     | Some ev ->
-      proc_events sender_to_master ev;
+      proc_events sender_to_master working ev;
       process_events ~sender_to_master ~working
     | None -> ()
 ;;
@@ -61,8 +68,17 @@ let rec process_events ~sender_to_master ~working =
 
 let ui_loop ~receiver ~sender_to_master =
   let working = ref true in
+
+  set_target_fps 20.0;
+
+  let last_tick = ref 0 in
   
   while !working do
+    let delay = (Sdl.Timer.get_ticks ()) - !last_tick in
+    if delay <= !target_delay then Sdl.Timer.delay (!target_delay - delay);
+    let current_tick = Sdl.Timer.get_ticks () in
+    last_tick := current_tick;
+
     process_events ~sender_to_master: sender_to_master ~working: working;
 
     Uigl.render ();

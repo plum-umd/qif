@@ -32,8 +32,7 @@
         freeglut3-dev
         libjpeg-dev
         libsdl2-dev
-        libsdl-image1.2-dev
-        libsdl-ttf2.0-dev
+        libsdl2-image-dev
 
   > sudo apt-get install NAME
 
@@ -67,14 +66,24 @@
   ocamlnet
   extlib
   glMLite
-  conf-sdl-image
-  conf-sdl-ttf
   lambda-term
   mlgmp
 
   > opam install NAME
 
-* Install ocamlsdl2:
+* Install OcamlSDL2:
+
+  > git clone https://github.com/piotrm0/OCamlSDL2.git
+  > cd OcamlSDL2/src
+  > cp Makefile.config.unix Makefile.config  
+  > make findreinstall
+  > sudo make install_h
+
+* Install OcamlSDL2_image:
+
+  > git clone https://github.com/piotrm0/OCamlSDL2_Image.git
+  > cd OcamlSDL2_Image
+  > make reinstall
 
 ### Contact
 Piotr Mardziel: [piotrm@gmail.com](mailto:piotrm@gmail.com), [http://www.cs.umd.edu/~piotrm](http://www.cs.umd.edu/~piotrm)
