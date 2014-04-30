@@ -32,24 +32,37 @@
 * Install PPL from source:
 
   > git clone git://git.cs.unipr.it/ppl/ppl.git
+
   > cd ppl
+
   > autoreconf -fi
+
   > ./configure --enable-interfaces=ocaml
+
   > make
+
   > sudo make install
 
 * Configure OPAM
 
   > opam config
+
   > eval `opam config env`
 
 * Install opam from source:
+
   > wget https://github.com/ocaml/opam/archive/1.1.1.tar.gz
+
   > tar -zxvf 1.1.1.tar.gz
+
   > cd opam-1.1.1
+
   > ./configure
+
   > make
+
   > sudo make install
+
   > opam init
 
 * Install with opam:
@@ -67,15 +80,21 @@
 * Install OcamlSDL2:
 
   > git clone https://github.com/piotrm0/OCamlSDL2.git
+
   > cd OcamlSDL2/src
+
   > cp Makefile.config.unix Makefile.config  
+
   > make findreinstall
+
   > sudo make install_h
 
 * Install OcamlSDL2_image:
 
   > git clone https://github.com/piotrm0/OCamlSDL2_Image.git
+
   > cd OcamlSDL2_Image
+
   > make reinstall
 
 ### Contact
