@@ -3,6 +3,25 @@ Piotr Mardziel, Mario S. Alvim, Michael Hicks
 
 **FCS 2014 Implementation and Experiments**
 
+### Papers
+
+1. [Quantifying Information Flow for Dynamic
+   Secrets](http://www.cs.umd.edu/~mwh/papers/qif-dynamic-secrets.pdf)
+
+   Initial paper. [Implementation and
+   experiments](https://github.com/plum-umd/qif/tree/master/oakland14).
+
+2. Tech Report: Quantifying Information Flow for Dynamic Secrets
+
+   Includes proofs and analysis of a memory-limited adversary.
+
+3. [Adversary Gain vs. Defender Loss in Quantified Information
+   Flow](http://www.cs.umd.edu/~mwh/papers/qifgl.pdf)
+
+   Introduces a distinction between defender's loss and the
+   adversary's gain. [Implementation and
+   experiments](https://github.com/plum-umd/qif/tree/master/fcs14).
+
 ### Installation
 
 There are two options for running the experiments.
