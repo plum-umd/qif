@@ -11,7 +11,8 @@ Piotr Mardziel, Mario S. Alvim, Michael Hicks, Michael R. Clarkson
    Initial paper. [Implementation and
    experiments](https://github.com/plum-umd/qif/tree/master/oakland14).
 
-2. Tech Report: Quantifying Information Flow for Dynamic Secrets
+2. [Tech Report: Quantifying Information Flow for Dynamic
+   Secrets](http://www.cs.umd.edu/~mwh/papers/qif-dynamic-secrets-tr.pdf)
 
    Includes proofs and analysis of a memory-limited adversary.
 
