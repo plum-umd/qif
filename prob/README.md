@@ -14,8 +14,8 @@ Piotr Mardziel, Michael Hicks, Jonathan Katz, Mudhakar Srivatsa
   * opam      (available with homebrew)
 
   * ocaml >= 3.12 (available with opam)
-
   * ocamlfind (available with opam)
+  * camlp5 (available with opam)
 
   * ppl [http://bugseng.com/products/ppl/download]
     - gmp   (available with homebrew)
@@ -37,12 +37,15 @@ to other package managers or source installations.
    brew install opam
    ```
 
-3. Install ocaml and ocamlfind:
+3. Install ocaml, ocamlfind, camlp5:
 
    ```bash
-   opam install ocaml
+   opam switch 4.02.0
    opam install ocamlfind
+   opam install camlp5
    ```
+
+   The `4.02.0` above is the ocaml version to install. Just go with the latest available.
 
 4. Install gmp, mpfr, and mlgmp:
 
@@ -52,7 +55,7 @@ to other package managers or source installations.
    opam install mlgmp
    ```
 
-5. Install ppl with ocaml interface enabled [ftp://ftp.cs.unipr.it/pub/ppl/releases/1.1/ppl-1.1.tar.gz]:
+5. Install ppl with ocaml interface enabled [1.1 tarball](ftp://ftp.cs.unipr.it/pub/ppl/releases/1.1/ppl-1.1.tar.gz):
 
     ```bash
     ./configure --enable-interfaces=ocaml --with-mlgmp=~/.opam/4.02/lib/gmp
@@ -65,7 +68,7 @@ to other package managers or source installations.
        the main library and even the ocaml interface documentation without
        actually installing the interface itself.**
 
-6. Install latte [https://www.math.ucdavis.edu/~latte/software/packages/latte_current/latte-integrale-1.7.2.tar.gz]:
+6. Install latte [1.7.2 tarball](https://www.math.ucdavis.edu/~latte/software/packages/latte_current/latte-integrale-1.7.2.tar.gz):
 
    ```bash
    ./configure
