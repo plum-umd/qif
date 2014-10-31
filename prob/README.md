@@ -60,10 +60,10 @@ to other package managers or source installations.
     sudo make install
     ```
 
-** Warning: ppl's configuration may silently fail when it cannot find
-   something it needs (like mlgmp). In those cases it might install
-   the main library and even the ocaml interface documentation without
-   actually installing the interface itself.**
+    ** Warning: ppl's configuration may silently fail when it cannot find
+       something it needs (like mlgmp). In those cases it might install
+       the main library and even the ocaml interface documentation without
+       actually installing the interface itself.**
 
 6. Install latte:
 
