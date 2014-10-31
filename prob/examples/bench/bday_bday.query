@@ -1,0 +1,7 @@
+  int out;
+  if s_bday >= c_day and
+     c_day + 7 > s_bday then
+    out = 1
+  else
+    out = 0
+  endif

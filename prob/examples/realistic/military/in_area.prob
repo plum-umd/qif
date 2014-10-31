@@ -1,0 +1,68 @@
+(* Are any of the troops in a 10-mile square around Karbala, Iraq *)
+(* Not the most efficient way to do this, but I wanted to
+   check a different method of testing distances than in
+   the facebook examples and make sure we can handle longer
+   programs. *)
+
+(* Karbala, Iraq *)
+target_location_lat = 32639375
+target_location_long = 44002991
+(* Rougly 10 mile radius *)
+lat_threshold = 0143958
+long_threshold = 0170898
+
+(* Compute distances *)
+dist_lat1 = troop_lat1 - target_location_lat
+dist_long1 = troop_long1 - target_location_long
+dist_lat2 = troop_lat1 - target_location_lat
+dist_long2 = troop_long1 - target_location_long
+dist_lat3 = troop_lat1 - target_location_lat
+dist_long3 = troop_long1 - target_location_long
+dist_lat4 = troop_lat1 - target_location_lat
+dist_long4 = troop_long1 - target_location_long
+
+if dist_lat1 < 0 then
+  dist_lat1 = -distlat1
+if dist_long1 < 0 then
+  dist_long1 = -distlong1
+
+if dist_lat2 < 0 then
+  dist_lat2 = -distlat2
+if dist_long2 < 0 then
+  dist_long2 = -distlong2
+
+if dist_lat3 < 0 then
+  dist_lat3 = -distlat3
+if dist_long1 < 0 then
+  dist_long3 = -distlong3
+
+if dist_lat4 < 0 then
+  dist_lat4 = -distlat4
+if dist_long4 < 0 then
+  dist_long4 = -distlong4
+
+(* Init in_area *)
+in_area = 0
+
+if dist_lat1 <= lat_threshold &&
+   dist_long1 <= long_threshold
+then
+  in_area = 1
+end
+if dist_lat2 <= lat_threshold &&
+   dist_long2 <= long_threshold
+then
+  in_area = 1
+end
+if dist_lat3 <= lat_threshold &&
+   dist_long3 <= long_threshold
+then
+  in_area = 1
+end
+if dist_lat4 <= lat_threshold &&
+   dist_long4 <= long_threshold
+then
+  in_area = 1
+end
+
+output = in_area

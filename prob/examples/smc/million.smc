@@ -1,0 +1,53 @@
+secret P_1: int8 worth = 45
+secret P_2: int8 worth = 50
+secret P_3: int8 worth = 60
+
+belief P_1 about P_2, P_3:
+       int8 P_2.worth = uniform 10 100;
+       int8 P_3.worth = uniform 10 100
+
+belief P_2 about P_1, P_3:
+       int8 P_1.worth = uniform 10 100;
+       int8 P_3.worth = uniform 10 100
+
+belief P_3 about P_1, P_2:
+       int8 P_1.worth = uniform 10 100;
+       int8 P_2.worth = uniform 10 100
+
+policy P_1 about P_2: [P_1.worth] 1/1
+(*
+  policy P_1 about P_3: [P_1.worth] 1/1
+  policy P_2 about P_1: [P_2.worth] 1/1
+  policy P_2 about P_3: [P_2.worth] 1/1
+  policy P_3 about P_1: [P_3.worth] 1/1
+  policy P_3 about P_2: [P_3.worth] 1/1
+*)
+
+querydef richer :
+	 int who_richer = 0;
+
+	 if P_1.worth > P_2.worth and
+	    P_1.worth > P_3.worth 
+  	    then
+	     who_richer = 1
+    	 endif;
+	 if P_2.worth > P_1.worth and
+	    P_2.worth > P_3.worth 
+  	    then
+	     who_richer = 2
+    	 endif;
+	 if P_3.worth > P_1.worth and
+	    P_3.worth > P_2.worth 
+  	    then
+	     who_richer = 3
+    	 endif;
+
+	 
+	 pif 1 : 0 then
+	     who_richer = uniform 0 3
+	 endpif;
+
+
+	 output who_richer to P_1, P_2, P_3
+
+query richer: skip

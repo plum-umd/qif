@@ -1,0 +1,151 @@
+secret: (* Actual positions of troops *)
+  (* Just SW of Baghdad *)
+  troop_loc_lat1 33252456
+  troop_loc_long1 44371639
+  (* Ramadi (slightly farther from Karbala *)
+  troop_loc_lat2 33427108
+  troop_loc_long2 43264847
+  (* Samarra (farther still) *)
+  troop_loc_lat3 = 34181276,
+  troop_loc_long3 = 43858452
+  (* Kirkuk (farthest) *)
+  troop_loc_lat4 = 35468115
+  troop_loc_long4 = 44395301
+
+belief:
+  (* Locations are in Iraq *)
+  uniform troop_loc_lat1 29267245 36332852
+  uniform troop_loc_long1 41483216 46405563
+  uniform troop_loc_lat2 29267245 36332852
+  uniform troop_loc_long2 41483216 46405563
+  uniform troop_loc_lat3 29267245 36332852
+  uniform troop_loc_long3 41483216 46405563
+  uniform troop_loc_lat4 29267245 36332852
+  uniform troop_loc_long4 41483216 46405563
+
+  uniform troop_level1 100 2000
+  uniform troop_level2 100 2000
+  uniform troop_level3 100 2000
+  uniform troop_level4 100 2000
+
+  (* Slow response (over land) is most likely, followed by
+     response > 165 (air-based response).  The response times
+     in between these two are less likely. *)
+  pif 5:5 then
+    uniform response1 0 20
+  else
+    pif 2:3 then
+      uniform response1 21 164
+    else
+      uniform response1 165 1185
+    endpif
+  endpif
+
+  pif 5:5 then
+    uniform response2 0 20
+  else
+    pif 2:3 then
+      uniform response2 21 164
+    else
+      uniform response2 165 1185
+    endpif
+  endpif
+
+  pif 5:5 then
+    uniform response3 0 20
+  else
+    pif 2:3 then
+      uniform response3 21 164
+    else
+      uniform response3 165 1185
+    endpif
+  endpif
+
+  pif 5:5 then
+    uniform response4 0 20
+  else
+    pif 2:3 then
+      uniform response4 21 164
+    else
+      uniform response4 165 1185
+    endpif
+  endpif
+
+(* Can the troops arrive in time? *)
+(* Returns 1 if any of the troops can respond to an incident in Karbala
+   within 2 hours given their position and response speed.
+   Estimates are used for converting miles to lattitude / longitude.
+   These estimates could be more precise if we supported non-linear assignments. *)
+(* a is unused *)
+
+querydef request_support a -> output :
+(* Karbala, Iraq *)
+target_location_lat = 32639375
+target_location_long = 44002991
+output = 0
+
+(* Can troop1 respond? *)
+response_dist_lat = 2 * response1 * 69
+response_dist_long = 2 * response1 * 53
+dist_lat = troop_lat1 - target_location_lat
+dist_long = troop_long1 - target_location_long
+if dist_lat < 0 then
+  dist_lat = -distlat
+endif
+if dist_long < 0 then
+  dist_long = -distlong
+endif
+if response_dist_lat >= dist_lat &&
+   response_dist_long >= dist_long then
+  output = 1
+endif
+
+(* Can troop2 respond? *)
+response_dist_lat = 2 * response2 * 69
+response_dist_long = 2 * response2 * 53
+dist_lat = troop_lat2 - target_location_lat
+dist_long = troop_long2 - target_location_long
+if dist_lat < 0 then
+  dist_lat = -distlat
+endif
+if dist_long < 0 then
+  dist_long = -distlong
+endif
+if response_dist_lat >= dist_lat &&
+   response_dist_long >= dist_long then
+  output = 1
+endif
+
+(* Can troop3 respond? *)
+response_dist_lat = 2 * response3 * 69
+response_dist_long = 2 * response3 * 53
+dist_lat = troop_lat3 - target_location_lat
+dist_long = troop_long3 - target_location_long
+if dist_lat < 0 then
+  dist_lat = -distlat
+endif
+if dist_long < 0 then
+  dist_long = -distlong
+endif
+if response_dist_lat >= dist_lat &&
+   response_dist_long >= dist_long then
+  output = 1
+endif
+
+(* Can troop4 respond? *)
+response_dist_lat = 2 * response4 * 69
+response_dist_long = 2 * response4 * 53
+dist_lat = troop_lat4 - target_location_lat
+dist_long = troop_long4 - target_location_long
+if dist_lat < 0 then
+  dist_lat = -distlat
+endif
+if dist_long < 0 then
+  dist_long = -distlong
+endif
+if response_dist_lat >= dist_lat &&
+   response_dist_long >= dist_long then
+  output = 1
+endif
+
+query request_support: a = 0

@@ -1,0 +1,27 @@
+(* taken from:
+   http://www.openforum.com/idea-hub/topics/marketing/article/facebook-ads-a-guide-to-targeting-and-reporting-adele-cooper *)
+(* Company: VisitBritain *)
+
+if country = 1 || country = 3 || country = 8 || country = 10 || country = 18 then
+  main_country = 1
+else
+  main_country = 0
+
+(* countries in:
+   http://en.wikipedia.org/wiki/British_Overseas_Territories *)
+if country = 169 || country = 197 || country = 194 || country = 170 || country = 206 ||
+   country = 183 || country = 188 then
+  island = 1
+else
+  island = 0
+
+age = 2010 - birth_year
+
+if language = 1 &&
+   (main_country || island) &&
+   age >= 21 &&
+   completed_school_type >= 4 )
+then
+  output = 1
+else
+  output = 0

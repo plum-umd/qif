@@ -1,0 +1,21 @@
+0. delete tasks.storable, tasks_add.storable, tasks/*
+1. edit create_benches_anilesh.sh to generate tests
+1.b. perl create_tasks.pl ../examples/bench/bday.pol 0 9 1 1 box halfs
+ARGS: 1 (bday.pol): policy file to run
+      2 (0): starting precision
+      3 (9): ending precision
+      4 (1): precision increment
+      5 (1): number of repeated runs, best for random tests
+      6 (box): domain
+      7 (halfs): simplifyer strategy
+2. run the above script
+3. perl run_tasks.pl <NUM OF CORES>
+4. perl gen_report ../examples/benches/bday.pol 2 0 
+   the first number is query number 
+   second number is policy number, but leave as 0 
+5. this will generate:
+   a. data_stats.tsv which you can combine to form graphs
+   b. stats_graph2.eps generated from plot.gnu (gnuplot)
+   c. plot.gnu gnuplot file that generates graph from datafile
+
+

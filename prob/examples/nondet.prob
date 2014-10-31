@@ -1,0 +1,13 @@
+secret: a = 1; b = 1;
+
+belief:
+	uniform a -3 3;
+	uniform b -3 3;
+
+program -> out :
+
+	uniform perturb -3 3;
+	out = a + b + perturb
+
+query: skip
+

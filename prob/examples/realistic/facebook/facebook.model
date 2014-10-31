@@ -1,0 +1,51 @@
+(* Secret vars *)
+birth_month = [1,12]
+birth_day = [1,31]
+birth_year = [1900,2010]
+(* Enumeration of schools *)
+(* 0 indicates that field is not filled in *)
+(* Could assume that these are sorted.  e.g. private school are 1-700, public schools are 701-1000 *)
+elem_school = [0,100000]
+middle_school = [0,100000]
+high_school = [0,10000]
+undergrad = [0,1000]
+masters = [0,1000]
+phd = [0,1000]
+(* 0 indicates not in school.  otherwise indicates which school level
+   the user is currently attending. *)
+(* 1 : elem_school ... 6 : phd *)
+in_school_type = [0,6]
+(* Highest education level completed *)
+completed_school_type = [0,6]
+(* These are enumerations of cities. *)
+current_city = [0,19429]
+hometown = [0,19429]
+(* Lattitude and longitude of current city to within .01 degrees *)
+current_city_lat = [-9000,9000]
+current_city_lat = [-9000,9000]
+(* Lattitutde and longitude of current address to within .000001 degrees (what Google uses) *)
+address_lat = [-90000000,90000000]
+address_long = [-90000000,90000000]
+(* Note that lattitude and longitude above are actually functions of the current city and current address. *)
+(* We can't model this right now, but it would be interesting.  Can convert, for example, zip codes to lat/long
+   ranges and can convert lat/long ranges to sets of zip codes. *)
+(* Country (also correlated with city and lat / long) *)
+
+country = [0,213]
+(* 0 : male, 1 : female *)
+gender = [0,1]
+(* 0 : no answer, 1: english, 2 : spanish, 3 : french, 4 : german, 5 : italian *)
+language = [0,5]
+(* 0 : none, 1 : men, 2 : women, 3 : both *)
+interested_in = [0,3]
+(* 0 : no answer
+   1 : single
+   2 : in a relationship
+   3 : engaged
+   4 : married
+   5 : it's complicated
+   6 : open relationship
+   7 : widowed
+   8 : separated
+   9 : divorced *)
+relationship_status = [0,9]

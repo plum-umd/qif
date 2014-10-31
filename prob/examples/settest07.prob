@@ -1,0 +1,15 @@
+secret: p1 = 11;
+
+belief:
+	uniform p1 1 10;
+
+	if p1 >= 3 or p1 <= 6 then p1 = p1 + 10 endif;
+
+	(* tests whether the polyregion describing the condition
+	   is produces properly
+	   
+	   should result in
+
+	     11 <= p1 <= 20 with 1.0
+
+	*)

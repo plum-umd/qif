@@ -1,0 +1,7 @@
+secret: a = 1
+
+belief:	
+	uniform a 0 9;
+	b = a;
+	a = a + 10;
+

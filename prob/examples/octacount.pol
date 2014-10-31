@@ -1,0 +1,15 @@
+secret: int x = 1; int y = 1; int z = 1
+
+belief:
+  int x = uniform 0 2;
+  int y = uniform 0 2;
+  int z = uniform 0 2;
+
+policy:	max_prob_output [x y z] 1/1
+
+querydef corner -> out :
+  int out;
+  if x + y >= 2 and z - y >= -1 then out = 1 else out = 0 endif
+
+query corner: skip
+

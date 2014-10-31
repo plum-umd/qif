@@ -1,0 +1,13 @@
+secret: p1 = 1; p2 = 1
+
+belief:
+	uniform p1 1 4;
+	uniform p2 1 4;
+	
+
+program a -> b :
+
+	b = 0;
+	if p1 <= 2 then b = p1 endif;
+
+query: a = 1;

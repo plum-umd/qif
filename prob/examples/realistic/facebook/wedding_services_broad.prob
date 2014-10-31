@@ -1,0 +1,23 @@
+(* Combination of broad_age.prob and wedding.prob.  Like broad_age, 1 is occasionally returned
+   even when age is not in the intended range.  Unlike broad_age, 1 is never returned if other
+   criteria are not met.  Thus, output = 1 leaks more information than in the broad_age.prob
+   example. *)
+
+age = 2010 - birth_year
+if age >= 24 && age <= 34 then
+  age_sat = 1
+else
+  age_sat = 0
+
+pif 1 : 9 then
+  age_sat = 1
+else
+  age_sat = output
+
+if geneder = 1 &
+   relationship_status = 3 &
+   age_sat = 1
+then
+  output = 1
+else
+  output = 0

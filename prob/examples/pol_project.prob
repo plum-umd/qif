@@ -1,0 +1,37 @@
+secret:  
+	 s1 = 1;
+(* 	 s2 = 1; *)
+
+
+belief:
+	uniform s1 1 10;
+(*	uniform s2 1 10; *)
+
+policy:
+	max_prob_output [s1] 1.0
+
+querydef donothing -> o : o = 42
+
+querydef split -> output :
+	 a = 10 - s1;
+
+	 if a >= 2 and a <= 8 then
+	   crit1 = 1
+	 else
+	   crit1 = 0
+	 endif; 
+(*
+	 if s1 >= 2 and s1 <= 8 then
+	   output = 1
+	 else
+	   output = 0
+	 endif;  *)
+
+(*	 if s2 >= 5 then crit2 = 1 else crit2 = 0 endif; *)
+
+(* 	 if crit1 == 1 and crit2 == 1 then output = 1 else output = 0
+endif *)
+
+ 	 if crit1 == 1 then output = 1 else output = 0 endif  
+
+query split: skip

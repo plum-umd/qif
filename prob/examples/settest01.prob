@@ -1,0 +1,12 @@
+secret: p1 = 1; p2 = 50;
+
+belief:
+	uniform p1 0 100;
+	uniform p2 50 150;
+
+	(* should be
+
+	 0 <= p1 <= 100 50 <= p2 <= 150 with 1.0
+
+	 *)
+

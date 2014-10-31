@@ -1,0 +1,39 @@
+secret:  (* actual values of secret variables *)
+	secret_val_1 = 42;
+	secret_val_2 = -8;
+	secret_val_3 = 99;
+
+belief:
+	(* initial construction of the belief over the secret variables *)
+	uniform t1 1 100;
+	secret_val_1 = t1 * 2;
+	secret_val_2 = t1 * 2 - 50;
+	uniform secret_val_3 0 99
+
+policy:
+	(* policies over the secret variables. type of policy, followed by list of variables involved, and a security parameter *)
+
+	max_prob_output [secret_val_1] 0.25 (* for any possible output of a query, the prob of secret_val_1 cannot exceed 0.25,
+	                                        or what I think is Mike's policy suggestion *)
+
+	max_prob_all [secret_val_1] 0.125 (* prob of any value of secret_val_1 cannot exceed 0.125 *)
+
+	max_prob [secret_val_2] 0.125 (* prob of actual value of secret_val_2 cannot exceed 0.125 *)
+
+	min_rel_entropy [secret_val_1 secret_val_2] 10.0 (* relative entropy of the entire secret as related to the truth cannot be below 3 bits *)
+
+querydef query_1 a -> b : (* query definitions, take inputs and produce outputs, inputs aren't really needed as those could be
+                             hard coded into the query but since I already process inputs I might as well leave it in *)
+        if a == 0 then
+	  if secret_val_1 > 10 then b = 0 else b = 1 endif
+        else b = secret_val_3 endif
+
+querydef query_2 a -> b :
+	b = 1234
+
+(*
+query query_2: a = 1 (* perform the queries, check the policies as you go along *)
+
+query query_1: a = 0*)
+
+query query_1: a = 1

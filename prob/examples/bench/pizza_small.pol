@@ -1,0 +1,74 @@
+secret:  
+	 int s_in_school_type = 4;
+	 int s_birth_year = 83;
+	 int s_address_lat = 42;
+	 int s_address_long = 42;
+
+belief:
+	pif 4:20 then
+          int s_in_school_type = uniform 1 1;
+	  int s_birth_year = uniform 98 99
+        else
+          pif 3:16 then
+            int s_in_school_type = uniform 2 2;
+	    int s_birth_year = uniform 90 98
+          else
+            pif 2:13 then
+              int s_in_school_type = uniform 3 3;
+	      int s_birth_year = uniform 85 92
+            else
+              pif 1:11 then
+                int s_in_school_type = uniform 4 4;
+	        int s_birth_year = uniform 80 85
+              else
+                int s_in_school_type = uniform 0 0;
+   	        int s_birth_year = uniform 50 85
+              endpif
+            endpif
+          endpif
+        endpif;
+	int s_address_lat = uniform 0 99;
+	int s_address_long = uniform 0 99
+
+policy:	max_prob_output [s_in_school_type s_birth_year s_address_lat s_address_long] 999/1
+
+querydef pizza -> out :
+  #define age = 110 - s_birth_year in
+  #define lr_lat = 30 in
+  #define ul_lat = 40 in
+  #define lr_long = 50 in
+  #define ul_long = 60 in
+
+  bool in_school;
+  if s_in_school_type >= 4 then
+    in_school = 1
+  else
+    in_school = 0
+  endif;
+  
+  bool age_criteria;
+  if age >= 18 and age <= 28 then
+    age_criteria = 1
+  else
+    age_criteria = 0
+  endif;
+  
+  bool in_box;
+  if s_address_lat <= ul_lat and
+     s_address_lat >= lr_lat and
+     s_address_long >= lr_long and
+     s_address_long <= ul_long
+  then
+    in_box = 1
+  else
+    in_box = 0
+  endif;
+  
+  bool out;
+  if (in_school == 1 or age_criteria == 1) and in_box == 1 then
+    out = 1
+  else
+    out = 0
+  endif
+
+query pizza: skip

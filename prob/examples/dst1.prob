@@ -1,0 +1,14 @@
+secret: pass = 1
+
+belief:
+	pif 1:1 then
+	uniform pass 1 5
+	else
+	uniform pass 6 10
+	endpif
+
+program guess -> guessed :
+
+	if guess >= pass then guessed = 1 else guessed = 0 endif;
+
+query: guess = 5

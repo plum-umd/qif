@@ -1,0 +1,27 @@
+secret:
+  int troop_loc_lat1 = 33252456;
+  int troop_loc_long1 = 44371639;
+
+belief:
+  int troop_loc_lat1 = uniform 29267245 36332852;
+  int troop_loc_long1 = uniform 41483216 46405563;
+
+policy:	max_prob_output [troop_loc_lat1 troop_loc_long1] 999/1
+
+querydef is_target_close target_location_lat target_location_long dist -> is_close :
+  bool is_close = 0;
+
+  int dist_lat = troop_loc_lat1 - target_location_lat;
+  int dist_long = troop_loc_long1 - target_location_long;
+
+  if dist_lat < 0 then dist_lat = -1 * dist_lat endif;
+  if dist_long < 0 then dist_long = -1 * dist_long endif;
+
+  if dist_lat + dist_long <= dist then is_close = 1 endif
+
+  (* returns is_close *)
+
+query is_target_close: 
+  int target_location_lat = 32639375;
+  int target_location_long = 44002991;
+  int dist = 1000

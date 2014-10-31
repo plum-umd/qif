@@ -1,0 +1,13 @@
+#define age = c_year - s_byear in
+  int out;
+
+  if age == 10 or age == 20 or age == 30
+     or age == 40 or age == 50 or age == 60 or age == 70 or age == 80
+  or age == 90 or age == 100 then
+    out = 1
+  else
+    out = 0
+  endif;
+  pif 1:9 then
+    out = 1
+  endpif

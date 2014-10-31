@@ -1,0 +1,8 @@
+secret: p = 1;
+
+belief:
+	pif 1:1 then
+   	  uniform p 1 2
+	else 
+  	  uniform p 2 3
+	endpif

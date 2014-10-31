@@ -1,0 +1,28 @@
+secret P_1: int8 x = 1; int8 y = 2
+secret P_2: int8 x = 3; int8 y = 4
+
+belief P_1 about P_2:
+  int8 P_2.x = uniform 0 7;
+  int8 P_2.y = uniform 0 7
+
+belief P_2 about P_1:
+  int8 P_1.x = uniform 0 7;
+  int8 P_1.y = uniform 0 7
+
+policy P_1 about P_2: [P_1.x P_1.y] 1/1
+policy P_2 about P_1: [P_2.x P_2.y] 1/1
+
+querydef areclose x y d:
+         bool areclose = 0;
+         int8 dist1x = P_1.x - x;
+         int8 dist1y = P_1.y - y;
+         if dist1x < 0 then dist1x = -1 * dist1x endif;
+         if dist1y < 0 then dist1y = -1 * dist1y endif;
+         int8 dist2x = P_2.x - x;
+         int8 dist2y = P_2.y - y;
+         if dist2x < 0 then dist2x = -1 * dist2x endif;
+         if dist2y < 0 then dist2y = -1 * dist2y endif;
+         if dist1x + dist1y <= d or dist2x + dist2y <= d then areclose = 1 endif;
+         output areclose to P_1, P_2;
+
+query areclose: int8 x = 4; int8 y = 4; int8 d = 4

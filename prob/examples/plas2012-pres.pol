@@ -1,0 +1,16 @@
+secret:
+ int x2 = 60
+
+belief:
+ int x2 = uniform 10 100
+
+policy:
+  max_prob_output [x2] 1/1
+
+querydef q1 x1 -> out :
+  int out1;
+  int out;
+  if x1 >= x2 then out1 = 1 else out1 = 0 endif;
+  pif 1:1 then out = 1 else out = out1 endpif
+
+query q1: int x1 = 80

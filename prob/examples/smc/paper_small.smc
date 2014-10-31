@@ -1,0 +1,64 @@
+secret agent1: int8 x = 14
+secret agent2: int8 x = 13
+secret agent3: int8 x = 11
+
+belief agent1 about agent2, agent3:
+  int8 agent2.x = uniform 10 15;
+  int8 agent3.x = uniform 10 15;
+
+belief agent2 about agent1, agent3:
+  int8 agent1.x = uniform 10 15;
+  int8 agent3.x = uniform 10 15;
+
+belief agent3 about agent1, agent2:
+  int8 agent1.x = uniform 10 15;
+  int8 agent2.x = uniform 10 15;
+
+(*policy agent1 about agent2: [agent1.x] 1/1	
+policy agent1 about agent3: [agent1.x] 1/1	
+policy agent2 about agent1: [agent2.x] 1/1*)
+policy agent2 about agent3: [agent2.x] 1/1	
+(*policy agent3 about agent1: [agent3.x] 1/1
+policy agent3 about agent2: [agent3.x] 1/1*)
+
+querydef q1 :
+	 bool out = 0;
+	 if agent1.x >= agent2.x and
+	    agent1.x >= agent3.x then
+	    out = 1
+	 endif;
+
+	 output out to agent1, agent2, agent3
+
+querydef q2 :
+	 bool out = 0;
+	 if agent1.x <= agent2.x and
+	    agent1.x <= agent3.x then
+	    out = 1
+	 endif;
+
+	 output out to agent1, agent2, agent3
+
+query q1: skip
+
+(* 
+
+smc
+
+agent agent1's policy: agent agent2's max belief = 1/11 when agent agent2's secret is [agent2.x=15], and output is [out=1]
+agent agent1's policy: agent agent3's max belief = 1/11 when agent agent3's secret is [agent3.x=17], and output is [out=1]
+agent agent2's policy: agent agent1's max belief = 19/822 when agent agent1's secret is [agent1.x=20], and output is [out=0]
+agent agent2's policy: agent agent3's max belief = 19/822 when agent agent3's secret is [agent3.x=17], and output is [out=0]
+agent agent3's policy: agent agent1's max belief = 13/589 when agent agent1's secret is [agent1.x=20], and output is [out=0]
+agent agent3's policy: agent agent2's max belief = 90/4123 when agent agent2's secret is [agent2.x=15], and output is [out=0]
+
+nosmc
+
+agent agent1's policy: agent agent2's max belief = 1/1 when agent agent2's secret is [agent2.x=100], and output is [out=1]
+agent agent1's policy: agent agent3's max belief = 1/1 when agent agent3's secret is [agent3.x=100], and output is [out=1]
+agent agent2's policy: agent agent1's max belief = 1/1 when agent agent1's secret is [agent1.x=10], and output is [out=1]
+agent agent2's policy: agent agent3's max belief = 2/91 when agent agent3's secret is [agent3.x=10], and output is [out=0]
+agent agent3's policy: agent agent2's max belief = 127/4798 when agent agent2's secret is [agent2.x=47], and output is [out=0]
+agent agent3's policy: agent agent1's max belief = 1/1 when agent agent1's secret is [agent1.x=10], and output is [out=1]
+
+*)

@@ -1,0 +1,73 @@
+secret:  
+	 s_in_school_type = 4;
+	 s_birth_year = 1983;
+	 s_address_lat = 39003178;
+	 s_address_long = -76958199;
+
+belief:
+	pif 4:20 then
+          uniform s_in_school_type 1 1;
+	  uniform s_birth_year 1998 2002
+        else
+          pif 3:16 then
+            uniform s_in_school_type 2 2;
+	    uniform s_birth_year 1990 1998
+          else
+            pif 2:13 then
+              uniform s_in_school_type 3 3;
+	      uniform s_birth_year 1985 1992
+            else
+              pif 1:11 then
+                uniform s_in_school_type 4 4;
+	        uniform s_birth_year 1980 1985
+              else
+                uniform s_in_school_type 0 0;
+   	        uniform s_birth_year 1900 1985
+              endpif
+            endpif
+          endpif
+        endpif;
+	uniform s_address_lat 38867884 39103178;
+	uniform s_address_long -77058199 -76825926
+
+policy:
+	max_prob_output [s_in_school_type s_birth_year s_address_lat s_address_long] 9999.0
+
+querydef donothing -> o : o = 42
+
+querydef pizza -> output :
+if s_in_school_type >= 4 then
+  in_school = 1
+else
+  in_school = 0
+endif;
+
+age = 2010 - s_birth_year;
+if age >= 18 and age <= 28 then
+  age_criteria = 1
+else
+  age_criteria = 0
+endif;
+
+lr_lat = 38967884;
+ul_lat = 39003178;
+lr_long = -76958199;
+ul_long = -76925926;
+
+if s_address_lat <= ul_lat and
+   s_address_lat >= lr_lat and
+   s_address_long >= lr_long and
+   s_address_long <= ul_long
+then
+  in_box = 1
+else
+  in_box = 0
+endif;
+
+if (in_school == 1 or age_criteria == 1) and in_box == 1 then
+  output = 1
+else
+  output = 0
+endif
+
+query pizza: skip

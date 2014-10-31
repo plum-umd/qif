@@ -1,0 +1,31 @@
+secret:
+  int interval_dim1 = 1;
+  int interval_dim2 = 1;
+  int octagon_dim1 = 1;
+  int octagon_dim2 = 1;
+  int poly_dim1 = 1;
+  int poly_dim2 = 1;
+	
+belief:
+  int interval_dim1 = uniform 0 9;
+  int interval_dim2 = uniform 0 9;
+  int octagon_dim1 = uniform 0 9;
+  int octagon_dim2 = uniform 0 9;
+  int poly_dim1 = uniform 0 9;
+  int poly_dim2 = uniform 0 9
+
+policy: max_prob_output [interval_dim1 interval_dim2 octagon_dim1
+octagon_dim2 poly_dim1 poly_dim2] 999/1
+
+querydef synth -> out:
+bool out;
+if interval_dim1 >= 3 and
+   interval_dim2 <= 7 and
+   octagon_dim1 <= octagon_dim2 - 2 and
+   poly_dim1 <= poly_dim2 * 2 - 4 then
+  out = 1
+else
+  out = 0
+endif
+
+query synth: skip

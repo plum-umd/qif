@@ -1,0 +1,17 @@
+secret: 
+	p = 2;
+
+belief:
+	uniform p 1 5;
+	p = p * 2
+
+program -> b :
+	x = 0;
+	if p <= 4 then
+	  skip;
+	else
+	  x = 1;
+	endif;
+	b = x;
+
+query: skip;

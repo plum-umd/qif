@@ -1,0 +1,12 @@
+secret: p1 = 1;
+
+belief:
+	uniform p1 0 99;
+
+	if p1 > 100 then p1 = p1 + 10 endif;
+
+	(* should result in
+
+	0 <= p1 <= 99 with 1.0
+
+	*)

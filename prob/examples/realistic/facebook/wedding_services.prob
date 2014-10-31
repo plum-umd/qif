@@ -1,0 +1,12 @@
+(* taken from
+   http://www.facebook.com/advertising/?campaign_id=402047449186&placement=pf&extra_1=0 *)
+(* Company: CM Photographics *)
+age = 2010 - birth_year
+if geneder = 1 &
+   relationship_status = 3 &
+   age <= 30 &
+   age >= 24
+then
+  output = 1
+else
+  output = 0

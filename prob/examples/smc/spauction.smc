@@ -1,0 +1,33 @@
+secret agent1: int8 bid = 45
+secret agent2: int8 bid = 50
+secret auctioneer: skip
+
+belief agent1 about agent2:
+  int8 agent2.bid = uniform 0 100
+belief agent2 about agent1:
+  int8 agent1.bid = uniform 0 100
+
+belief auctioneer about agent1, agent2:
+  int8 agent1.bid = uniform 0 100;
+  int8 agent2.bid = uniform 0 100
+
+policy agent1 about agent2: [agent1.bid] 1/1
+policy agent2 about agent1: [agent2.bid] 1/1
+
+querydef auction :
+	 bool first_winner = 0;
+	 int8 out_price1 = 0;
+	 int8 out_price2 = 0;
+
+	 if agent1.bid > agent2.bid then
+	   first_winner = 1;
+	   out_price1 = agent2.bid
+         else
+	   first_winner = 0;
+	   out_price2 = agent1.bid
+	 endif;
+	 output first_winner to agent1, agent2, auctioneer;
+	 output out_price1 to agent1, auctioneer;
+	 output out_price2 to agent2, auctioneer
+
+query auction: skip

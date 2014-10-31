@@ -1,0 +1,23 @@
+secret: byear = 1985; gender = 1;
+
+belief:
+	uniform gender 0 1;
+	pif 1:3 then
+	  uniform byear 1900 1949
+	else
+	  uniform byear 1950 1999
+	endpif
+
+program a -> out :
+	if byear <= 1980 then
+	  out = 0
+	else
+	  if gender == 0 then
+	    out = 1
+	  else
+	    out = 2
+	  endif
+	endif
+
+query: a = 0
+

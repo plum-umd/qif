@@ -1,0 +1,22 @@
+secret: hs = 2; h = 1;
+
+belief:
+  uniform hs 1 2;
+  uniform h 1 6
+
+program -> out :
+  out = 0;
+  if hs == 1 then
+  if h >= 1 and h <= 2 then out = 1
+  else
+    if h >= 3 and h <= 4 then out = 2
+    else
+      if h >= 5 and h <= 6 then out = 3 endif
+    endif
+  endif
+  else
+    if h >= 1 and h <= 3 then out = 1 endif;
+    if h >= 4 and h <= 6 then out = 2 endif;
+  endif;
+
+query: skip

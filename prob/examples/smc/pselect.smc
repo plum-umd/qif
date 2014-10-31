@@ -1,0 +1,23 @@
+secret agent1: int8 a = 45
+secret agent2: int8 a = 50
+
+belief agent1 about agent2:
+  int8 agent2.a = uniform 0 100
+
+belief agent2 about agent1:
+  int8 agent1.a = uniform 0 100
+
+policy agent1 about agent2: [agent1.a] 1/1
+policy agent2 about agent1: [agent2.a] 1/1
+
+querydef select b :
+	 int8 u = uniform 0 b; (* will not parse presently *)
+	 int2 ret_who = 0;
+	 if u < agent1.a then ret_who = 1 endif;
+	 if u < agent1.a + agent2.a then ret_who = 2 endif;
+	 output ret_who to agent1, agent2
+
+query select: int8 b = 100
+query select: int8 b = 80
+query select: int8 b = 40
+query select: int8 b = 20

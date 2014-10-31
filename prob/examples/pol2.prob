@@ -1,0 +1,10 @@
+secret: s = 0;
+
+belief:	uniform s 0 9;
+
+policy: max_prob_output [s] 0.25 
+
+querydef query_1 in -> out:
+ if s <= in then out = 0 else out = s endif;
+
+query query_1: in = 5

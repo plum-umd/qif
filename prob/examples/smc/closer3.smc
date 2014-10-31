@@ -1,0 +1,64 @@
+secret agent1: int8 x = 124; int8 y = 42
+secret agent2: int8 x = 123; int8 y = 50
+secret agent3: int8 x = 10; int8 y = 20
+
+belief agent1 about agent2, agent3:
+  int8 agent2.x = uniform 0 255;
+  int8 agent2.y = uniform 0 255;
+  int8 agent3.x = uniform 0 255;
+  int8 agent3.y = uniform 0 255
+
+belief agent2 about agent1, agent3:
+  int8 agent1.x = uniform 0 255;
+  int8 agent1.y = uniform 0 255;
+  int8 agent3.x = uniform 0 255;
+  int8 agent3.y = uniform 0 255
+
+belief agent3 about agent1, agent2:
+  int8 agent1.x = uniform 0 255;
+  int8 agent1.y = uniform 0 255;
+  int8 agent2.x = uniform 0 255;
+  int8 agent2.y = uniform 0 255
+
+policy agent1 about agent2: [agent1.x agent1.y] 1/1
+policy agent1 about agent3: [agent1.x agent1.y] 1/1
+policy agent2 about agent1: [agent2.x agent2.y] 1/1
+policy agent2 about agent3: [agent2.x agent2.y] 1/1
+policy agent3 about agent1: [agent3.x agent3.y] 1/1
+policy agent3 about agent2: [agent3.x agent3.y] 1/1
+
+querydef closer x y :
+	 bool who_closer = 1;
+
+	 int8 dist1x = agent1.x - x;
+	 int8 dist1y = agent1.y - y;
+	 if dist1x < 0 then dist1x = -1 * dist1x endif;
+	 if dist1y < 0 then dist1y = -1 * dist1y endif;
+
+	 int8 dist2x = agent2.x - x;
+	 int8 dist2y = agent2.y - y;
+	 if dist2x < 0 then dist2x = -1 * dist2x endif;
+	 if dist2y < 0 then dist2y = -1 * dist2y endif;
+
+	 int8 dist3x = agent3.x - x;
+	 int8 dist3y = agent3.y - y;
+	 if dist3x < 0 then dist3x = -1 * dist3x endif;
+	 if dist3y < 0 then dist3y = -1 * dist3y endif;
+
+	 if dist1x + dist1y < dist2x + dist2y then
+	   if dist1x + dist1y < dist3x + dist3y then
+	     who_closer = 1
+	   else
+	     who_closer = 3
+	   endif
+	 else
+	   if dist2x + dist2y < dist3x + dist3y then
+	     who_closer = 2
+	   else
+	     who_closer = 3
+	   endif
+         endif;
+
+	 output who_closer to agent1, agent2, agent3
+
+query closer: int8 x = 1; int8 y = 2

@@ -1,0 +1,10 @@
+secret: s = 0
+
+belief:
+	pif 1:1 then s = 0 else s = 1 endpif;
+	pif 1:1 then s = 0 endpif
+
+program a -> b :
+	if false then skip else skip endif
+
+query: a = 0

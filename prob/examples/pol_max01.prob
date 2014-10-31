@@ -1,0 +1,14 @@
+secret:  
+	 int a = 1;
+	 int b = 1
+
+belief:
+	 pif 1:1 then int a = uniform 1 3 else int a = uniform 3 5 endpif;
+	 int b = uniform 1 10
+
+policy:
+	max_prob_output [b] 9999.0
+
+querydef donothing -> o : int o = 42
+
+query donothing: skip

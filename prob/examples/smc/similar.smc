@@ -1,0 +1,19 @@
+secret P_1: int8 x = 45
+secret P_2: int8 x = 50
+
+belief P_1 about P_2:
+  int8 P_2.x = uniform 0 100
+
+belief P_2 about P_1:
+  int8 P_1.x = uniform 0 100
+
+policy P_1 about P_2: [P_1.x] 1/1
+policy P_2 about P_1: [P_2.x] 1/1
+
+querydef similar epsilon :
+	 bool similar = 0;
+	 if P_1.x - P_2.x <= epsilon and
+            P_2.x - P_1.x <= epsilon then similar = 1 endif;
+	 output similar to P_1, P_2;
+
+query similar: int8 epsilon = 10

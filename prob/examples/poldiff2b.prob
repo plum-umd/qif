@@ -1,0 +1,14 @@
+secret: h = 1;
+
+belief:
+  uniform h 1 6
+
+program -> out :
+  out = 0;
+  if h == 1 or h == 3 or h == 5 then 
+    out = 0
+  else
+    out = 1
+  endif;
+
+query: skip

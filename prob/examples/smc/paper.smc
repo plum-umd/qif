@@ -1,0 +1,77 @@
+secret P_1: int8 x = 20
+secret P_2: int8 x = 15
+secret P_3: int8 x = 17
+
+belief P_1 about P_2, P_3:
+  int8 P_2.x = uniform 10 100;
+  int8 P_3.x = uniform 10 100;
+
+belief P_2 about P_1, P_3:
+  int8 P_1.x = uniform 10 100;
+  int8 P_3.x = uniform 10 100;
+
+belief P_3 about P_1, P_2:
+  int8 P_1.x = uniform 10 100;
+  int8 P_2.x = uniform 10 100;
+
+policy P_1 about P_2: [P_1.x] 1/1	
+policy P_1 about P_3: [P_1.x] 1/1	
+policy P_2 about P_1: [P_2.x] 1/1
+policy P_2 about P_3: [P_2.x] 1/1
+policy P_3 about P_1: [P_3.x] 1/1
+policy P_3 about P_2: [P_3.x] 1/1
+
+querydef q1 :
+	 bool out = 0;
+	 if P_1.x >= P_2.x and
+	    P_1.x >= P_3.x then
+	    out = 1
+	 endif;
+
+	 output out to P_1, P_2, P_3
+
+querydef q2 :
+	 bool out = 0;
+	 if P_1.x <= P_2.x and
+	    P_1.x <= P_3.x then
+	    out = 1
+	 endif;
+
+	 output out to P_1, P_2, P_3
+
+query q1: skip
+
+(* 
+
+smc
+
+agent P_1's policy: agent P_2's max belief = 1/11 when agent P_2's secret is [P_2.x=15], and output is [out=1]
+agent P_1's policy: agent P_3's max belief = 1/11 when agent P_3's secret is [P_3.x=17], and output is [out=1]
+agent P_2's policy: agent P_1's max belief = 19/822 when agent P_1's secret is [P_1.x=20], and output is [out=0]
+agent P_2's policy: agent P_3's max belief = 19/822 when agent P_3's secret is [P_3.x=17], and output is [out=0]
+agent P_3's policy: agent P_1's max belief = 13/589 when agent P_1's secret is [P_1.x=20], and output is [out=0]
+agent P_3's policy: agent P_2's max belief = 90/4123 when agent P_2's secret is [P_2.x=15], and output is [out=0]
+
+agent P_1's policy: agent P_2's largest max belief = 1/1 when agent P_2's secret is [P_2.x=100], and output is [out=1]
+agent P_1's policy: agent P_2's smallest max belief = 2/91 when agent P_2's secret is [P_2.x=10], and output is [out=0]
+agent P_1's policy: agent P_3's largest max belief = 1/1 when agent P_3's secret is [P_3.x=100], and output is [out=1]
+agent P_1's policy: agent P_3's smallest max belief = 2/91 when agent P_3's secret is [P_3.x=10], and output is [out=0]
+agent P_2's policy: agent P_1's largest max belief = 1/1 when agent P_1's secret is [P_1.x=10], and output is [out=1]
+agent P_2's policy: agent P_1's smallest max belief = 1/91 when agent P_1's secret is [P_1.x=100], and output is [out=1]
+agent P_2's policy: agent P_3's largest max belief = 2/91 when agent P_3's secret is [P_3.x=10], and output is [out=0]
+agent P_2's policy: agent P_3's smallest max belief = 1/91 when agent P_3's secret is [P_3.x=100], and output is [out=0]
+agent P_3's policy: agent P_2's largest max belief = 127/4798 when agent P_2's secret is [P_2.x=47], and output is [out=0]
+agent P_3's policy: agent P_2's smallest max belief = 45/2048 when agent P_2's secret is [P_2.x=11], and output is [out=0]
+agent P_3's policy: agent P_1's largest max belief = 1/1 when agent P_1's secret is [P_1.x=10], and output is [out=1]
+agent P_3's policy: agent P_1's smallest max belief = 1/91 when agent P_1's secret is [P_1.x=100], and output is [out=1]
+
+nosmc
+
+agent P_1's policy: agent P_2's max belief = 1/1 when agent P_2's secret is [P_2.x=100], and output is [out=1]
+agent P_1's policy: agent P_3's max belief = 1/1 when agent P_3's secret is [P_3.x=100], and output is [out=1]
+agent P_2's policy: agent P_1's max belief = 1/1 when agent P_1's secret is [P_1.x=10], and output is [out=1]
+agent P_2's policy: agent P_3's max belief = 2/91 when agent P_3's secret is [P_3.x=10], and output is [out=0]
+agent P_3's policy: agent P_2's max belief = 127/4798 when agent P_2's secret is [P_2.x=47], and output is [out=0]
+agent P_3's policy: agent P_1's max belief = 1/1 when agent P_1's secret is [P_1.x=10], and output is [out=1]
+
+*)

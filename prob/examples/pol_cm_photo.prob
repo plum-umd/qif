@@ -1,0 +1,33 @@
+secret:  
+	 s_birth_year = 1983;
+	 s_gender = 0;
+	 s_relationship_status = 0
+
+belief:
+	uniform s_birth_year 1900 2010;
+	uniform s_gender 0 1;
+	uniform s_relationship_status 0 3;
+
+policy:
+	max_prob_output [s_birth_year s_gender s_relationship_status] 1.0
+
+querydef cm_advert -> output :
+
+  age = 2010 - s_birth_year;
+
+  if age >= 24 and age <= 30 then
+    age_sat = 1
+  else
+    age_sat = 0
+  endif;
+
+  if s_gender == 1
+    and s_relationship_status == 2
+    and age_sat == 1
+  then
+    output = 1
+  else
+    output = 0
+  endif
+
+query cm_advert: skip

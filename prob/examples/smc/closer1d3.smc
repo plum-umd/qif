@@ -1,0 +1,50 @@
+secret P_1: int8 x = 1
+secret P_2: int8 x = 2
+secret P_3: int8 x = 3
+
+belief P_1 about P_2, P_3:
+  int8 P_2.x = uniform 0 100;
+  int8 P_3.x = uniform 0 100
+
+belief P_2 about P_1, P_3:
+  int8 P_1.x = uniform 0 100;
+  int8 P_3.x = uniform 0 100
+
+belief P_3 about P_1, P_2:
+  int8 P_1.x = uniform 0 100;
+  int8 P_2.x = uniform 0 100
+
+policy P_1 about P_2: [P_1.x] 1/1
+policy P_1 about P_3: [P_1.x] 1/1
+policy P_2 about P_1: [P_2.x] 1/1
+policy P_2 about P_3: [P_2.x] 1/1
+policy P_3 about P_1: [P_3.x] 1/1
+policy P_3 about P_2: [P_3.x] 1/1
+
+querydef closer x :
+	 bool who_closer = 1;
+
+	 int8 dist1x = P_1.x - x;
+	 if dist1x < 0 then dist1x = -1 * dist1x endif;
+	 int8 dist2x = P_2.x - x;
+	 if dist2x < 0 then dist2x = -1 * dist2x endif;
+	 int8 dist3x = P_3.x - x;
+	 if dist3x < 0 then dist3x = -1 * dist3x endif;
+
+	 if dist1x <= dist2x then
+	   if dist1x <= dist3x then
+	     who_closer = 1
+	   else
+	     who_closer = 3
+	   endif
+	 else
+	   if dist2x <= dist3x then
+	     who_closer = 2
+	   else
+	     who_closer = 3
+	   endif
+         endif;
+
+	 output who_closer to P_1, P_2, P_3
+
+query closer: int8 x = 50

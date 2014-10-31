@@ -1,0 +1,28 @@
+(* Made up example *)
+(* Company: CheapCollegePizza *)
+
+if in_school_type >= 4 then
+  in_school = 1
+else
+  in_school = 0
+
+age = 2010 - birth_year
+if age >= 18 && age <= 28 then
+  age_criteria = 1
+else
+  age_criteria = 0
+
+ul_lat = 39003178
+ul_long = -76958199
+lr_lat = 38967884
+lr_long = -76925926
+if address_lat <= ul_lat &&
+   address_lat >= lr_lat &&
+   address_long <= lr_long &&
+   address_long >= ul_long
+then
+  in_box = 1
+else
+  in_box = 0
+
+output = (in_school || age_criteria) && in_box

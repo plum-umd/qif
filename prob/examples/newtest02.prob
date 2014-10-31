@@ -1,0 +1,24 @@
+secret: a0 = 1
+
+belief:	
+	uniform a0 0 9;
+	(* a in [0,9] *)
+
+	a1 = a0 * 2;
+	(*
+	a in [0,18] evens 
+	0,2,4,6,8,10,12,14,16,18
+	*)
+
+	if a1 < 10 then a2 = a1 + 5 else a2 = a1 - 5 endif;
+	(* 
+	0,2,4,6,8,10,12,14,16,18
+
+	5,7,9,11,13
+	5,7,9,11,13
+
+	*)
+
+program x -> a2 : skip
+
+query: skip

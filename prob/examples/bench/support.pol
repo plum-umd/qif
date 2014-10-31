@@ -1,0 +1,60 @@
+secret: (* Actual positions of troops *)
+  (* Just SW of Baghdad *)
+  int troop_loc_lat1 = 33252456;
+  int troop_loc_long1 = 44371639;
+  (* Ramadi (slightly farther from Karbala *)
+  (*
+  int troop_loc_lat2 33427108;
+  int troop_loc_long2 43264847;
+  (* Samarra (farther still) *)
+  int troop_loc_lat3 = 34181276,;
+  int troop_loc_long3 = 43858452;
+  (* Kirkuk (farthest) *)
+  int troop_loc_lat4 = 35468115;
+  int troop_loc_long4 = 44395301;*)
+
+  int response1 = 16
+
+belief:
+  (* Locations are in Iraq *)
+  int troop_loc_lat1 = uniform 29267245 36332852;
+  int troop_loc_long1 = uniform 41483216 46405563;
+
+  (* Slow response (over land) is most likely, followed by
+     response > 165 (air-based response).  The response times
+     in between these two are less likely. *)
+     (*
+  pif 5:5 then
+    int response1 = uniform 0 20
+  else pif 2:3 then
+    int response1 = uniform 21 164
+  else
+    int response1 = uniform 165 1185
+  endpif endpif*)
+  int response1 = uniform 0 528000
+
+policy:	max_prob_output [troop_loc_lat1 troop_loc_long1] 999/1
+
+querydef request_support time -> out :
+
+(* Karbala, Iraq *)
+#define target_location_lat = 32639375 in
+#define target_location_long = 44002991 in
+
+bool out = 0;
+
+int dist_lat = troop_loc_lat1 - target_location_lat;
+int dist_long = troop_loc_long1 - target_location_long;
+if dist_lat < 0 then
+  dist_lat = -1 * dist_lat
+endif;
+if dist_long < 0 then
+  dist_long = -1 * dist_long
+endif;
+dist_lat = 39 * dist_lat;
+dist_long = 50 * dist_long;
+if dist_lat + dist_long <= response1 * time then
+  out = 1
+endif
+
+query request_support: int time = 1

@@ -1,0 +1,19 @@
+(* Example modeling Facebook's "broad age targeting" *)
+(* http://www.facebook.com/help/?page=863 *)
+
+(* The idea is that it returns 1 if your age is within the requested range,
+   but it also sometimes returns 1 when your age is outside the range.
+   The modeling is accurate assume either 1) Facebook does return 1 outside the range randomly or
+   (more likely) 2) Facebook has some deterministic method of decided when to violate the range,
+   but it is unknown (and cannot be inferred) outside of Facebook. *)
+
+age = 2010 - birth_year
+if age >= 24 && age <= 34 then
+  output = 1
+else
+  output = 0
+
+pif 1 : 9 then
+  output = 1
+else
+  output = output

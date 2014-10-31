@@ -1,0 +1,63 @@
+troop_loc_lat1 = [-90000000,90000000]
+troop_loc_long1 = [-90000000,90000000]
+(* number of troops *)
+troop_level1 = [0,50000]
+air_capability1 = [0,1]
+tank_capability1 = [0,1]
+(* mph at which the troops can move *)
+mobility1 = [0,200]
+(* response capability of troops (estimated as mph
+   at which support can be delivered) *)
+response1 = [0,2000]
+(* an example of a piece of private data that
+   may change between queries. *)
+busy1 = [0,1]
+
+(* the above repeated 3 times *)
+troop_loc_lat2 = [-90000000,90000000]
+troop_loc_long2 = [-90000000,90000000]
+(* number of troops *)
+troop_level2 = [0,50000]
+air_capability2 = [0,1]
+tank_capability2 = [0,1]
+sea_capability2 = [0,1]
+(* mph at which the troops can move *)
+mobility2 = [0,200]
+(* response capability of troops (estimated as mph
+   at which support can be delivered) *)
+response2 = [0,1000]
+(* an example of a piece of private data that
+   may change between queries. *)
+busy2 = [0,1]
+
+troop_loc_lat3 = [-90000000,90000000]
+troop_loc_long3 = [-90000000,90000000]
+(* number of troops *)
+troop_level3 = [0,50000]
+air_capability3 = [0,1]
+tank_capability3 = [0,1]
+sea_capability3 = [0,1]
+(* mph at which the troops can move *)
+mobility3 = [0,200]
+(* response capability of troops (estimated as mph
+   at which support can be delivered) *)
+response3 = [0,1000]
+(* an example of a piece of private data that
+   may change between queries. *)
+busy3 = [0,1]
+
+troop_loc_lat4 = [-90000000,90000000]
+troop_loc_long4 = [-90000000,90000000]
+(* number of troops *)
+troop_level4 = [0,50000]
+air_capability4 = [0,1]
+tank_capability4 = [0,1]
+sea_capability4 = [0,1]
+(* mph at which the troops can move *)
+mobility4 = [0,200]
+(* response capability of troops (estimated as mph
+   at which support can be delivered) *)
+response4 = [0,1000]
+(* an example of a piece of private data that
+   may change between queries. *)
+busy4 = [0,1]

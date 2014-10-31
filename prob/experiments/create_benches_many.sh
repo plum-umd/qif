@@ -1,0 +1,32 @@
+perl create_tasks.pl ../examples/bench/bday.pol 0 9 1 5 box halfs
+perl create_tasks.pl ../examples/bench/bday_large.pol 0 9 1 5 box halfs
+perl create_tasks.pl ../examples/bench/pizza.pol 0 9 1 5 box halfs
+perl create_tasks.pl ../examples/bench/photo.pol 0 9 1 5 box halfs
+perl create_tasks.pl ../examples/bench/travel.pol 0 9 1 5 box halfs
+perl create_tasks.pl ../examples/bench/bday.pol 10 40 5 5 box halfs
+perl create_tasks.pl ../examples/bench/bday_large.pol 10 40 5 5 box halfs
+perl create_tasks.pl ../examples/bench/pizza.pol 10 40 5 5 box halfs
+perl create_tasks.pl ../examples/bench/photo.pol 10 40 5 5 box halfs
+perl create_tasks.pl ../examples/bench/travel.pol 10 40 5 5 box halfs
+
+perl create_tasks.pl ../examples/bench/bday.pol 0 9 1 5 octalatte halfs
+perl create_tasks.pl ../examples/bench/bday_large.pol 0 9 1 5 octalatte halfs
+perl create_tasks.pl ../examples/bench/pizza.pol 0 9 1 5 octalatte halfs
+perl create_tasks.pl ../examples/bench/photo.pol 0 9 1 5 octalatte halfs
+perl create_tasks.pl ../examples/bench/travel.pol 0 9 1 5 octalatte halfs
+perl create_tasks.pl ../examples/bench/bday.pol 10 40 5 5 octalatte halfs
+perl create_tasks.pl ../examples/bench/bday_large.pol 10 40 5 5 octalatte halfs
+perl create_tasks.pl ../examples/bench/pizza.pol 10 40 5 5 octalatte halfs
+perl create_tasks.pl ../examples/bench/photo.pol 10 40 5 5 octalatte halfs
+perl create_tasks.pl ../examples/bench/travel.pol 10 40 5 5 octalatte halfs
+
+perl create_tasks.pl ../examples/bench/bday.pol 0 9 1 5 poly halfs
+perl create_tasks.pl ../examples/bench/bday_large.pol 0 9 1 5 poly halfs
+perl create_tasks.pl ../examples/bench/pizza.pol 0 9 1 5 poly halfs
+perl create_tasks.pl ../examples/bench/photo.pol 0 9 1 5 poly halfs
+perl create_tasks.pl ../examples/bench/travel.pol 0 9 1 5 poly halfs
+perl create_tasks.pl ../examples/bench/bday.pol 10 40 5 5 poly halfs
+perl create_tasks.pl ../examples/bench/bday_large.pol 10 40 5 5 poly halfs
+perl create_tasks.pl ../examples/bench/pizza.pol 10 40 5 5 poly halfs
+perl create_tasks.pl ../examples/bench/photo.pol 10 40 5 5 poly halfs
+perl create_tasks.pl ../examples/bench/travel.pol 10 40 5 5 poly halfs

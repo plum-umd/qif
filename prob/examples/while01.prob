@@ -1,0 +1,14 @@
+secret: 
+	p = 2;
+
+belief:
+	uniform ptemp 1 5;
+	p = ptemp * 2
+
+program -> out :
+	out = 0;
+	while out <= p do
+	  out = out + 1
+  	endwhile;
+
+query: skip;

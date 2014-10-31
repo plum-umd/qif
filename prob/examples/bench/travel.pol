@@ -1,0 +1,48 @@
+(* taken from:
+   http://www.openforum.com/idea-hub/topics/marketing/article/facebook-ads-a-guide-to-targeting-and-reporting-adele-cooper *)
+(* Company: VisitBritain *)
+
+secret:
+  int country = 1;
+  int birth_year = 1983;
+  int completed_school_type = 4;
+  int language = 5;
+	
+belief:
+  int country = uniform 1 200;
+  int birth_year = uniform 1900 2011;
+  int language = uniform 1 50;
+  int completed_school_type = uniform 0 5
+
+policy: max_prob_output [country birth_year language completed_school_type] 1/1
+
+querydef travel -> out:
+  #define age = 2010 - birth_year in
+
+  bool main_country;
+  if country == 1 or country == 3 or country == 8 or country == 10 or country == 18 then
+    main_country = 1
+  else
+    main_country = 0
+  endif;
+
+  bool island;
+  if country == 169 or country == 197 or country == 194 or country == 170 or country == 206 or
+     country == 183 or country == 188 then
+    island = 1
+  else
+    island = 0
+  endif;
+
+  bool out;
+  if language == 1 and
+     (main_country == 1 or island == 1) and
+     age >= 21 and
+     completed_school_type >= 4
+  then
+    out = 1
+  else
+    out = 0
+  endif
+
+query travel: skip

@@ -1,0 +1,16 @@
+if( 20 < age < 25 )
+  a = 1
+else
+  a = 0
+
+if( 20000 < income < 30000 )
+  b = 1
+else
+  b = 0
+
+if( sex = 1 )
+  c = 1
+else
+  c = 0
+
+l = a || b || c

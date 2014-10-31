@@ -1,0 +1,14 @@
+secret: #include "bday.secret"
+
+belief:
+  int s_bday = uniform 0 364;
+  int s_byear = uniform 1956 1992;
+
+policy:	max_prob_output [s_bday s_byear] 1/1
+
+querydef bday c_day -> out : #include "bday_bday.query"
+querydef spec c_year -> out : #include "bday_spec.query"
+
+query bday: int c_day = 260;
+query bday: int c_day = 261;
+query spec: int c_year = 2011;

@@ -1,0 +1,16 @@
+secret: p1 = 1;
+
+belief:
+	uniform p1 0 99;
+	if p1 >= 50 then p1 = p1 - 10 else p1 = p1 + 10 endif
+
+	(* should result in
+
+	40 <= p1 <= 89 with 0.5
+	10 <= p1 <= 59 with 0.5
+
+	40 <= p1 <= 59 intersection
+
+	*)
+
+

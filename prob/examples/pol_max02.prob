@@ -1,0 +1,16 @@
+secret:  
+	 int a = 1;
+	 int b = 1
+
+belief:
+	int a = uniform 0 5;
+	int b = uniform 0 5
+
+policy:
+	max_prob_output [a] 9999.0
+
+querydef donothing -> o :
+        int o;
+	if a <= 2*b and a+b <= 3 and 2*a >= b then o = 1 else o = 0 endif
+
+query donothing: skip

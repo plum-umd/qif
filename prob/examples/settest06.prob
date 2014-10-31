@@ -1,0 +1,14 @@
+secret: p1 = 1;
+
+belief:
+	uniform p1 1 10;
+
+	if p1 >= 6 or p1 <= 3 then p1 = p1 + 10 endif;
+
+	(* should result in
+
+	16 <= p1 <= 20 with 0.5
+	11  <= p1 <= 13 with 0.3
+	4  <= p1 <= 5 with 0.2
+
+	*)

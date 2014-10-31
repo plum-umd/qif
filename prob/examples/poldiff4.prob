@@ -1,0 +1,17 @@
+secret: h = 3;
+
+belief:
+  uniform h 1 12
+
+program -> out :
+  out = 0;
+  if h == 1 or h == 2 then
+    if (h >= 1 and h <= 3) or (h >= 7 and h <= 9) then out = 1 endif;
+    if (h >= 4 and h <= 6) or (h >= 10 and h <= 12) then out = 2 endif;
+  else
+    if (h >= 1 and h <= 2) or (h >= 7 and h <= 8) then out = 3 endif;
+    if (h >= 3 and h <= 4) or (h >= 9 and h <= 10) then out = 4 endif;
+    if (h >= 5 and h <= 6) or (h >= 11 and h <= 12) then out = 5 endif;
+  endif
+
+query: skip

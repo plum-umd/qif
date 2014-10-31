@@ -1,0 +1,40 @@
+secret:
+	 s_bday = 270;
+	 s_byear = 1980
+
+belief:
+	uniform s_bday 0 364;
+	uniform s_byear 1956 1992;
+
+policy:
+	max_prob_output [s_bday s_byear] 1/20
+(*	max_prob_output [s_bday] 0.2 *)
+
+querydef donothing -> o : o = 42
+
+querydef bday c_day -> output :
+
+if s_bday >= c_day and
+   c_day + 7 > s_bday then
+   output = 1
+else
+   output = 0
+endif
+
+querydef spec c_year -> output :
+  age = c_year - s_byear;
+  if age == 10 or age == 20 or age == 30 or age == 40 or age == 50 
+      then
+        output_temp = 1
+      else
+        output_temp = 0
+    endif;
+  pif 1:9 then
+    output = 1
+  else
+    output = output_temp
+  endpif
+
+query bday: c_day = 260;
+query bday: c_day = 261;
+query spec: c_year = 2011;

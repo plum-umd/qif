@@ -1,0 +1,53 @@
+secret: (* Actual positions of troops *)
+  (* Just SW of Baghdad *)
+  int troop_loc_lat1  = 33252456;
+  int troop_loc_long1 = 44371639;
+
+  (* Ramadi (slightly farther from Karbala *)
+  int troop_loc_lat2  = 33427108;
+  int troop_loc_long2 = 43264847;
+
+belief:
+  (* Locations are in Iraq *)
+  int troop_loc_lat1  = uniform 29267245 36332852;
+  int troop_loc_long1 = uniform 41483216 46405563;
+
+  int troop_loc_lat2  = uniform 29267245 36332852;
+  int troop_loc_long2 = uniform 41483216 46405563
+
+policy:	max_prob_output [troop_loc_lat1 troop_loc_long1
+	                 troop_loc_lat2 troop_loc_long2] 999/1
+
+querydef who_is_closer target_location_lat target_location_long -> who_closer :
+
+int diff_lat1 = troop_loc_lat1 - target_location_lat;
+int diff_long1 = troop_loc_long1 - target_location_long;
+int diff_lat2 = troop_loc_lat2 - target_location_lat;
+int diff_long2 = troop_loc_long2 - target_location_long;
+if diff_lat1 < 0 then
+  diff_lat1 = -1 * diff_lat1
+endif;
+if diff_long1 < 0 then
+  diff_long1 = -1 * diff_long1
+endif;
+if diff_lat2 < 0 then
+  diff_lat2 = -1 * diff_lat2
+endif;
+if diff_long2 < 0 then
+  diff_long2 = -1 * diff_long2
+endif;
+
+int dist1 = diff_long1 + diff_lat1;
+int dist2 = diff_long2 + diff_lat2;
+
+bool who_closer;
+if dist1 <= dist2 then
+  who_closer = 0
+else
+  who_closer = 1
+endif
+
+query who_is_closer:
+(* Karbala, Iraq *)
+int target_location_lat = 32639375;
+int target_location_long = 44002991

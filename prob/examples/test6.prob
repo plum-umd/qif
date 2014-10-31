@@ -1,0 +1,11 @@
+secret: pass = 1
+
+belief:	
+	uniform pass 1 80;
+
+program guess -> guessed :
+
+	if pass >= 1 and pass <= 10 then guessed = pass else guessed = 0 endif;
+
+query: guess = 0;
+

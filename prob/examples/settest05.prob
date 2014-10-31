@@ -1,0 +1,14 @@
+secret: p1 = 1;
+
+belief:
+	uniform p1 0 99;
+
+	if p1 >= 40 and p1 <= 59 then p1 = p1 + 100 endif;
+
+	(* should result in
+
+	140 <= p1 <= 159 with 0.2
+	0   <= p1 <=  39 with 0.4
+	60  <= p1 <=  99 with 0.4
+
+	*)

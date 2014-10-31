@@ -1,0 +1,11 @@
+secret: a = 1
+
+belief:	
+	uniform a 0 9;
+	(* a in [0,9] *)
+
+	a = a * 2;
+	(*
+	a in [0,18] evens 
+	0,2,4,6,8,10,12,14,16,18
+	*)

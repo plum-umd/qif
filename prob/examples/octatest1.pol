@@ -1,0 +1,15 @@
+secret:
+ x = 50;
+ y = 50;
+
+belief:
+  uniform x 0 99;
+  uniform y 0 99
+
+policy:
+	max_prob_output [x y] 1/1
+
+querydef q1 -> output :
+  if x >= 2 * y then output = 1 else output = 0 endif
+
+query q1: skip
