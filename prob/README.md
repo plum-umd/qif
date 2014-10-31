@@ -55,7 +55,7 @@ to other package managers or source installations.
    opam install mlgmp
    ```
 
-5. Install ppl with ocaml interface enabled [1.1 tarball](ftp://ftp.cs.unipr.it/pub/ppl/releases/1.1/ppl-1.1.tar.gz):
+5. Install ppl with ocaml interface enabled [1.1 tarball](http://bugseng.com/products/ppl/download/ftp/releases/1.1/ppl-1.1.tar.gz):
 
     ```bash
     ./configure --enable-interfaces=ocaml --with-mlgmp=~/.opam/4.02/lib/gmp
