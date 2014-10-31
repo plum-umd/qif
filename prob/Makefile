@@ -83,19 +83,22 @@ INC_FLAGS = -package str -package unix -package gmp
 LINK_FLAGS = $(DEBUG_FLAGS) $(INC_FLAGS) -linkpkg
 BUILD_FLAGS = $(DEBUG_FLAGS) $(INC_FLAGS) -pp "camlp5o ./pa_if.cmo" -I +camlp5
 
-prob: $(OBJS_PROB)
-	$(OCAMLC) $(PPL_LINK) $(LINK_FLAGS) -o prob $^
+prob: $(OBJS_PROB) latte_tmp
+	$(OCAMLC) $(PPL_LINK) $(LINK_FLAGS) -o prob $(OBJS_PROB)
 
 mprob: $(OBJS_MPROB) 
-	$(OCAMLC) $(PPL_LINK) $(LINK_FLAGS) -o mprob $^
+	$(OCAMLC) $(PPL_LINK) $(LINK_FLAGS) -o mprob $(OBJS_MPROB)
 
 pa_if.cmo: pa_if.ml
-	$(OCAMLC) -package camlp5 -c -pp camlp5r -o pa_if.cmo $^
+	$(OCAMLC) -package camlp5 -c -pp camlp5r -o pa_if.cmo
 
 latex: $(OBJS_LATEX)
 	$(OCAMLC) $(PPL_LINK) $(LINK_FLAGS) -o latex $^
 
 util.ml: pa_if.cmo
+
+latte_tmp:
+	mkdir latte_tmp
 
 -include .dep
 

@@ -9,9 +9,9 @@ open Ppl_util
 open Maths
 open Geo
 
-let latte_bin = Globals.file_abs "install/latte-for-tea-too-1.2-mk-0.9.3/dest/bin/count"
-let latte_bin_max = Globals.file_abs "install/latte-for-tea-too-1.2-mk-0.9.3/dest/bin/maximize"
-let latte_bin_max_b = Globals.file_abs "install/latte-for-tea-too-1.2-mk-0.9.3/dest/bin/maximize bbs"
+let latte_bin = "count"
+let latte_bin_max = "latte-maximize"
+let latte_bin_max_b = "latte-maximize bbs"
 let latte_tmp = Globals.file_abs "latte_tmp"
 
 let latte_workdir = (latte_tmp ^ "/" ^ (string_of_int (Unix.getpid ())));;

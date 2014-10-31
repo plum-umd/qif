@@ -33,24 +33,24 @@ to other package managers or source installations.
 
 2. Install opam
 
-```bash
-brew install opam
-```
+   ```bash
+   brew install opam
+   ```
 
 3. Install ocaml and ocamlfind:
 
-```bash
-opam install ocaml
-opam install ocamlfind
-```
+   ```bash
+   opam install ocaml
+   opam install ocamlfind
+   ```
 
 4. Install gmp, mpfr, and mlgmp:
 
-```bash
-brew install gmp
-brew install mpfr
-opam install mlgmp
-```
+   ```bash
+   brew install gmp
+   brew install mpfr
+   opam install mlgmp
+   ```
 
 5. Install ppl with ocaml interface enabled:
 
@@ -60,12 +60,25 @@ opam install mlgmp
     sudo make install
     ```
 
+** Warning: ppl's configuration may silently fail when it cannot find
+   something it needs (like mlgmp). In those cases it might install
+   the main library and even the ocaml interface documentation without
+   actually installing the interface itself.**
+
 6. Install latte:
 
-  ```bash
-  ./configure
-  make
-  ```
+   ```bash
+   ./configure
+   make
+   ```
+
+   Make latte's `count` and `latte-maximize` available on your path. You
+   can do this by making links to `dest/bin/count` and `dest/bin/latte-maximize` like so:
+
+   ```bash
+   ln -s /Users/piotrm/Downloads/install/latte-integrale-1.7.2/dest/bin/count /usr/local/bin/count
+   ln -s /Users/piotrm/Downloads/install/latte-integrale-1.7.2/dest/bin/latte-maximize /usr/local/bin/latte-maximize
+   ```
 
 ### Contact
 Piotr Mardziel: [piotrm@gmail.com](mailto:piotrm@gmail.com),
