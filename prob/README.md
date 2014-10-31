@@ -52,7 +52,7 @@ to other package managers or source installations.
    opam install mlgmp
    ```
 
-5. Install ppl with ocaml interface enabled:
+5. Install ppl with ocaml interface enabled [ftp://ftp.cs.unipr.it/pub/ppl/releases/1.1/ppl-1.1.tar.gz]:
 
     ```bash
     ./configure --enable-interfaces=ocaml --with-mlgmp=~/.opam/4.02/lib/gmp
@@ -65,7 +65,7 @@ to other package managers or source installations.
        the main library and even the ocaml interface documentation without
        actually installing the interface itself.**
 
-6. Install latte:
+6. Install latte [https://www.math.ucdavis.edu/~latte/software/packages/latte_current/latte-integrale-1.7.2.tar.gz]:
 
    ```bash
    ./configure
