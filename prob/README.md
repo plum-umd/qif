@@ -83,6 +83,23 @@ to other package managers or source installations.
    ln -s /Users/piotrm/Downloads/install/latte-integrale-1.7.2/dest/bin/latte-maximize /usr/local/bin/latte-maximize
    ```
 
+7. Make prob:
+
+   ```bash
+   make prob
+   ```
+
+### Running
+There are a bunch of examples in `examples/bench` . Some of the
+stuff in `examples` proper might be outdated but `bench` should have
+mostly working examples. To run you can start with:
+
+  ```bash
+  ./prob examples/bench/bday.pol
+  ```
+
+Run `./prob --help` to see options.
+
 ### Contact
 Piotr Mardziel: [piotrm@gmail.com](mailto:piotrm@gmail.com),
 [http://www.cs.umd.edu/~piotrm](http://www.cs.umd.edu/~piotrm)

@@ -90,7 +90,7 @@ mprob: $(OBJS_MPROB)
 	$(OCAMLC) $(PPL_LINK) $(LINK_FLAGS) -o mprob $(OBJS_MPROB)
 
 pa_if.cmo: pa_if.ml
-	$(OCAMLC) -package camlp5 -c -pp camlp5r -o pa_if.cmo
+	$(OCAMLC) -package camlp5 -c -pp camlp5r $^ -o pa_if.cmo
 
 latex: $(OBJS_LATEX)
 	$(OCAMLC) $(PPL_LINK) $(LINK_FLAGS) -o latex $^
