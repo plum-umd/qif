@@ -201,21 +201,17 @@ let main () =
 		  | 0 -> (*printf "running with lists\n";
 		      (module EVALS_S: EXP_SYSTEM)*)
 		      raise (General_error "list-based peval not implemented")
-		  | 1 -> printf "running with boxes\n";
-		      (module EVALS_PPSS_BOX: EXP_SYSTEM)
-		  | 2 -> printf "running with octagons\n";
-		      (module EVALS_PPSS_OCTA: EXP_SYSTEM)
-		  | 3 -> printf "running polygons\n";
-		      (module EVALS_PPSS_POLY: EXP_SYSTEM)
-		  | 4 -> printf "running with octagons and latte\n";
-		      (module EVALS_PPSS_OCTALATTE: EXP_SYSTEM)
+		  | 1 -> (module EVALS_PPSS_BOX: EXP_SYSTEM)
+		  | 2 -> (module EVALS_PPSS_OCTA: EXP_SYSTEM)
+		  | 3 -> (module EVALS_PPSS_POLY: EXP_SYSTEM)
+		  | 4 -> (module EVALS_PPSS_OCTALATTE: EXP_SYSTEM)
 		  | _ -> raise Not_expected): EXP_SYSTEM) in
 	  E.pmock aexperiment;
 	  ifdebug (printf "maximum complexity encountered = %d\n" !Globals.max_complexity);
 	  ifbench (Globals.close_bench ());
 	  Globals.bench_latte_close ();
-	  printf "simplification steps: %d\n" !Globals.simplify_steps;
-	  printf "no errors\n"
+(*	  printf "simplification steps: %d\n" !Globals.simplify_steps;
+	  printf "no errors\n"*)
     with 
       | e ->
 	  Unix.chdir Globals.original_dir;

@@ -77,7 +77,7 @@ module MAKE_PSYSTEM (ESYS: EVAL_SYSTEM) = struct
     let outstates = ESYS.psrep_enum_on_vars distout outputs in
       list_max (List.map
 		  (fun s -> 
-		     ifverbose (printf "output = "; s#print; printf "\n";
+		     ifverbose (printf "-- possible output = "; s#print; printf "\n";
 				flush stdout);
 		     (let revised =
 			(ESYS.psrep_on_vars
@@ -87,10 +87,9 @@ module MAKE_PSYSTEM (ESYS: EVAL_SYSTEM) = struct
 
 			  let m = ESYS.psrep_max_belief revised in
 			    ifverbose (
-			      printf "got revised\n";
-			      printf "revision possibility = ";
+			      printf "revised belief for this output:\n";
 			      ESYS.print_psrep revised;
-			      printf "\n  possible revision max belief = %s\n" (Q.to_string m);
+			      printf "max belief for this output= %s\n" (Q.to_string m);
 			      flush stdout);
 			    m
 			)
@@ -116,7 +115,7 @@ module MAKE_PSYSTEM (ESYS: EVAL_SYSTEM) = struct
 	      else true
 	| PMaxProbOut ->
 	    let max_prob = find_max_belief distout outputs p.pvars in
-	      printf "overall max_belief = %s = %f\n" (Q.to_string max_prob) (Q.to_float max_prob);
+	      printf "-- overall max_belief = %s = %f\n" (Q.to_string max_prob) (Q.to_float max_prob);
 	      ifbench Globals.set_record p.plabel (string_of_float (Q.to_float max_prob));
 	      (max_prob < p.pparam)
 	    (*
@@ -231,7 +230,7 @@ module MAKE_PSYSTEM (ESYS: EVAL_SYSTEM) = struct
 		 printf "relative entropy (revised -> secret): %f\n" endrelent;
 		 printf "bits learned: %f\n" (startrelent -. endrelent); *)
 
-	      printf "\n--- checking policies ---\n";
+	      printf "\n### checking policies ###\n";
 	      (*flush stdout;*)
 	      
 	      (*      match policysystem_check_policies ps.policies outputdist enddist secretdist outlist with *)

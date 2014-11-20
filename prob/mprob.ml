@@ -451,14 +451,10 @@ let main () =
 		| 0 -> (*printf "running with lists\n";
 			 (module EVALS_S: EXP_SYSTEM)*)
 		    raise (General_error "list-based peval not implemented")
-		| 1 -> printf "running with boxes\n";
-		    (module CM_BOX: EXP_SYSTEM)
-		| 2 -> printf "running with octagons\n";
-		    (module CM_OCTA: EXP_SYSTEM)
-		| 3 -> printf "running polygons\n";
-		    (module CM_POLY: EXP_SYSTEM)
-		| 4 -> printf "running with octagons and latte\n";
-		    (module CM_OCTALATTE: EXP_SYSTEM)
+		| 1 -> (module CM_BOX: EXP_SYSTEM)
+		| 2 -> (module CM_OCTA: EXP_SYSTEM)
+		| 3 -> (module CM_POLY: EXP_SYSTEM)
+		| 4 -> (module CM_OCTALATTE: EXP_SYSTEM)
 		| _ -> raise Not_expected): EXP_SYSTEM) in
 	if !nosmc then E.domock_nosmc mock else E.domock mock
     with 

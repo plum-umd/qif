@@ -85,11 +85,9 @@ struct
     P.print_region_with_map p vmap
 
   let print_stateset (aset: stateset) : unit =
-    printf "Stateset of %s states, %d dims (%d recorded), with dimensions "
+    printf "Stateset of %s states, %d dimensions"
       (Z.to_string (stateset_size aset))
-      (P.get_dimensions aset.bound)
-      aset.dim;
-    print_varmap aset.varmap;
+      (P.get_dimensions aset.bound);
     printf "\n\t\t\t";
     _print_region_with_map aset.bound (Bimap.get_bmap aset.varmap)
 

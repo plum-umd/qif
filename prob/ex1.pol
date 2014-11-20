@@ -1,0 +1,43 @@
+secret: int x = 10
+
+belief:
+  int x = uniform 0 9;
+  int y = uniform 0 9;
+
+policy:	max_prob_output [x] 1/1
+(*policy:	max_prob_output [y] 1/1*)
+(*policy:	max_prob_output [x y] 1/1*)
+
+querydef greater5 -> o :
+         int o;
+         if x > 5 then
+           o = 1
+         else
+           o = 0
+         endif
+
+querydef greaterg g -> o :
+         int o;
+         if x > g then
+           o = 1
+         else
+           o = 0
+         endif
+
+querydef greater5orflip -> o :
+         int o1;
+         if x > 5 then
+           o1 = 1
+         else
+           o1 = 0
+         endif;
+         int o;
+         pif 1:9 then
+           o = 1 - o1
+         else
+           o = o1
+         endpif
+
+query greater5orflip: skip
+(*query greaterg: int g = 5*)
+(*query greater5orflip: skip*)
