@@ -1,4 +1,5 @@
-secret: int x = 10
+secret: int x = 5
+secret: int y = 6
 
 belief:
   int x = uniform 0 9;
