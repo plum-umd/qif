@@ -31,7 +31,8 @@ ALINK_FLAGS := $(BUILD_FLAGS)
 BUILD_FLAGS += -linkpkg
 LINK_FLAGS := $(BUILD_FLAGS)
 
-TARGETS := exp_price exp_pennies exp_pennies_variant exp_pennies_rnd exp_rock exp_rock_pennies exp_guess_my_number exp_guess_my_number2
+SOURCES := $(wildcard exp_*.ml)
+TARGETS := $(SOURCES:.ml=)
 
 all: $(TARGETS)
 
@@ -51,7 +52,7 @@ exp_%: util.$(OEXT) ppmonad.$(OEXT) exp_%.$(OEXT)
 	$(OCAMLC) $(BUILD_FLAGS) -c $<
 
 clean:
-	rm -Rf *.cmx *.cmi *.cmo *.o $(TARGETS) .dep
+	rm -Rf *.cmx *.cmi *.cmo *.o $(TARGETS) .dep *.cplex
 
 .dep: $(find *.ml *.mli)
 	$(OCAMLDEP) *.ml *.mli > .dep

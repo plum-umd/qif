@@ -5,7 +5,7 @@
 * ocaml 4.0 or greater
 * ocamlfind
 * opam
-** opam's extlib and ocaml-glpk packages
+* opam's extlib and ocaml-glpk packages
 
 ## Building
 
