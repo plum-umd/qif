@@ -1,31 +1,27 @@
 OCAMLFIND := ocamlfind
 
-MLLIB := $(shell ocamlc -where)
-
-OCAMLC := $(OCAMLFIND) ocamlopt
-OCAMLLEX := ocamllex.opt
+OCAMLC := $(OCAMLFIND) ocamlc
+OCAMLLEX := ocamllex
 OCAMLYACC := ocamlyacc
 OCAMLDEP := ocamldep -ml-synonym .mll -ml-synonym .mly -native
-OEXT := cmx
+OEXT := cmo
+LOEXT := cma
 
-LIBS_GFX := extlib sdl2.ba sdl2 sdl2_img glMLite glMLite.glut glMLite.glu 
-LIBS_MULTICORE := netmulticore
-LIBS_UTIL := core_extended lambda-term unix 
-LIBS_ALL := $(LIBS_GFX) $(LIBS_MULTICORE) $(LIBS_UTIL)
+LIBS := extlib \
+	glMLite glMLite.glut glMLite.glu \
+	sdl2.ba sdl2 sdl2_img \
+        netmulticore \
+	core_extended lambda-term unix gmp 
 
-BUILD_FLAGS_COMMON := -linkpkg -linkall -I $(MLLIB)/gmp gmp.cmxa -I /usr/local/lib/ppl ppl_ocaml.cmxa -thread -g
-BUILD_FLAGS_ALL := $(BUILD_FLAGS_COMMON) $(LIBS_ALL:%=-package %)
+BUILD_FLAGS := -linkpkg \
+	$(LIBS:%=-package %) \
+	-I /usr/local/lib/ppl ppl_ocaml.$(LOEXT) -thread -g \
 
-LINK_PPL := -cclib -lppl -cclib -lm -cclib -lgmpxx -cclib -lgmp
-LINK_GFX := $(LIBS_GFX:%=-package %)
-LINK_GFX += -cclib "-framework CoreFoundation -framework Cocoa" 
-LINK_MULTICORE := $(LIBS_MULTICORE:%=-package %)
-LINK_UTIL := $(LIBS_UTIL:%=-package %)
 
-LINK_FLAGS_REPL := $(BUILD_FLAGS_COMMON) $(LINK_PPL) $(LINK_GFX) $(LINK_MULTICORE) $(LINK_UTIL)
-
-LINK_FLAGS_CINTERP := $(BUILD_FLAGS_COMMON) $(LINK_UTIL)
-LINK_FLAGS_AINTERP := $(BUILD_FLAGS_COMMON) $(LINK_PPL) $(LINK_UTIL)
+LINK_FLAGS := $(BUILD_FLAGS) -thread -linkpkg \
+	-cclib -lppl -cclib -lgl_stubs \
+	-cclib "-framework OpenGL -framework GLUT -framework CoreFoundation -framework Cocoa" \
+	$(LIBS:%=-package %)
 
 repl:\
  util.$(OEXT) config.$(OEXT) \
@@ -37,7 +33,7 @@ repl:\
  ipc.$(OEXT) worker.$(OEXT) cmd.$(OEXT) master.$(OEXT) \
  sdldefs.$(OEXT) glutil.$(OEXT) uigl.$(OEXT) ui.$(OEXT) \
  repl.$(OEXT)
-	$(OCAMLC) $(LINK_FLAGS_REPL) $^ -o repl
+	$(OCAMLC) $(LINK_FLAGS) $^ -o repl
 
 ainterp:\
  util.$(OEXT) \
@@ -47,7 +43,7 @@ ainterp:\
  library.$(OEXT) librarylinear.$(OEXT)  stateabstract.$(OEXT) ppldomainbox.$(OEXT) \
  evalconcrete.$(OEXT) evalabstract.$(OEXT) \
  ainterp.$(OEXT)
-	$(OCAMLC) $(LINK_FLAGS_AINTERP) $^ -o ainterp
+	$(OCAMLC) $(LINK_FLAGS) $^ -o ainterp
 
 cinterp:\
  util.$(OEXT) \
@@ -56,23 +52,31 @@ cinterp:\
  library.$(OEXT) \
  preprocess.$(OEXT) eval.$(OEXT) stateconcrete.$(OEXT) evalconcrete.$(OEXT) \
  cinterp.$(OEXT)
-	$(OCAMLC) $(LINK_FLAGS_CINTERP) $^ -o cinterp
+	$(OCAMLC) $(LINK_FLAGS) $^ -o cinterp
 
 parsedebug: parser.mly
 	$(OCAMLYACC) -v parser.mly
 
-lexer.ml : parser.ml
+#lexer.ml : parser.ml
 lexer.$(OEXT) : parser.$(OEXT)
-parser.$(OEXT) : parser.cmi
-parser.cmi : lang.$(OEXT)
+parser.$(OEXT) : parser.cmi lang.$(OEXT)
+#parser.cmi : lang.$(OEXT) lang.$(OEXT)
+
+stateabstract.cmo: ppldomain.mli
 
 -include .dep
 
-%.cmx %.cmxi : %.ml
-	$(OCAMLC) $(BUILD_FLAGS_ALL) -c $<
-
 %.cmi : %.mli
-	$(OCAMLC) $(BUILD_FLAGS_ALL) -c $<
+	$(OCAMLC) $(BUILD_FLAGS) -c $<
+
+%.cmx %.cmxi : %.ml
+	$(OCAMLC) $(BUILD_FLAGS) -c $<
+
+%.cmo %.cmi : %.ml
+	$(OCAMLC) $(BUILD_FLAGS) $(filter %.mli,$^) -c $<
+
+#%.cmi : %.mli
+#	$(OCAMLC) $(BUILD_FLAGS) -c $<
 
 %.ml : %.mll
 	$(OCAMLLEX) $<

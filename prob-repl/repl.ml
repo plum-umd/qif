@@ -11,6 +11,10 @@ let () =
   let wakeup_sem_addr = ref "" in
   let infile = ref "" in
 
+  printf "parsing options\n";
+  printf "%s\n" (Std.dump Sys.argv);
+  printf "\n";
+  
   Arg.parse [
     ("--uiproc",
      Arg.Set is_gl_proc,

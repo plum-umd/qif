@@ -10,5 +10,7 @@ querydef bday c_day -> out : #include "bday_bday.query"
 querydef spec c_year -> out : #include "bday_spec.query"
 
 query bday: int c_day = 260;
+
 query bday: int c_day = 261;
+
 query spec: int c_year = 2011;

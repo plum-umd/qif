@@ -1,3 +1,5 @@
+open ExtList
+open ExtString
 open Gmp
 open Ppl_ocaml
 open Pplutil

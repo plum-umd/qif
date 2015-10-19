@@ -16,6 +16,7 @@ let proc_events ~sender_to_master ~working ev = match ev with
   | KeyDown { scancode = Sdlscancode.ESCAPE } ->
     sender_to_master#send (UiAction (UiQuit true));
     working := false
+      
   | Window_Event { kind = WindowEvent_Resized p } ->
     let w = Option.get !window_main in
     w.W.width <- p.win_x;
@@ -27,6 +28,8 @@ let proc_events ~sender_to_master ~working ev = match ev with
   | Quit e ->
     sender_to_master#send (UiAction (UiQuit true));
     working := false
+
+  | KeyUp { scancode = Sdlscancode.SPACE } -> Uigl.toggle_show_abssamples ()
   | _ -> () (*!callback_proc_events ev*)
 ;;  
 

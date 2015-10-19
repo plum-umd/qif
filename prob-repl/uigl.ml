@@ -27,8 +27,8 @@ let abssamples_call_list = ref 0;;
 let bar_width = 0.25;;
 
 (*
-  let (samples_all: ((float * (string * Lang.value) list) DynArray.t)) = DynArray.create ();;
-  let (samples_view: ((float * float * float) DynArray.t)) = DynArray.create ();;
+  let (samples_all: ((float * (string * Lang.value) list) DynArray.t)) = DynArray.make ();;
+  let (samples_view: ((float * float * float) DynArray.t)) = DynArray.make ();;
   let samples_hash = Hashtbl.create 1024;;
 *)
 
@@ -54,10 +54,10 @@ let samples_call_list = ref 0;;
 let samples_last_time = ref 0.0;;
 let samples_have_changed = ref true;;
 
-let workers_load = Array.create Config.num_cores 0;;
-let workers_completed = Array.create Config.num_cores 0;;
-let workers_accepted = Array.create Config.num_cores 0;;
-let workers_rejected = Array.create Config.num_cores 0;;
+let workers_load = Array.make Config.num_cores 0;;
+let workers_completed = Array.make Config.num_cores 0;;
+let workers_accepted = Array.make Config.num_cores 0;;
+let workers_rejected = Array.make Config.num_cores 0;;
 
 let view = Array.of_list ["x"; "y"; "z"];;
 
@@ -269,7 +269,7 @@ let init () =
 ;;
 
 let reinit () =
-  let icon = load_texture "gfx/alpha_prob_icon.png" in
+  ignore (load_texture "gfx/alpha_prob_icon.png");
 
   samples_have_changed := true;
   abssamples_have_changed := true;

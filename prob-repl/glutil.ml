@@ -270,14 +270,14 @@ let init () =
 
   window_main := Some win;
 
-  let r = Sdl.Render.create_renderer
-    ~win: w
-    ~index: 0
-    ~flags: [Sdl.Render.Accelerated] in
+  ignore (Sdl.Render.create_renderer
+            ~win: w
+            ~index: 0
+            ~flags: [Sdl.Render.Accelerated]);
 
   let c = Sdl.GL.create_context ~win: w in
   ignore (Sdl.GL.make_current ~win: w ~ctx: c);
-  let x = Sdl.GL.get_swap_interval () in
+  ignore (Sdl.GL.get_swap_interval ());
 
   (*
     let dname = (Sdl.Audio.get_drivers ()).(0) in
@@ -299,7 +299,7 @@ let init () =
   (*set font (Sdlttf.open_font "gfx/BemboStd.otf" 40);*)
   (*Sdlgl.set_attr [Sdlgl.DOUBLEBUFFER true];*)
 
-  glutInit [||];
+  ignore (glutInit [||]);
 
   exec_handler init_handler;
   exec_handler reinit_handler

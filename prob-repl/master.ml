@@ -97,10 +97,10 @@ let master_fork, master_join =
       (* starting workers *)
       let root_sref: shared Netmcore_ref.sref = 
         Netmcore_ref.sref pool
-          {workers_samples_load = Array.create Config.num_cores 0;
-           workers_samples_completed = Array.create Config.num_cores 0;
-           workers_samples_accepted = Array.create Config.num_cores 0;
-           workers_samples_rejected = Array.create Config.num_cores 0;
+          {workers_samples_load = Array.make Config.num_cores 0;
+           workers_samples_completed = Array.make Config.num_cores 0;
+           workers_samples_accepted = Array.make Config.num_cores 0;
+           workers_samples_rejected = Array.make Config.num_cores 0;
            wakeup_workers = [||];
            wakeup_cmd = Netmcore_sem.dummy ();
            wakeup_master = "";
@@ -137,8 +137,8 @@ let master_fork, master_join =
                       Netsys_posix.Fda_close fd_master_read;
                       Netsys_posix.Fda_close fd_master_write;
                      ]*)
-        "repl"
-        (Array.of_list ["";
+        "./repl"
+        (Array.of_list ["./repl";
                         "--uiproc";
                         "--box_addr"; (receiver_from_ui#get_addr ());
                         "--sem_addr"; root.wakeup_master;

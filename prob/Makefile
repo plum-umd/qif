@@ -3,7 +3,7 @@ DEBUG_FLAGS = -g
 CDEBUG_FLAGS = -g
 #CDEBUG_FLAGS =
 
-#USE_OPT = 1
+#USE_OPT = 0
 
 OCAMLYACC := ocamlyacc
 OCAMLLEX := ocamllex
@@ -13,8 +13,8 @@ ifdef USE_OPT
   OEXT := cmx
   IEXT := cmxi
   LOEXT := cmxa
-  OCAMLC := $(OCAMLFIND) ocamlc.opt
-  OCAMLDEP := $(OCAMLFIND) ocamldep.opt -native
+  OCAMLC := $(OCAMLFIND) ocamlopt
+  OCAMLDEP := $(OCAMLFIND) ocamldep -native
 else
   OEXT := cmo
   IEXT := cmi
@@ -90,7 +90,7 @@ mprob: $(OBJS_MPROB)
 	$(OCAMLC) $(PPL_LINK) $(LINK_FLAGS) -o mprob $(OBJS_MPROB)
 
 pa_if.cmo: pa_if.ml
-	$(OCAMLC) -package camlp5 -c -pp camlp5r $^ -o pa_if.cmo
+	ocamlfind ocamlc -package camlp5 -c -pp camlp5r $^ -o pa_if.cmo
 
 latex: $(OBJS_LATEX)
 	$(OCAMLC) $(PPL_LINK) $(LINK_FLAGS) -o latex $^
@@ -114,7 +114,7 @@ clean:
 	make clean_build
 	rm -Rf prob mprob latex
 
-.dep: lexer.ml parser.mli parser.ml
+.dep: lexer.ml parser.mli parser.ml pa_if.cmo
 
 %.ml : %.mll
 	$(OCAMLLEX) $<
@@ -137,5 +137,3 @@ SRC_ALL :=
 
 .dep: $(filter-out pa_if.ml,$(wildcard *.ml)) $(wildcard *.mli)
 	$(OCAMLDEP) -pp "camlp5o ./pa_if.cmo" $^ > .dep
-
-
