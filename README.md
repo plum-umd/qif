@@ -1,6 +1,12 @@
 # Quantitative Information Flow at UMD
 
 ## Contents
+* [csf11](csf11) - CSF 2011 paper source.
+
+* [jcs12](jcs12) - JCS 2012 journal paper source.
+
+* [plas12](plas12) - PLAS 2012 workshop paper source.
+
 * [pgames-monad](pgames-monad) - A (work-in-progress) monadic
   prototyping of games and Nash-equilibrium computation.
 
