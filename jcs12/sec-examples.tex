@@ -1,0 +1,97 @@
+Suppose the storage server keeps a user's social security number (SSN)
+and the attacker sends the query $\sif{\mathit{SSN} =
+  012345678}{\sassign{\mathit{result}}{1}}{\sassign{\mathit{result}}{0}}$.
+Suppose the attacker's pre-belief about $\mathit{SSN}$ is a uniform
+distribution.  If $\mathit{result}$ is $0$ (i.e., the user's SSN is
+not $012345678$) then running the query will not reveal much
+information.  But if $\mathit{result}$ is $1$, the running the query
+reveals \emph{everything}.  Unfortunately, if we reject the query on
+this basis, the attacker knows that the SSN must be $012345678$ since
+no other SSN would increase his knowledge above a reasonable
+threshold.
+
+\subsection{Example queries}
+\label{sec:examples}
+
+Here we consider some example queries that might be used by an
+application like Facebook.  
+% In our proposed model, Facebook would send
+% these queries to an agent that acts on behalf of the user, e.g., a
+% storage server that runs on his home network).  The agent examines the
+% query and either responds with an answer or declines to do so if it
+% believes that an answer could reveal too much information.  
+% In the examples below, 
+We use capitalized variables to represent enumerations which would
+ultimately be compiled to integers; notably we assume $\strue = 1$ and
+$\sfalse = 0$.  For brevity, we assume that all local variables are
+initialized to 0, missing $\mathsf{else}$ branches are equivalent to
+$\sskip$, expressions $E$ when used as boolean expressions $B$
+are equivalent to $E = \strue$, and all local variables other than
+$\var{output}$ are zeroed out before the query returns.
+
+\begin{example}
+\label{ex1}
+The following program determines whether to display an ad for a
+hypothetical company CM Photographics; it is an example Facebook
+gives to potential advertisers.\footnote{See
+  \url{http://www.facebook.com/advertising/?campaign_id=402047449186&placement=pf&extra_1=0}}
+\begin{displaymath}
+\begin{array}{l}
+\sassign{\var{age}}{2010 - \var{birth\_year}}; \\
+\sifnoelse{\var{age} \leq 30 \wedge \var{age} \geq
+  24}{\sassign{\var{age\_sat}}{\strue}};\\
+\sifk\; \var{gender} = \sconst{Female}\; \wedge \\
+\quad \var{relationship\_status} = \sconst{Engaged} \wedge \var{age\_sat}\; \sthenk \\
+\quad \quad \sassign{\var{output}}{\strue};\\
+\end{array}
+\end{displaymath}
+Here, the secret variables (containing a user's private data) are
+\var{birth\_year}, \var{gender}, and 
+\var{relationship\_status}.  The advertiser is targeting young women,
+aged 24 to 30, who are engaged to be married.  If the \var{output}
+variable is \strue, the ad will be displayed, otherwise not.
+\end{example}
+
+One possible disadvantage of the above query is that it strictly excludes
+women outside the given age range.  To provide some opportunity for
+serendipity, we might insert the following statement just after the first
+$\sifk$ statement above:
+\begin{displaymath}
+\begin{array}{l}
+\spifnoelse{0.1}{\sassign{\var{age\_sat}}{\strue}}; \\
+\end{array}
+\end{displaymath}
+\begin{example}
+  Here is another example for a hypothetical company, this time trying
+  to sell pizza to college students and/or young people that live
+  within a ``box'' around where the restaurant is located.
+\begin{displaymath}
+\begin{array}{l}
+\sifnoelse{\var{in\_school\_type} \geq \sconst{University}}{
+  \sassign{\var{in\_school}}{\strue}}; \\
+~\\
+\sassign{\var{age}}{2010 - \var{birth\_year}}; \\
+\sifnoelse{\var{age} \geq 18 \wedge \var{age} \leq 28}{
+  \sassign{\var{age\_sat}}{\strue}}; \\
+~\\
+\sassign{\var{ul\_lat}}{39003178}; \\
+\sassign{\var{ul\_long}}{-76958199}; \\
+\sassign{\var{lr\_lat}}{38967884}; \\
+\sassign{\var{lr\_long}}{-76925926}; \\
+\sifk\; \var{address\_lat} \leq \var{ul\_lat}\; \wedge  \\
+\quad  \var{address\_lat} \geq \var{lr\_lat}\; \wedge \\
+\quad  \var{address\_long} \leq \var{lr\_long}\; \wedge \\
+\quad  \var{address\_long} \geq \var{ul\_long}\;\sthenk \\
+\quad \quad \sassign{\var{in\_range}}{\strue}; \\
+~\\
+\sifk\; (\var{in\_school} \vee \var{age\_criteria}) \wedge
+\var{in\_range}\; \sthenk \\
+\quad \sassign{\var{output}}{\strue};
+\end{array}
+\end{displaymath}
+  Here the secret variables are as with the previous query, along with
+  the variables \var{address}* that indicate where the user lives,
+  and \var{in\_school\_type} as an enumeration indicating whether the
+  user is in school, and at what level.  The restaurant's location is
+  given by the \var{ul}* and \var{lr}* variables.
+\end{example}

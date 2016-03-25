@@ -1,0 +1,25 @@
+Not be so much in a hurry.
+  :: Cut down a lot of things so I don't have to hurry as much
+
+What is PL in here?
+  Mention that it is resistant to state space size.
+  :: See the new slide 18.
+
+  Mention previous paper.
+  :: See the new slide 18.
+
+  Hint at future work in abstraction for SMC.
+
+  Mention how abstraction can help for initial belief assumption.
+  :: See the new slide 18.
+
+Cut out some examples.
+  Examples in the SMC section.
+  :: done
+
+"Knowledge depend on secret in middle of pres, change to 2 parties."
+  :: remove the slide altogether, still have the 3 party thing at the
+  very end
+
+Why 2 approaches?
+  :: see last slide

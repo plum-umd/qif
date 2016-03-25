@@ -1,0 +1,47 @@
+Comments from Jeff:
+
+* The intro spends a huge amount of time talking about prior work, and
+  it's only in the middle of the left column on page 2 that I actually
+  learn what the new contribution of this paper is. I think you need
+  to move this much earlier.
+
+PM: attempted to hint at the contribution earlier, right after
+explaining why differential privacy is a bad solution to this problem
+via those examples in the intro.
+
+* I also found the examples in the 3rd and 4th paras of the intro, on
+  the limitations of previous approaches, confusing, because I don't
+  know exactly what those techniques do. The sentence "This function
+  should be deemed unsafe because the possibility...implies that..."
+  was particularly confusing; I'd guess that the previous techniques
+  fall down because they have to work in all possible scenarios, and
+  this is an example of a case where one particular scenario causes a
+  problem. It's just not very clear.
+
+PM: reworded things here and simplified the second example.
+
+* It was also surprising that you had detailed examples for other
+  people's work in the introduction, but not for your own work. The
+  paragraph "In recent work..." could benefit from a concrete example,
+  as could the actual discussions of your contributions in this
+  paper. I'd suggest scaling back what you say about related work to
+  the bare minimum in the intro, and deferring the rest to related
+  work; and then talk more about your contributions.
+
+PM: the detailed examples serve to demonstrate our contribution, so I'm not
+sure what to say here.
+
+* The motivation for the two approaches seems a bit confusing. The
+  first approach, the belief set method, is a prepass before you even
+  go to SMC. This makes me think that perhaps you can justify it
+  without referring to SMC at all? It might be a stronger result if it
+  just stood on its own, especially because you dump a bit on SMC in
+  the next paragraph, saying that it's very slow. I'm not quite sure
+  how to take that---if you think SMC is so slow that it's useless,
+  then why do we care about SMC at all? And if you think it may be
+  practical one day, then why do you care that it's slow now?
+
+PM: The confusion seems to be the relationships between the first
+method and SMC. I've added some rewording to the first description of
+the methods to distinguish more strongly the difference, specifically
+that in the first case, the policy check takes place before any SMC is done.

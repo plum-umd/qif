@@ -1,0 +1,391 @@
+\section{Tracking beliefs}
+\label{sec:belief}
+
+This section reviews Clarkson et al.'s method of revising a querier's
+belief of the possible valuations of secret variables based on the
+result of a query involving those
+variables~\cite{clarkson09quantifying}.  We retain Clarkson et al.'s
+notation for consistency.
+
+\begin{figure}[t]
+\[
+\begin{array}{llcl}
+\mathit{Variables} & x & \in & \vars \\ 
+\mathit{Integers} & n & \in & \Integer \\
+\mathit{Rationals} & q & \in & \Rational \\
+\mathit{Arith. ops} & \arithop &::= & + \mid \times \mid - \\
+\mathit{Rel. ops} & \relop &::= & \leq \;\mid\; < \;\mid\; = \;\mid\; \neq \;\mid\; \cdots
+\\
+\mathit{Arith. exps} & \aexp &::= & x \mid n \mid \aop{\aexp_1}{\aexp_2} \\
+\mathit{Bool. exps} & \bexp &::= & \bop{\aexp_1}{\aexp_2} \mid \\
+% \strue \mid \sfalse \mid \\
+& && \bexp_1 \wedge \bexp_2 \mid \bexp_1 \vee \bexp_2 \mid \aneg{\bexp} \\
+
+\mathit{Statements} & \stmt &::= & \sskip \mid \sassign{x}{\aexp} \mid \\
+&     && \sif{\bexp}{\stmt_1}{\stmt_2} \mid \\
+&     && \spif{q}{\stmt_1}{\stmt_2} \mid \\
+&     && \sseq{\stmt_1}{\stmt_2} \mid \swhile{\bexp}{\stmt} % \mid \\
+% &     && \suniform{x}{n_1}{n_2} \\
+\end{array}
+\]
+\caption{Core language syntax}
+\label{fig:syntax}
+\end{figure}
+
+\subsection{Core language}
+The programming language we use for queries is given in
+Figure~\ref{fig:syntax}.  A computation is defined by a statement
+$\stmt$ whose standard semantics can be viewed as a relation between
+states: given an input state $\sigma$, running the program will
+produce an output state $\sigma'$.  States are maps from variables to
+integers:
+$$\begin{array}{l}
+\sigma, \tau \in \states \defeq \vars \rightarrow \Integer
+\end{array}$$
+Sometimes we consider states with domains restricted to a
+subset of variables $V$, in which case we write $\sigma_V \in \states_V \defeq V
+\rightarrow \Integer$.  We may also \emph{project}
+states to a set of variables $V$:
+\[\project{\sigma}{V} \defeq \lambda x \in \vars_V \lsep \sigma(x)\]
+The language is essentially standard, though
+we limit the form of expressions to support our abstract 
+interpretation-based semantics (Section~\ref{sec:absinterp}).
+The semantics of the statement form $\spif{q}{\stmt_1}{\stmt_2}$ is
+non-deterministic: the result is that of $\stmt_1$ with probability
+$q$, and $\stmt_2$ with probability $1 - q$.
+
+Note that in our language, variables have only integer values and the
+syntax is missing a division operator. Furthermore, we will restrict
+arithmetic expressions to be of a linear forms only, that is,
+multiplication of two variables will be disallowed. These restrictions
+ease implementation considerations. Easing these constraints is an
+aspect of our future work.
+
+\subsection{Probabilistic semantics for tracking beliefs}
+\label{sec:clarkson-semantics}
+
+To enforce a knowledge-based policy, an agent must be able to
+estimate what a querier could learn from the output of his query.  To
+do this, the agent keeps a distribution $\delta$ that represents
+the querier's \emph{belief} of the likely valuations of the user's
+secrets.  A distribution is a map from states to positive real
+numbers, interpreted as probabilities (in range $[0,1]$).
+$$\begin{array}{l}
+\delta \in \dists \defeq \states \rightarrow \Real+
+\end{array}$$
+We sometimes focus our attention on distributions over states of a
+fixed set of variables $V$, in which case we write $\delta_V \in
+\dists_V$ to mean a function $\states_V \rightarrow \Real+$.  The
+variables of a state, written $ \fv{\sigma} $ is defined by $
+\dom{\sigma} $, sometimes we will refer to this set as just the
+\emph{domain} of $ \sigma $. We will also use the this notation for
+distributions; $ \fv{\delta} \defeq \dom{\dom{\delta}} $. In the
+context of distributions, \emph{domain} will also refer to the set $
+\fv{\delta} $ as opposed to $ \dom{\delta} $.
+
+Projecting distributions onto a set of variables is as
+follows:\footnote{The notation $\sum_{x \given \pi} \rho$ can be read
+  \emph{$\rho$ is the sum over all $x$ such that formula $\pi$ is
+    satisfied} (where $x$ is bound in $\rho$ and $\pi$).}
+\[\project{\delta}{V} \defeq \lambda \sigma_V \in \states_V \lsep \sum_{\tau \given \project{\tau}{V} = \sigma_V} \delta(\tau)\]
+
+We will often project away a single variable. We will call this
+operation \emph{forget}. Intuitively the distribution \emph{forgets}
+about a variable $ x $.
+$$ \forget{x}{\delta} \defeq \project{\delta}{\paren{\fv{\delta} -
+    \set{x}}} $$
+
+The \emph{mass} of a distribution, written $ \pmass{\delta} $ is the sum
+of the probabilities ascribed to states, $ \sum_{\sigma}
+\delta(\sigma) $.  A \emph{normalized distribution} is one such that $
+\pmass{\delta} = 1 $.  A normalized distribution can 
+be constructed by scaling a distribution according to its
+mass:
+$$ \normal{\delta} \defeq \frac{1}{\pmass{\delta}} \cdot \delta $$
+Normalization requires the mass of a distribution to be non-zero. We
+will only be dealing with distributions of finite mass but some of the
+theory presented later makes use of zero-mass
+distributions. There is one such distribution for each domain; when
+the domain is understood from the context we will label its zero-mass
+distribution as $ \distzero{} $.
+
+The \emph{support} of a distribution is the set of states which have
+non-zero probability: $\nzset{\delta} \defeq \{\sigma \given
+\delta(\sigma) > 0\}$.
+
+% We take as our basis the denotational semantics for reasoning about belief
+% presented by Clarkson et al. \cite{clarkson09quantifying}.
+
+\begin{figure}
+%{\small
+\centering
+\begin{displaymath}
+\begin{array}{rcl}
+\pevalp{\sskip}{\delta} & = & \delta \\
+%
+\pevalp{\sassign{x}{\aexp}}{\delta} & = & \delta \bparen{x \ra \aexp} \\
+%
+\pevalp{\sif{B}{\stmt_1}{\stmt_2}}{\delta} & = &
+\pevalp{\stmt_1}{(\dcond{\delta}{B})} + \pevalp{\stmt_2}{(\dcond{\delta}{\neg B})} \\
+%
+\evalp{\spif{q}{\stmt_1}{\stmt_2}}{\delta} & = & 
+\evalp{\stmt_1}{(q \cdot\delta)} + \evalp{\stmt_2}{((1-q) \cdot \delta)} \\
+%
+\pevalp{\sseq{\stmt_1}{\stmt_2}}{\delta} & = & \pevalp{\stmt_2}{\paren{\evalp{\stmt_1}{\delta}}} \\
+\pevalp{\swhile{\bexp}{\stmt}}{} & = & \lfp\left[\lambda
+f :\ \dists
+\rightarrow \dists \lsep \lambda \delta \lsep \right. \\
+& & \left. \quad f\paren{\pevalp{\stmt}{(\dcond{\delta}{B})}} +
+       \paren{\dcond{\delta}{\neg B}}\right]
+\end{array} 
+\end{displaymath} 
+where
+\begin{displaymath}
+\begin{array}{l@{\;\defeq\;}l}
+\delta \bparen{x \ra \aexp} & \lambda \sigma \lsep \sum_{\tau \; | \; \tau
+  \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma} \delta (\tau) \\
+\delta_1 + \delta_2 & \lambda \sigma \lsep \delta_1(\sigma) +
+\delta_2(\sigma) \\
+\dcond{\delta}{\bexp} & \lambda \sigma \lsep \aif \eeval{\bexp}{\sigma} \athen
+\delta(\sigma) \aelse 0 \\
+p \cdot \delta & \lambda \sigma \lsep p \cdot \delta(\sigma) \\
+\pmass{\delta} & \sum_\sigma \delta(\sigma) \\
+\normal{\delta} & \frac{1}{\pmass{\delta}} \cdot \delta \\
+\drevise{\delta}{B} & \normal{\dcond{\delta}{B}} \\
+\delta_1 \times \delta_2 & \lambda(\sigma_1, \sigma_2) \lsep
+\delta_1(\sigma_1) \cdot \delta_2(\sigma_2) \\
+\dot{\sigma} & \lambda \tau \lsep \aif \sigma = \tau \athen 1 \aelse
+0 \\
+\project{\sigma}{V} & \lambda x \in \vars_V \lsep \sigma(x)\\
+\project{\delta}{V} & \lambda \sigma_V \in \states_V \lsep
+\sum_{\tau \given \project{\tau}{V} = \sigma_V} \delta(\tau) \\
+\forget{x}{\delta} & \project{\delta}{\paren{\fv{\delta} - \set{x}}} \\
+\nzset{\delta} & \{\sigma \given \delta(\sigma) > 0\}
+\end{array}
+\end{displaymath}
+%}
+\vspace*{-.1in}
+\caption{Probabilistic semantics for the core language and index of
+  state/distribution operations}
+\label{fig-sem-nondet2-core}
+\end{figure}
+
+The agent evaluates a query in light of the querier's initial belief
+using a probabilistic semantics.  Figure~\ref{fig-sem-nondet2-core}
+defines a semantic function $\pevalp{\cdot}{}$ whereby
+$\pevalp{\stmt}{\delta} = \delta'$ indicates that, given an input
+distribution $\delta$, the semantics of program $\stmt$ is the output
+distribution $\delta'$.  The semantics is defined in terms of
+operations on distributions.%, including \emph{assignment} $\delta
+%\bparen{v \ra E}$ (used in the rule for $v := E$), \emph{conditioning}
+%$\dcond{\delta}{B}$ and \emph{addition} $\delta_1 + \delta_2$ (used in
+%the rule for $\sifk$), and \emph{scaling} $q \cdot \delta$ where $q$
+%is a rational (used for $\spifk$). The semantics is standard; a brief
+%review is given in Appendix~\ref{appendix:concrete}.
+Here we briefly explain the concrete probabilistic semantics. 
+%  More
+% details can be found in Clarkson et al.~\cite{clarkson09quantifying}.
+
+The semantics of $\sskip$ is straightforward: it is the identity on
+distributions.  The semantics of sequences $\sseq{\stmt_1}{\stmt_2}$
+is also straightforward: the distribution that results from executing
+$\stmt_1$ with $\delta$ is given as input to $\stmt_2$ to produce
+the result.
+
+The semantics of assignment is $\delta \bparen{x \ra \aexp}$, which is
+defined as follows: 
+$$ \delta \bparen{x \ra \aexp} \defeq \lambda \sigma \lsep \sum_{\tau \; | \; \tau
+  \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma} \delta (\tau) $$ In
+other words, the result of substituting an expression $\aexp$ for $x$ is a
+distribution where state $\sigma$ is given a probability that is the
+sum of the probabilities of all states $\tau$ that are equal to
+$\sigma$ when $x$ is mapped to the distribution on $\aexp$ in $\tau$.
+
+% For implementation purposes, it will be useful to consider separately the
+% case where assignment is invertible.
+
+% When $x \ra \aexp$ is an invertible transformation, the formula for
+% assignment can be simplified. Let $ f $ be the inverse of the
+% assignment, that is, $ f (\stassign{\sigma}{x}{E}) = \sigma $.
+% \[
+% \dassign{\delta}{x}{\aexp} \defeq \lambda \sigma \lsep \delta (f(\sigma))
+% \]
+
+% When $x \ra \aexp$ is not invertible, the original definition is
+% equivalent to a projection followed by an assignment.  Let $V'
+% = \fv{\delta} - \{x\}$ and let $\delta' = \project{\delta}{V'}$.
+% Then we have the following for a non-invertible assignment.
+% \[\delta \bparen{x \ra \aexp} \defeq \lambda \sigma \lsep \aif \sigma(x) = \eeval{E}{\sigma}\athen
+% \delta'(\project{\sigma}{V'}) \aelse 0 \]
+% We prove this definition by cases is
+% equivalent to the original definition in the companion technical report~\cite{TR}.
+
+The semantics for conditionals makes use of two operators on
+distributions which we now define.  First, given distributions
+$\delta_1$ and $\delta_2$ we define the \emph{distribution sum} as
+follows:
+$$ \delta_1 + \delta_2 \defeq \lambda \sigma \lsep \delta_1(\sigma) +
+\delta_2(\sigma) $$
+In other words, the probability mass for a given state
+$\sigma$ of the summed distribution is just the sum of the masses from
+the input distributions for $\sigma$.  Second, given a distribution
+$\delta$ and a boolean expression $\bexp$, we define the
+\emph{distribution conditioned on $\bexp$} to be
+$$ \dcond{\delta}{\bexp} \defeq \lambda \sigma \lsep \aif \eeval{\bexp}{\sigma} \athen
+\delta(\sigma) \aelse 0 $$
+In short, the resulting distribution retains only the probability mass
+from $\delta$ for states $\sigma$ in which $\bexp$
+holds.
+
+With these two operators, the semantics of conditionals can be stated
+simply: the resulting distribution is the sum of the distributions of
+the two branches, where the first branch's distribution is conditioned
+on $\bexp$ being true, while the second branch's distribution is
+conditioned on $\bexp$ being false.
+
+The semantics for probabilistic conditionals is like that of conditionals
+but makes use of \emph{distribution scaling}, which is defined as
+follows: given $\delta$ and some scalar $p$ in $[0,1]$, we have
+$$ p \cdot \delta \defeq \lambda \sigma \lsep p \cdot \delta(\sigma) $$
+In short, the probability ascribed to each state is just the
+probability ascribed to that state by $\delta$ but multiplied by $p$.
+For probabilistic conditionals, we sum the distributions of the two
+branches, scaling them according to the odds $q$ and $1 - q$.
+
+The semantics of a single while-loop iteration is essentially
+that of $\sif{B}{S}{\sskip}$; the semantics of the entire loop is
+the fixed point of a function that composes the distributions produced
+by each iteration.  That such a fixed point exists is proved by
+Clarkson et al.~\cite{clarkson09quantifying}. For an implementation,
+however, the evaluation of a loop can be performed naively, by
+repeatedly evaluating the loop body until the mass of $
+\dcond{\delta}{B} $ becomes zero. This process has a chance of
+diverging, signifying an infinite loop on some $ \sigma \in
+\support{\delta} $.
+
+In Section~\ref{sec:absinterp} we make use of an additional
+convenience statement, $\suniform{x}{n_1}{n_2}$ (equivalent to a
+series of probabilistic conditionals)
+intended to assign a uniform value in the range $ \set{n_1, ..., n_2}
+$ to the variable $ x $.
+
+$$
+\begin{array}{rcl}
+\pevalp{\suniform{x}{n_1}{n_2}}{\delta} & = &
+\forget{x}{\delta} \times \delta'
+\end{array}
+$$
+Here we use the \emph{distribution product} operator, which is defined
+for two distributions with disjoint domains (sharing no variables):
+ $$ \delta_1 \times \delta_2 \defeq \lambda(\sigma_1, \sigma_2) \lsep
+\delta_1(\sigma_1) \cdot \delta_2(\sigma_2) $$ The notation
+$(\sigma_1,\sigma_2)$ is the ``concatenation'' of two states with
+disjoint domains. In the definition of $\suniform{x}{n_1}{n_2}$, $ \delta' $ is
+defined over just the variable $ x $ (removed from $\delta$ by the
+forget operator) as follows.
+$$ \delta ' = \lambda \sigma \lsep \aif n_1 \leq \sigma(x) \leq n_2 \athen
+\frac{1}{n_2-n_1+1} \aelse 0 $$
+
+\subsection{Belief and security}
+\label{sec:experiment}
+
+Clarkson et al.~\cite{clarkson09quantifying} describe how a belief
+about possible values of a secret, expressed as a probability
+distribution, can be revised according to an experiment using the
+actual secret.  Such an experiment works as follows.
+
+The values of the set of secret variables $ H $ are given by the hidden
+state $\sigma_H$.  The attacker's initial belief as to the possible
+values of $\sigma_H$ is represented as a distribution $ \delta_H $.  A
+query is a program $ S $ that makes use of variables $ H $ and
+possibly other, non-secret variables from a set $L$; the final values
+of $L$, after running $S$, are made visible to the attacker.  Let
+$\sigma_L$ be an arbitrary initial state of these variables.  Then we
+take the following steps: 
+
+\myparagraph{Step 1} Evaluate $S$ probabilistically using the
+querier's belief about the secret to produce an output distribution
+$\delta'$, which amounts to the attacker's prediction of the possible
+output states.  This is computed as $\delta' = \eval{S}{\delta} $,
+where $\delta$, a distribution over variables $ H \cup L $, is defined as $ \delta =
+\delta_H \times \dot{\sigma}_L $.  
+Here we write $ \dot{\sigma} $ to denote the \emph{point distribution}
+for which only $\sigma$ is possible:
+$$ \dot{\sigma} \defeq \lambda \tau \lsep \aif \sigma = \tau \athen 1 \aelse
+0 $$ Thus, the initial distribution $\delta$ is the attacker's belief about the
+secret variables combined with an arbitrary valuation of the
+public variables.
+
+\myparagraph{Step 2} Using the actual
+secret $\sigma_H$, evaluate $S$ ``concretely'' to produce an output
+state $\hat{\sigma}_L$, in three steps. 
+First, we have $\hat{\delta}' = \eval{S}{\hat{\delta}}$, where
+$\hat{\delta} = \dot{\sigma}_H \times \dot{\sigma}_L $.  
+% Notice here
+% that we use the actual secret in constructing the initial
+% distribution, rather than the attacker's belief about it. 
+Second, we have $\hat{\sigma} \in \Gamma(\hat{\delta}')$ where $\Gamma$
+is a sampling operator that produces a state $\sigma$ from the domain
+of a distribution $\delta$ with probability $ \normal{\delta}(\sigma)
+$. Finally, we extract the attacker-visible output of the sampled
+state by projecting away the high variables: $\hat{\sigma}_L =
+\project{\hat{\sigma}}{L}$. The sampling here is needed because $S$
+may include probabilistic if statements, and so $\hat{\delta'}$ may not
+be a point distribution.
+% The projection operator
+% is defined as $\project{\sigma}{V} \defeq \lambda x \in
+% \vars_V \lsep \sigma(x)$.
+
+\myparagraph{Step 3} Revise the attacker's initial belief $\delta_H$
+according to the observed output $\hat{\sigma}_L$, yielding a new
+belief $\hat{\delta}_H =
+\project{\paren{\dcond{\delta'}{\hat{\sigma}_L}}}{H}$.  Here, $\delta'$ is
+\emph{conditioned} on the output $\hat{\sigma}_L$, which yields a new
+distribution, and this distribution is then projected to the variables
+$H$.  %The conditioning is defined as follows:
+%$$ \dcond{\delta}{\sigma_V} \defeq \lambda \sigma
+%\lsep \aif \project{\sigma}{V} = \sigma_V \athen \delta (\sigma) \aelse 0 $$
+% Second, we have $\hat{\delta}_H =
+% \project{\hat{\delta}}{H}$.
+%   The latter projection is similar to
+% projection on states, given above, but applied to distributions, as
+% follows:
+% \[
+% \project{\delta}{V} \defeq \lambda \sigma_V \in \states_V \lsep \sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_v)} \delta(\sigma')
+% \]
+% It allows the querier to
+% revise his belief about the secret variables based on the output
+% resulting from a query of those secrets.  
+%
+The conditioned distribution $ \hat{\delta}_H $ is the non-normalized
+representation of the attacker's belief about the secret variables,
+after observing the final values of low variables. In can be
+turned into a true distribution by normalizing it.
+
+Note that this protocol assumes that $S$ always terminates and does not
+modify the secret state.  The latter assumption can be eliminated by
+essentially making a copy of the state before running the program, while
+eliminating the former depends on the observer's ability to detect
+nontermination~\cite{clarkson09quantifying}.
+
+% We say more about
+% nontermination as it relates to our approach in the next section.
+
+% A distribution can be projected to a set of variables $ V $:
+% $$ \project{\delta}{V}
+% = \lambda \sigma_V \lsep \sum_{\sigma : \project{\sigma}{V}
+% = \sigma_V} \delta(\sigma) $$
+% The projection of a state to $ V $, written $ \project{\sigma}{V} $ as
+% above, removes all variables except those of $ V $ from the
+% state.
+
+% Given $ \delta $, and a set of
+%   states $ S $, we have $\dcond{\delta}{S}$, the revision of $ \delta $,
+% The exact behavior is specified as follows:
+
+% $$ \delta | S = \lambda \sigma \lsep \aif \sigma \in S \athen
+%   \delta(\sigma) \aelse 0 $$
+
+%   Revision will also be performed based on logical expressions. Having
+%   a means of determining whether a logical expression $ B $ is true on a
+%   state $ \sigma $, written $ \eeval{B}{\sigma} $, we define revision:

@@ -1,0 +1,292 @@
+To do:
+
+- Expand on comparison to min-entropy stuff in related work at least.
+  I think in the intro we can defer to that section.  Need to
+  characterize exactly what the difference is.
+
+  RE: p2, first column, last paragraph & related work: "higher
+  utility, greater accuracy". This claim is problematic because it is
+  in no way backed up. You don't even say what utility is!
+
+  Suppose we invoke Example 1 with today = 260 (and bday = 270).  Then
+  this will define a partition
+
+  C1 = (260 <= bday < 267)
+  C2 = (bday < 260) \/ (267 <= bday < 365)
+
+  As in section 2, our system would allow this query, and the attacker
+  could revise his belief C* to be precisely C2.  Now suppose we
+  invoke the query again with today := 265.  In our model this query
+  will be accepted.  In particular, we would infer that either C3 if
+  the output is True, and C4 is the output is False:
+
+  C3 = (267 <= bday < 272)
+  C4 = (bday < 265) \/ (267 <= bday < 365)
+
+  Thus size of these partitions is at least 5 in both cases, so we
+  meet our threshold of 1/5.  However, to use the prior min-entropy
+  based approaches, we would evaluate both queries independently
+  assuming a uniform distribution and then intersect the partitions.
+  For the first query, the partition would be C1 \/ C2.  The second
+  query we would generate partition 
+
+  C5 = (265 <= bday < 272) \/ ((bday < 265) \/ (272 <= bday < 365))
+
+  If we intersect, we have (C1 \/ C2) /\ C5 and doing so yields the
+  possibility that 
+
+  (265 <= bday < 267)
+
+  which is too small.  In essence this approach is identifying that
+  there exists some bday for which this sequence of queries is unsafe
+  (in particular, bday is 265 or 266), but for our particular bday of
+  270, the sequence of queries is safe.  So our approach affords
+  greater precision.
+
+DONE:
+
+- Change intro's introduction of the idea of a "knowledge based
+  policy" to include the prior min entropy work.  Or, find a way to
+  distinguish it earlier (I'm leaning more toward this).
+
+  RE: p1, second column, first paragraph: The characterization of
+  knowledge-based policies as "such policies" is vague. Everything you
+  said up to this point can be captured using min-entropy-based
+  policies. Things become clearer in the next paragraph and in
+  particular in the related work section. Maybe you can bring some
+  more distinguishing features earlier?
+
+- Clarify social network example in intro:
+
+  RE: p1, second column: I have to admit I am only now starting to
+  understand the role of the social network X. You write in the intro
+  that X is uninformed and you mention this again in related work
+  ("trusting the curator is exactly what we wish to avoid"). So this
+  means that X simply forwards Qs queries to U, and that the whole
+  belief-tracking business is done on the client-side. Makes complete
+  sense, you even hint at this possibility in the second paragraph in
+  the intro. I think you could make this point much more explicit by
+  identifying Q with X. The social network *is* the querying
+  principal! (Or am I overlooking something?)
+
+- Expand DP example in related work; give example values for
+  epsilon-diffpriv.  Here's what to do:
+
+  Theorem (due to McSherry, taken from Rastogi): 
+  
+  http://research.microsoft.com/apps/pubs/default.aspx?id=65075
+
+  Given deterministic query q over private data I, a
+  epsilon/2-differentially private response is to output r \in
+  range(q) with probability exp(-(epsilon * |r-q(I)|/2L)) where L is
+  the global sensitivity of q.  In the case of the birthday example, L
+  is 1.  This is because, for all x,y that are legal birth days
+  (values between 0 and 364), we have |q(x)-q(y)| <= L * |x-y| where L
+  is 1.  So: let's pick epsilon = 0.2 and run this query 10 times and
+  see what we get, to give a sense of the range of possible answers
+  you'll get in asking the question ten times.  This even leaves aside
+  the problem that each call adds to the privacy budget; let's pretend
+  we have an infinite budget.
+
+  RE: In the comparison with differential privacy in related work:
+  Nice example, but again: your claims are not backed up! Maybe you
+  can work out the details for one concrete example that shows how
+  your proposal outperforms DP and entropy?
+
+----------------------------------------------------------------------
+
+Piotr todo:
+  - Paper
+    - simplified summary of related Clarkson bits, experimental
+    protocol, belief vs distribution, security measures (relative
+    entropy)
+    - replace poly with generalized stateset
+    - formalism details of powerset with probabilities
+    - accuracy loss measures for deciding which statesets to merge
+    - total mass tracking and its updating
+    - generalized secret-independent policy description
+    - soundness of approximation of entropy
+  - Implementation
+    - simplification using new first class modules
+    - min/max prob, points, mass tracking
+    - abstract operations extended to work out the min/max from above
+    - generalized projection
+    - a simple (or a few simple ones) accuracy loss measures and
+      powerset simplification using them
+  - Examples
+    - decision trees
+  - Experiments
+    - usefullness comparison vs total complexity vs computation time
+      - simple examples
+    - decision tree accuracy vs complexity vs computation time
+
+Stuff to figure out still:
+- How to handle data that changes over time?  Model this in the paper?
+- What is the form of security policy that users express?
+
+----------------------------------------------------------------------
+
+Intro:
+
+Paradigm: people maintain their own data and control access to it.  But then
+this implies they need to track information that others can learn from
+queries they make.  Application: Facebook, etc.
+
+  Thought: the diffpriv scenario is essentially treating the Census,
+  Hospital, etc. as a trusted third party, with respect to the
+  individuals whose data they hold.  That is, we trust the hospital to
+  gather all the data, and then not release too much about ours.
+  Wouldn't it be better to get rid of the data warehouse at the
+  hospital and work out these queries among the inviduals involved?
+
+Examples:
+
+- For Facebook style apps, queries might reasonably involve
+
+  - Gender, birthday/age, sexual orientation, number of friends, etc.  I.e.,
+    all integers.  We could also bound the number of interests, in a finite
+    list.
+
+  TODO: can we find some interesting examples?
+
+- Other applications involving personal information
+
+  - Social security number (perhaps just the last 4 digits, or any 4!),
+    birthday, mother's maiden name (string, really slow!)
+
+- Some examples form Tsudik's talk; see their paper
+  http://eprint.iacr.org/2009/491.pdf
+
+  - Airline share flight manifest with DHS.  But don't want to share the
+  entire manifest, just relevant information.
+  - CIA shares with MI6, but only suspects they have in common.
+  - Realty A and Realty B : double-dealing sellers
+  - IRS <- Swiss Bank : suspected tax cheats.  IRS wants all US
+    citizens; but really they just want the existence of those whose
+    income is beyond a threshold.
+  - Hospital <- SSA : latter wants # patients with fake SSNs, to know
+    how much money being spent on non-residents.  Don't care about
+    names, just numbers and amounts.
+  - Alice & Bob : how many friends in common?
+
+Approach:
+
+- Query language for queries running at user's machine, accesses their data.
+
+  - Key: can track belief data while running the queries on-line.  Thus the
+    query processing can't be too slow (just a few seconds) if it's to be
+    feasible.  This is potentially a problem, and we explore tradeoffs of
+    accuracy vs. performance.  
+
+    - Our use of abstract interpretation with widening etc. would hopefully
+      curb the bounds on this problem; i.e., using abstract interpretation,
+      is better than sampling-based probabilistic languages (we think).
+      Scalability is a concern: the amount of state we have to track between
+      queries should be bounded.  Less concerned about elapsed time of a
+      single query.  The idea: reason a bit about run-time to avoid denial
+      of service attacks.
+
+- Tracking of belief and deny queries that would exceed a dynamic knowledge
+  threshold.
+
+  - How to express this policy?
+    - Entropy
+    - Set sizes of possibilities (same as entropy)?
+    - Min-entropy
+    - Relative entropy ... ?
+
+Discussion: 
+
+- In the worst case: we don't deal with secret data that changes over time.
+  What are the issues with this?  Discuss here.
+
+- Consequence of this model is that aggregate queries are harder, but
+  Stephen thought of a way to deal with those, using probabilistic
+  operators.
+
+- Worrying about collusion:
+
+  - Optimistic: each principal has own distribution
+  - Pessimistic: one distribution for whole world
+    - Could assume (full) collusion between subsets too.
+  - Goal: something in between (classes, combinations, ?)
+
+- How you might actually implement this (use Adam's architecture with
+  Persona).
+
+- Why this language?
+
+  - This language is more general than it needs to be, potentially.
+    Programs may not terminate, which adds complication.
+
+  - It also only works on integers, not lists/tables, so it seems
+    potentially less realistic.  For example, can't model lists of friends,
+    or strings, such that they are arbitrarily sized.
+
+  Despite these drawbacks, we don't have time, so we'll stick with what we
+  have.  Mitigating factor might be to claim that this model is more
+  broadly applicable than Facebook; can we come up with some examples?
+
+Results:
+
+- Prove our AI approach is sound with respect to Clarkson's (which we can do
+  completely if we add while loops).  Just belief tracking part.
+
+  TO DO: 
+  - Finish the standard abstract semantics.
+    - Include while loops
+    - Widening and narrowing
+  - Prove sound with respect to standard semantics
+    - i.e., include an abstraction function (not nec. galois connection)
+  - Proof of soundness WRT Clarkson
+
+- Prove that our dynamic policy does not leak information.
+
+  TO DO:
+  - How to express security policies?  Mike thinks that min-entropy is the
+    right thing.  That is, the user states that no possibility should ever
+    be known beyond some level of certainty.
+
+    NOTE: Policy in which you state "know my birthday with no more than 30%
+    certainty" is not safe in general; if the attacker thought he knew some
+    other value with 80% certainty, he'd know the birthday was the other
+    one, or else the distribution would not have been allowed.
+
+  ISOK(dist) holds iff
+    for all secrets h, dist(h) < threshold
+
+    (I think the above is min-entropy)
+
+  QUERYOK(q,dist) holds iff
+    for all secrets h such that dist(h) > 0
+      q(h) = l, which produces a revised dist', implies
+      ISOK(dist')
+
+  Question: could you instead use the following security policy with the
+  same results
+
+  ISOK'(dist,h) holds iff
+    dist(h) < threshold  (where h is my secret)
+
+  QUERYOK'(q,dist) holds iff
+    for all secrets h such that dist(h) > 0
+      q(h) = l, which produces a revised dist', implies
+      ISOK'(dist',h)
+
+  if ISOK(dist) then does QUERYOK'(q,dist) imply QUERYOK(q,dist)?
+
+- Implementation and some experiments.  Experiments drawn from examples
+  listed above (when we have them).  What else?
+
+  TO DO:
+  - Implement while loops if we're going to have them
+  - Implement our new min/max stuff too, with bounds on how big the
+    polyhedra can get.
+  - Implement widening/narrowing.
+
+  TO DO: 
+  - What experiments to run?  Want to show stuff that is "realistic" but
+    also need to measure performance.  I guess we want to show how we fare
+    compared to other probabilistic languages, and we want to show that we
+    indeed scale.  Also measure accuracy vs. performance tradeoff for
+    queries of interest.

@@ -1,0 +1,385 @@
+%%% names
+\newcommand{\flowcheck}{\textsc{FlowCheck}}
+\newcommand{\parma}{PARMA}
+
+\makeatletter
+\newtheorem*{rep@theorem}{\rep@title}
+\newcommand{\newreptheorem}[2]{%
+\newenvironment{rep#1}[1]{%
+ \def\rep@title{#2 \ref{##1}}%
+ \begin{rep@theorem}}%
+ {\end{rep@theorem}}}
+\makeatother
+
+\theoremstyle{plain} % bold head, italicized body  (the default)
+\newtheorem{theorem}{Theorem}
+\newreptheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newreptheorem{lemma}{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{axiom}{Axiom}
+
+\newcounter{subtheorem}[theorem]
+\newtheorem{subtheorem}[subtheorem]{}
+\renewcommand{\thesubtheorem}{\thetheorem{} (\roman{subtheorem})}
+
+% https://secure.wikimedia.org/wikibooks/en/wiki/LaTeX/Theorems
+% Fix latex
+\def\smallskip{\vskip\smallskipamount}
+\def\medskip{\vskip\medskipamount}
+\def\bigskip{\vskip\bigskipamount}
+ 
+% Hand made theorem
+\def\subtheorem{%
+\par\smallskip\indent\refstepcounter{subtheorem}\hbox{\bf%
+    (\roman{subtheorem})}%
+\it\ %\ignorespaces
+}
+\def\endsubtheorem{\par\smallskip}
+\newenvironment{thm}{\subtheorem}{\endsubtheorem}
+
+\def\subproof#1{%
+\par\smallskip\noindent\hbox{{\em} \bf%
+    #1.}%
+\ %\ignorespaces
+}
+\def\endsubproof{\qed\par\smallskip}
+\newenvironment{subproofe}{\subproof}{\endsubproof}
+
+
+
+\theoremstyle{definition} % bold head, normal body
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem*{definition-un}{Definition}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem*{notation-un}{Notation}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem*{remark-un}{Remark}
+\newtheorem*{claim}{Claim}
+
+\theoremstyle{remark} % italic head, normal body
+\newtheorem{example}[theorem]{Example}
+\newtheorem*{example-un}{Example}
+\newtheorem{examples}[theorem]{Examples}
+\newtheorem*{examples-un}{Examples}
+\newtheorem*{hint}{Hint}
+
+\newcommand{\imp}{\Rightarrow}
+\newcommand{\ybox}[1]{\parbox{5.5in}{\vspace{0.1in} \hl{#1} \vspace{0.1in}}}
+\newcommand{\note}[1]{{\textbf{Note: #1}}}
+% \newcommand{\todo}[1]{{\color{red}{\textbf{To do:} #1}}}
+% \newcommand{\goal}[1]{\ybox{\textbf{Goal}: #1}}
+% \newcommand{\activity}[1]{\ybox{\textbf{Research activity}: #1}}
+% \newcommand{\problem}[1]{\ybox{\textbf{Research problem}: #1}}
+% \newcommand{\question}[1]{\ybox{\textbf{Question}: #1}}
+
+\newcommand{\stacklabel}[1]{\stackrel{\smash{\scriptscriptstyle \mathrm{#1}}}}
+\newcommand{\defeq}{\stacklabel{def}=}
+\newcommand{\nzset}[1]{\textit{support}(#1)}
+\newcommand{\support}[1]{\nzset{#1}}
+\newcommand{\overlap}[2]{\textit{overlap}(#1,#2)}
+\newcommand{\cp}{\mathbb{C}}
+% deleted \ppbot, use \ppzero instead
+\newcommand{\pconcfun}{\gamma_{\cp}}
+\newcommand{\pconc}[1]{\gamma_{\cp}(#1)}
+\newcommand{\psconc}[1]{\gamma_{\powersetb{}{\cp}}(#1)}
+\newcommand{\ppconcfun}{\gamma_{\ppolys}}
+\newcommand{\ppsconcfun}{\gamma_{\ppowers}}
+\newcommand{\ppconc}[1]{\ppconcfun(#1)}
+\newcommand{\ppowers}[0]{\powersetb{n}{\ppolys}}
+\newcommand{\ppsconc}[1]{\ppsconcfun(#1)}
+
+\newcommand{\abst}[1]{\alpha(#1)}
+\newcommand{\lub}[1]{\textit{lub}(#1)}
+\newcommand{\glb}[1]{\textit{glb}(#1)}
+\newcommand{\chull}[1]{\textit{chull}(#1)}
+\newcommand{\dom}[1]{\textit{domain}(#1)}
+\newcommand{\fv}[1]{\textit{fv}(#1)}
+
+\newcommand{\var}[1]{\ensuremath{\mathit{#1}}}
+\newcommand{\aif}[0]{\text{ \textbf{if} }}
+\newcommand{\aendif}[0]{\text{ \textbf{endif} }}
+\newcommand{\apif}[0]{\text{ \textbf{pif} }}
+\newcommand{\athen}[0]{\text{ \textbf{then} }}
+\newcommand{\aelse}[0]{\text{ \textbf{else} }}
+\newcommand{\aendpif}[0]{\text{ \textbf{endpif} }}
+\newcommand{\atrue}[0]{\text{ \textbf{true} }}
+\newcommand{\afalse}[0]{\text{ \textbf{false} }}
+\newcommand{\aor}[0]{\text{ \textbf{or} }}
+\newcommand{\aand}[0]{\text{ \textbf{and} }}
+\newcommand{\asemi}[0]{\text{ \textbf{;} }}
+\newcommand{\aassign}[0]{\text{ \textbf{=} }}
+\newcommand{\askip}[0]{\text{ \textbf{skip} }}
+\newcommand{\aneg}[1]{\neg #1}
+
+\newcommand{\sconst}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\strue}{\sconst{True}}
+\newcommand{\sfalse}{\sconst{False}}
+\newcommand{\sskip}{\mathsf{skip}}
+\newcommand{\sifk}{\mathsf{if}}
+\newcommand{\spifk}{\mathsf{pif}}
+\newcommand{\sthenk}{\mathsf{then}}
+\newcommand{\selsek}{\mathsf{else}}
+\newcommand{\sif}[3]{\sifk\;{#1}\;\sthenk\;{#2}\;\mathsf{else}\;{#3}}
+\newcommand{\sifnoelse}[2]{\sifk\;{#1}\;\sthenk\;{#2}}
+\newcommand{\spif}[3]{\spifk\;{#1}\;\sthenk\;{#2}\;\mathsf{else}\;{#3}}
+\newcommand{\spifnoelse}[2]{\spifk\;{#1}\;\sthenk\;{#2}}
+\newcommand{\sassign}[2]{{#1}\;:=\;{#2}}
+\newcommand{\sseq}[2]{{#1} \;;\; {#2}}
+\newcommand{\swhile}[2]{\mathsf{while}\;{#1}\;\mathsf{do}\;{#2}}
+\newcommand{\suniformname}[0]{\mathsf{uniform}}
+\newcommand{\suniform}[3]{\suniformname\;{#1}\;{#2}\;#3}
+\newcommand{\ebinop}[3]{#2 #1 #3}
+\newcommand{\ssecretk}{\mathsf{secret}}
+\newcommand{\sbeliefk}{\mathsf{belief}}
+\newcommand{\squerydefk}{\mathsf{querydef}}
+\newcommand{\squeryk}{\mathsf{query}}
+
+\newcommand{\stmt}{\mathit{S}}
+\newcommand{\aexp}{\mathit{E}}
+\newcommand{\bexp}{\mathit{B}}
+\newcommand{\relop}{\mathit{relop}}
+\newcommand{\arithop}{\mathit{aop}}
+\newcommand{\aop}[2]{#1\;\arithop\;#2}
+\newcommand{\bop}[2]{#1 \;\relop\; #2}
+
+\newcommand{\vars}[0]{\textbf{Var}}
+\newcommand{\states}[0]{\textbf{State}}
+\newcommand{\dists}[0]{\textbf{Dist}}
+\newcommand{\vals}[0]{\textbf{Val}}
+\newcommand{\pmass}[1]{\mathord{\parallel}#1\mathord{\parallel}}
+\newcommand{\normal}[1]{\text{normal}(#1)}
+
+\newcommand{\sem}[2]{[\![{#1}]\!]{#2}}
+\newcommand{\eeval}[2]{[\![{#1}]\!]{#2}}
+\newcommand{\eval}[2]{[\![{#1}]\!]{#2}}
+\newcommand{\evalp}[2]{[\![{#1}]\!]{#2}}
+\newcommand{\pevalp}[2]{[\![{#1}]\!]{#2}}
+
+\newcommand{\ssplit}[1]{\text{ssplit}\paren{#1}}
+
+\newcommand{\sor}[0]{\;|\;}
+
+\newcommand{\polypoint}[1]{\hat{#1}}
+
+\newcommand{\absbexp}[1]{a(#1)}
+\newcommand{\absdbexp}[2]{a^{#1}(#2)}
+
+\newcommand{\auniform}[0]{\text{ \textbf{uniform} }}
+
+\newcommand{\repart}[1]{repart\paren{#1}}
+
+\newcommand{\vkill}{\vspace{-10pt plus 5pt minus 5pt}}
+
+%%% groupings
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+\newcommand{\paren}[1]{\left( #1 \right)}
+\newcommand{\bparen}[1]{\left[ #1 \right]}
+\newcommand{\aparen}[1]{\langle #1 \rangle}
+\newcommand{\tparen}[1]{\bigl( #1 \bigr)}
+\newcommand{\sparen}[1]{\left\{ #1 \right\}}
+\newcommand{\maxparen}[1]{\max\sparen{#1}}
+\newcommand{\minparen}[1]{\min\sparen{#1}}
+
+%%% logic
+\newcommand{\lequiv}[0]{\vdash \dashv}
+\newcommand{\limp}{\Rightarrow}
+\newcommand{\lh}[1]{lh\paren{#1}}
+\newcommand{\lps}[1]{p_l\left[#1\right]}
+\newcommand{\rps}[1]{p_r\left[#1\right]}
+\newcommand{\ass}[1]{h\paren{#1}}
+\newcommand{\assb}[1]{\bar{h}\paren{#1}}
+\newcommand{\ra}{\rightarrow}
+\newcommand{\lra}{\leftrightarrow}
+\newcommand{\sA}{\mathfrak{A}}
+\newcommand{\sAA}{\mathfrak{A}_A}
+\newcommand{\sB}{\mathfrak{B}}
+\newcommand{\sBB}{\mathfrak{B}_B}
+\newcommand{\sC}{\mathfrak{C}}
+\newcommand{\sCC}{\mathfrak{C}_C}
+\newcommand{\sD}{\mathfrak{D}}
+\newcommand{\sDD}{\mathfrak{D}_D}
+\newcommand{\sN}{\mathfrak{N}}
+\newcommand{\sNN}{\mathfrak{N}_N}
+\newcommand{\Cn}[1]{Cn\paren{#1}}
+\newcommand{\Th}[1]{Th\paren{#1}}
+\newcommand{\sents}[0]{Sn_L}
+\newcommand{\forms}[0]{Fm_L}
+
+\newcommand{\lsep}[0]{. \;}
+\newcommand{\qsep}[0]{\; . \;}
+
+%%% number sets
+\newcommand{\Natural}{\mathbb{N}}
+\newcommand{\Integer}{\mathbb{Z}}
+\newcommand{\Rational}{\mathbb{Q}}
+\newcommand{\Real}{\mathbb{R}}
+\newcommand{\Complex}{\mathbb{C}}
+
+%%% misc
+\newcommand{\logtwo}[1]{\lg \left( #1 \right)}
+\newcommand{\abs}[1]{\left| #1 \right|}
+
+%%% referencing
+\newcommand{\aref}[1]{Axiom \ref{#1}}
+\newcommand{\alref}[1]{Algorithm \ref{#1}}
+\newcommand{\apref}[1]{Appendix \ref{#1}}
+\newcommand{\pref}[1]{Proposition \ref{#1}}
+\newcommand{\eref}[1]{Example \ref{#1}}
+\newcommand{\fref}[1]{Figure \ref{#1}}
+\newcommand{\sref}[1]{Section \ref{#1}}
+\newcommand{\rref}[1]{Remark \ref{#1}}
+\newcommand{\dref}[1]{Definition \ref{#1}}
+\newcommand{\tref}[1]{Theorem \ref{#1}}
+\newcommand{\lref}[1]{Lemma \ref{#1}}
+\newcommand{\cref}[1]{Condition \cnumref{#1}}
+\newcommand{\cnumref}[1]{(\ref{#1})}
+\newcommand{\clref}[1]{Claim \cnumref{#1}}
+
+
+%%% sets
+\newcommand{\powerset}[1]{\mathcal{P}\paren{#1}}
+\newcommand{\powersetb}[2]{\mathcal{P}_{#1}\paren{#2}}
+\newcommand{\set}[1]{\left\{ #1 \right\}}
+\newcommand{\setsize}[1]{\left| #1 \right|}
+\newcommand{\vect}[1]{\langle #1 \rangle}
+\newcommand{\irange}[2]{\set{#1, ..., #2}}
+\newcommand{\ssupset}[1]{#1^{+}}
+\newcommand{\ssubset}[1]{#1^{-}}
+
+%%% probabilities and moments
+\newcommand{\Prob}[1]{\textbf{Pr}\left[#1\right]}
+\newcommand{\Expect}[1]{E \left[ #1 \right]}
+\newcommand{\Var}[1]{Var \left[ #1 \right]}
+\newcommand{\Covar}[2]{Cov \left[ #1, #2 \right]}
+\newcommand{\given}{\;|\;}
+
+%%% operations on distributions
+\newcommand{\dcond}[2]{#1 | #2}
+\newcommand{\pmassmax}[1]{\mathord{\parallel}#1\mathord{\parallel}^\text{max}}
+\newcommand{\pmassmin}[1]{\mathord{\parallel}#1\mathord{\parallel}^\text{min}}
+
+%%% probabilistic polyhedra
+\newcommand{\maxprobof}[2]{\overline{#1}(#2)}
+
+\newcommand{\ppname}{probabilistic polyhedron}
+\newcommand{\ppnames}{probabilistic polyhedra}
+\newcommand{\ppsname}{\ppname{} set}
+\newcommand{\ppsnames}{\ppname{} sets}
+%\newcommand{\pcup}{\mathrel{\vcenter{\offinterlineskip\hbox{\scriptsize$\hspace*{0.1ex}\mathord{+}$}\vskip-1ex\hbox{$\sqcup$}}}}
+%\newcommand{\pcap}{\sqcap}
+\newcommand{\poly}{C}
+\newcommand{\cons}{B}
+\newcommand{\polyset}{\mathcal{C}}
+\newcommand{\ppoly}{P}
+\newcommand{\abseeval}[2]{\langle\!\langle{#1}\rangle\!\rangle\,{#2}}
+\newcommand{\absecount}[2]{#2 \# #1}
+\newcommand{\pmeet}{\sqcap_{\cp}}
+\newcommand{\pjoin}{\sqcup_{\cp}}
+\newcommand{\dprod}{\times}
+\newcommand{\pprod}{\times}
+\newcommand{\pord}{\sqsubseteq_{\cp}}
+\newcommand{\pleq}{\sqsubseteq_{\cp}}
+\newcommand{\ple}{\sqsubset_{\cp}}
+\newcommand{\ppord}{\sqsubseteq_{\ppolys}}
+\newcommand{\ppleq}{\ppord}
+\newcommand{\pple}{\sqsubset_{\ppolys}}
+\newcommand{\distleq}{\leq}
+\newcommand{\distle}{\le}
+\newcommand{\ppcup}{\mathrel{\tilde{\cup}}}
+\newcommand{\ppcap}{\mathrel{\tilde{\cap}}}
+\newcommand{\emptypoly}{\emptyset_{\polyset}}
+\newcommand{\iszero}[1]{\mathit{iszero}(#1)}
+\newcommand{\isempty}[1]{\mathit{isempty}(#1)}
+\newcommand{\pa}[0]{\poly_1}
+\newcommand{\pb}[0]{\poly_2}
+\newcommand{\pc}[0]{\poly_3}
+\newcommand{\pp}[1]{P_{#1}}
+\newcommand{\distset}[1]{D_{#1}}
+\newcommand{\ppeq}[0]{\equiv}
+\newcommand{\ppneq}[0]{{\not \equiv}}
+\newcommand{\ppzero}[0]{0_{\ppolys}}
+\newcommand{\ppfunzero}[0]{\bot_{\ppolys}}
+\newcommand{\distzero}[0]{0_{\dists}}
+\newcommand{\distfunzero}[0]{\bot_{\dists}}
+\newcommand{\pps}[1]{\Delta_{#1}}
+\newcommand{\ppsmax}[1]{max_{pp}\paren{#1}}
+\newcommand{\ppolys}{\mathbb{P}}
+\newcommand{\ppp}[1]{\getpoly{1}}
+\newcommand{\ppa}[0]{\pp{1}}
+\newcommand{\ppb}[0]{\pp{2}}
+\newcommand{\ppc}[0]{\pp{3}}
+\newcommand{\pmin}[1]{\mathrm{p}^\mathrm{min}_{#1}}
+\newcommand{\pmax}[1]{\mathrm{p}^\mathrm{max}_{#1}}
+\newcommand{\smin}[1]{\mathrm{s}^\mathrm{min}_{#1}}
+\newcommand{\smax}[1]{\mathrm{s}^\mathrm{max}_{#1}}
+\newcommand{\mmin}[1]{\mathrm{m}^\mathrm{min}_{#1}}
+\newcommand{\mmax}[1]{\mathrm{m}^\mathrm{max}_{#1}}
+\newcommand{\maxh}[1]{\mathrm{h}^\mathrm{max}_{#1}}
+\newcommand{\minh}[1]{\mathrm{h}^\mathrm{min}_{#1}}
+
+\newcommand{\vcomp}[0]{\overline{V}}
+
+\newcommand{\parta}[0]{\mathcal{L}}
+
+\newcommand{\ppprob}[2]{#1^{\text{max}}\paren{#2}}
+\newcommand{\ppsprob}[2]{#1^{\text{max}}\paren{#2}}
+
+\newcommand{\ppmmin}[1]{\mathrm{M}^\mathrm{min} (#1)}
+\newcommand{\ppmmax}[1]{\mathrm{M}^\mathrm{max} (#1)}
+
+\newcommand{\getpoly}[1]{\poly_{#1}}
+
+% assignment
+\newcommand{\bassign}[2]{#1 \ra #2}
+\newcommand{\stassign}[3]{#1 \bparen{\bassign{#2}{#3}}}
+\newcommand{\stsassign}[3]{#1 \bparen{\bassign{#2}{#3}}}
+\newcommand{\funassign}[2]{t_{\bassign{#1}{#2}}}
+\newcommand{\funinvassign}[2]{t_{\bassign{#1}{#2}}^{-1}}
+\newcommand{\eqassign}[3]{\aparen{#1}^{\bassign{#2}{#3}}}
+\newcommand{\eqassignsup}[4]{\aparen{#1}^{\bassign{#2}{#3}}_#4}
+\newcommand{\dassign}[3]{#1 \bparen{#2 \ra #3}}
+\newcommand{\deassign}[3]{#1 \aparen{#2 \ra #3}}
+
+%\newcommand{\pmin}[1]{\lfloor{\ppoly_#1}\rfloor_\mathrm{p}}
+%\newcommand{\pmax}[1]{\lceil{\ppoly_#1}\rceil^\mathrm{p}}
+%\newcommand{\smin}[1]{\lfloor{\ppoly_#1}\rfloor_\mathrm{s}}
+%\newcommand{\smax}[1]{\lceil{\ppoly_#1}\rceil^\mathrm{s}}
+%\newcommand{\mmin}[1]{\lfloor{\ppoly_#1}\rfloor_\mathrm{m}}
+%\newcommand{\mmax}[1]{\lceil{\ppoly_#1}\rceil^\mathrm{m}}
+%\newcommand{\getpoly}[1]{\pentagon{#1}}
+\newcommand{\psize}[1]{\#(#1)}
+\newcommand{\phull}[1]{hull\paren{#1}}
+\newcommand{\pinter}[2]{#1 \cap #2}
+\newcommand{\ppplus}{+}
+\newcommand{\pessoverlap}[2]{#1 \mathrel{\frownie} #2}
+\newcommand{\optoverlap}[2]{#1 \mathrel{\smiley} #2}
+\newcommand{\abspevalp}[2]{\langle\!\langle{#1}\rangle\!\rangle\,{#2}}
+%\newcommand{\absdcond}[2]{#1 \wr #2}
+\newcommand{\absdcond}[2]{#1 \mid #2}
+\newcommand{\abspolicy}[3]{\mathit{tsecure}_{#3}(#1,#2)}
+\newcommand{\abspolicyname}{\mathit{tsecure}}
+
+\newcommand{\simplify}[2]{\floor{#1}_{#2}}
+\newcommand{\bigsimplify}[2]{\Bigl\lfloor{#1}\Bigr\rfloor_{#2}}
+
+%%% semantic sets and meta-variables
+\newcommand{\Z}{\Integer}
+\newcommand{\ineq}{\beta}
+
+\newcommand{\project}[2]{#1 \upharpoonright #2}
+\newcommand{\forget}[2]{\mathrm{f}_{#1}(#2)}
+%\newcommand{\newdim}[2]{\mathrm{e}_{#1}(#2)}
+
+\newcommand{\deleted}[1]{}
+
+\newcommand{\pcase}[1]{\textsc{case} {#1}: }
+
+%%% for proofs in appendix
+\newcommand{\eqclass}[3]{\bparen{#1}_{#2}^{#3}}
+\newcommand{\eqclassc}[3]{\overline{\bparen{#1}}_{#2}^{#3}}
+
+\newcommand{\mathstep}[1]{\text{[ #1 ]}}
+\newcommand{\lfp}{\mathrm{lfp}}

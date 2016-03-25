@@ -1,0 +1,165 @@
+% http://mstracker.com
+% Manuscript 12-313-RR
+% Dynamic Enforcement of Knowledge-based Security Policies using Probabilistic Abstract Interpretation
+% Mr. Piotr Mardziel piotrm@cs.umd.edu USA UMD College Park
+% Dr. Stephen Magill stephen.magill@gmail.com USA UMD College Park
+% Dr. Michael Hicks mwh@cs.umd.edu USA UMD College Park
+% Dr. Mudhakar Srivatsa msrivats@us.ibm.com USA IBM TJ Watson
+
+%\newif \ifdraft \drafttrue
+\newif \ifdraft \draftfalse
+\newif \iffullapp \fullappfalse
+
+%\documentclass[10pt,conference,compsocconf]{IEEEtran}
+\documentclass[9pt]{article}
+%\usepackage{times}
+\usepackage{times}
+\usepackage[hyphens]{url}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{bigstrut}
+%\usepackage{alg}
+\usepackage[override]{cmtt}
+\usepackage[nointegrals]{wasysym}
+\usepackage{graphicx}
+\usepackage{balance}
+\usepackage{longtable}
+
+\input{defs}
+
+%\IEEEoverridecommandlockouts
+\title{Dynamic Enforcement of Knowledge-based Security Policies using
+  Probabilistic Abstract Interpretation}
+
+\author{
+Piotr Mardziel$^\dagger$, Stephen Magill, Michael Hicks$^\dagger$, Mudhakar
+Srivatsa$^\star$\\\\
+$^\dagger$ University of Maryland, College Park\\
+$^\star$ IBM T.J. Watson Research Laboratory\\
+}
+
+\newcommand{\myparagraph}[1]{\textbf{#1}.}
+\ifdraft
+\newcommand{\todo}[1]{\textbf{#1}}
+\definecolor{purple}{rgb}{0.8,0,0.8}
+\definecolor{dgreen}{rgb}{0.0,0.5,0.0}
+\newcommand{\sbmcomment}[1]{\textcolor{purple}{SBM -- #1}}
+\newcommand{\mwh}[1]{\textcolor{blue}{MWH -- #1}}
+\newcommand{\pxm}[1]{\textcolor{red}{PM -- #1}}
+\newcommand{\changed}[1]{\textcolor{dgreen}{#1}}
+\newcommand{\ms}[1]{\textcolor{yellow}{MS -- #1}}
+\else
+\newcommand{\changed}[1]{#1}
+\newcommand{\todo}[1]{}
+\newcommand{\sbmcomment}[1]{}
+\newcommand{\mwh}[1]{}
+\newcommand{\pxm}[1]{}
+\newcommand{\ms}[1]{}
+\fi
+
+\begin{document}
+
+\pagestyle{plain}
+
+\maketitle
+\date{}
+
+%Piotr Mardziel - University of Maryland, College Park
+%Stephen Magill
+%Michael Hicks - University of Maryland, College Park
+%Mudhakar Srivatsa - IBM T.J. Watson Research Laboratory
+
+\begin{abstract}
+% Following Simon PJ (Kent Beck, actually) abstract structure:
+% 1. State the problem 
+% 2. Say why it’s an interesting problem 
+% 3. Say what your solution achieves 
+% 4. Say what follows from your solution
+
+  This paper explores the idea of \emph{knowledge-based security
+    policies}, which are used to decide whether to answer queries over
+    secret data based on an estimation of the querier's (possibly
+    increased) knowledge given the results.  Limiting knowledge is the
+    goal of existing information release policies that employ
+    mechanisms such as noising, anonymization, and redaction.
+    Knowledge-based policies are more general: they increase
+    flexibility by not fixing the means to restrict information flow.
+    We enforce a knowledge-based policy by explicitly tracking a model
+    of a querier's belief about secret data, represented as a
+    probability distribution, and denying any query that could
+    increase knowledge above a given threshold.  We implement query
+    analysis and belief tracking via abstract interpretation, which allows us to
+    trade off precision and performance through the use of
+    abstraction. We have developed an approach to augment standard
+    abstract domains to include probabilities, and thus define
+    distributions.  We focus on developing \emph{probabilistic
+      polyhedra} in particular, to support numeric programs. While
+    probabilistic abstract interpretation has been 
+    considered before, our domain is the first whose design supports
+    sound conditioning, which is required to ensure that estimates of
+    a querier's knowledge are accurate. Experiments with our
+    implementation show that several useful queries can be handled
+    efficiently, particularly compared to exact (i.e., sound)
+    inference involving sampling.  We also show that, for our
+    benchmarks, restricting constraints to \emph{octagons}
+    or \emph{intervals}, rather than full polyhedra, can dramatically
+    improve performance while incurring little to no loss in
+    precision.
+\end{abstract}
+
+\input{sec-intro}
+\input{sec-overview}
+\input{sec-beliefs}
+\input{sec-security}
+\input{sec-abstract}
+\input{sec-implement}
+\input{sec-related}
+
+\section{Conclusion}
+\label{sec:conc}
+
+This paper has explored the idea of \emph{knowledge-based security
+  policies}: given a query over some secret data, that query should
+only be answered if doing so will not increase the querier's knowledge
+above a fixed threshold.  We enforce knowledge-based policies by
+explicitly tracking a model of a querier's belief about secret data,
+represented as a probability distribution, and we deny any query that
+could increase knowledge above the threshold.  Our denial criterion is
+independent of the actual secret, so denial does not leak information.
+We implement query analysis and belief tracking via abstract
+interpretation using domains of \emph{powersets of probabilistic
+polyhedra, octagons, and intervals}.
+%
+Compared to typical approaches to implementing belief revision, our
+implementation using this domain is more efficient and scales better.
+
+\vspace*{.1in}
+\begin{small}
+\paragraph*{Acknowledgments} The authors are
+grateful to Jeff Foster, Nataliya Guts, the CSF'11 anonymous referees, and
+especially Boris K\"opf for their helpful comments on
+drafts of this paper.  
+
+This research was sponsored by the U.S. Army
+Research Laboratory and the U.K. Ministry of Defence and was
+accomplished under Agreement Number W911NF-06-3-0001. The views and
+conclusions contained in this document are those of the author(s) and
+should not be interpreted as representing the official policies,
+either expressed or implied, of the U.S. Army Research Laboratory, the
+U.S. Government, the U.K. Ministry of Defence or the
+U.K. Government. The U.S. and U.K. Governments are authorised to
+reproduce and distribute reprints for Government purposes
+notwithstanding any copyright notation hereon.  Support was also
+provided by National Science Foundation grants 0905419 and
+0910530.
+\end{small}
+
+\bibliographystyle{plain}
+\balance
+\bibliography{paper}
+
+\input{sec-appendix}
+
+\end{document}

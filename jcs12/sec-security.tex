@@ -1,0 +1,87 @@
+\section{Enforcing knowledge-based policies}
+\label{sec:policy}
+
+When presented with a query over a user's data $\sigma_H$, the user's
+agent should only answer the query if doing so will not reveal too
+much information.  More precisely, given a query $S$, the agent will
+return the public output $\sigma_L$ resulting from running $S$ on
+$\sigma_H$ if the agent deems that from this output the querier cannot
+know the secret state $\sigma_H$ beyond some level of doubt,
+identified by a threshold $ t $.  If this threshold could be exceeded,
+then the agent declines to run $S$.  We call this security check
+\emph{knowledge threshold security}.
+
+\begin{definition}[Knowledge Threshold Security]
+\label{def:threshold}
+Let $\delta' = \eval{S}{\delta}$, where $\delta$ is the model of the
+querier's initial belief.  Then query $S$ is \emph{threshold $ t $
+  secure} iff for all $\sigma_L \in \nzset{\project{\delta'}{L}}$ and
+all $ \sigma'_H \in \states_H$ we have
+$(\project{\drevise{\delta'}{\sigma_L}}{H})(\sigma'_H) \leq t$.
+% $(\normal{\project{\paren{\dcond{\delta'}{\sigma_L}}}{H}})(\sigma'_H)
+% \leq t$ for some threshold $t$. 
+\end{definition}
+
+This definition can be related to the experiment protocol defined in
+Section~\ref{sec:experiment}.  First, $\delta'$ in the definition is
+the same as $\delta'$ computed in the first step of the protocol.
+Step 2 in the protocol produces a concrete output $\hat{\sigma}_L$
+based on executing $S$ on the actual secret $\sigma_H$, and Step 3
+revises the querier's belief based on this output.
+Definition~\ref{def:threshold} generalizes these two steps: instead of
+considering a single concrete output based on the actual secret it
+considers \emph{all possible} concrete outputs, as given by
+$\nzset{\project{\delta'}{L}}$, and ensures that the revised belief in
+each case for \emph{all possible} secret states must assign
+probability no greater than $t$.
+
+This definition considers a threshold for the whole secret state
+$\sigma_H$.  As described in Section~\ref{sec:overview} we can also
+enforce thresholds over portions of a secret state.  In particular, a
+threshold that applies only to variables $V \subseteq H$ requires that
+all $ \sigma'_V \in \states_V$ result in
+$(\project{\drevise{\delta'}{\sigma_L}}{V})(\sigma'_V) \leq
+t$.
+
+The two ``foralls'' in the definition are critical for ensuring
+security.  The reason was shown by the first example in
+Section~\ref{sec:overview}: If we used the flawed approach of just
+running the experiment protocol and checking if
+$\hat{\delta}_H(\sigma_H) > t$ then rejection depends on the value of
+the secret state and could reveal information about it.  The more
+general policy $\forall \sigma_L \in \nzset{\project{\delta'}{L}}.\,
+(\project{\drevise{\delta'}{\sigma_L}}{H})(\sigma_H) \leq t $, would
+sidestep the problem in the example, but this policy could still
+reveal information because it too depends on the actual secret
+$\sigma_H$.
+% (An example illustrating the problem in this case is given in 
+% Appendix~\ref{appendix:flawed}.)
+
+Definition~\ref{def:threshold} avoids any inadvertent information
+leakage because rejection is not based on the actual secret: if there
+exists \emph{any} secret such that a possible output would reveal too
+much, the query is rejected. Definition~\ref{def:threshold} is
+equivalent to a worst-case \emph{conditional vulnerability} (upper)
+bound or alternatively a worst-case \emph{conditional min-entropy}
+(lower) bound. Min-entropy measures the expected likelihood of an
+adversary guessing the secret value \cite{smith09foundations}; the
+stronger worst-case used in our definition does away with expectation
+and bounds this likelihood regardless of what the secret is. Such
+worst-case measures were considered in \cite{koepfbasin07} as a means
+of providing a stronger security guarantee. In our case, however, the
+extra strength is a side-effect of our need for a simulatable
+policy. See Section~\ref{sec:related} for further details.
+
+% In fact, the use
+% of a simple maximum probability threshold $ t $ corresponds to a
+% minimum relative entropy $ - \lg t $ between the true belief and the
+% revised belief ~\cite{clarkson09quantifying}.
+
+% To make belief revision cost effective, we restrict queries to boolean
+% results.  By fixing the output space of a query to two values, the
+% security policy can be implemented by a single abstract interpretation
+% of the query according to the attacker's modeled belief followed by
+% two revision operations (which employ polyhedral intersections).  For
+% many domains, boolean queries are perfectly acceptable (e.g., should a
+% particular ad be shown to a given user), and larger output spaces can
+% be handled by multiple queries (e.g., using a directed search).

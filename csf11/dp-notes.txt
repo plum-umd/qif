@@ -1,0 +1,213 @@
+Below are my thoughts relating to differential privacy, but I think we
+can address the reviewer's concerns with less nuance.  They are:
+
+  If it wasn't for the work in differential privacy, I would be
+  strongly championing this paper.  Given the work in differential
+  privacy, however, it is difficult to see the advantages of the
+  approach proposed in this paper.  A brief discussion in related work
+  suggests that the approach in this paper is superior to the
+  differential privacy approach because it is more flexible in
+  potentially allowing access regardless of the number of queries.  On
+  the other hand, this would appear to mean that the proposed approach
+  simply offers a weaker guarantee.  In differential privacy access is
+  granted only when it is certain that this cannot give an adversary a
+  greater advantage than specified by policy, directly or indirectly.
+  For the approach proposed in this paper, the same guarantee requires
+  the reference monitor both to precisely track the knowledge of
+  (potentially many) requesters, and to assume that they don't
+  communicate, neither of which seems reasonable for many practical
+  settings.
+
+We can address this criticism in two parts:
+
+1) Does differential privacy solve the same problem?  No.  It applies
+to databases that are absent/not absent a record.  There is no such
+notion in a setting of individual data, rather than a population query
+for which an individual may or may not be considered.  One way to view
+it is to imagine a boolean query on an individual as determining
+membership in a virtual database, and the query should be randomized,
+so that the true answer is only slightly more likely than the false
+answer.  But this may be unsatisfactory if the query is about an
+individual's data in response to a service that should truly be
+catered to the individual, to increase his utility.  To very often
+have the wrong service even if slightly less often than the right one
+seems counterproductive.  Moreover, the limitation on the number of
+queries is problematic since such individualized services could be
+abruptly denied.
+
+2) Are we providing a weaker guarantee?  The answer is that it depends
+on how you use our system.  You can certainly use it to respond to
+non-differentially private queries.  But you can also enforce
+differential privacy; see Dwork paper and the random response
+example.  In the latter case you get the best of both: you can argue
+that the result is differentially private, and you can characterize
+precisely the amount of information that has been leaked.
+
+3) Is the reference monitor and tracking semantics seems unreasonable
+for all practical settings?  No.  Since queries to individuals are
+relatively rare, being able to service one query every few seconds
+does not seem unreasonable.  Moreover, we can quicken this time if we
+are willing to reduce utility, i.e., by employing more abstraction of
+the attacker's modeled knowledge (which would take us closer to
+differential privacy).  Nevertheless, ours is an initial prototype, so
+we would expect further research to improve performance.  I would
+point out that differential privacy is, at the moment, eminently
+impractical, e.g., because of the limitation of a fixed number of
+queries.  But such current impracticality has not limited continued
+research on the topic.
+
+----------------------------------------------------------------------
+
+More thoughts.  I think we are different in a couple of ways:
+applicability/setting, flexibility/security, collusion, and
+accuracy/privacy:
+
+1) Applicability.  Most work on differential privacy doesn't directly
+apply to our setting.  DP as a formal property is framed around the
+idea K(D) <= exp(e) * K(D') where K is a random function (i.e., it
+adds noise) and D and D' differ by one record; i.e., whether a
+particular user is in the database or not.  Our system applies to
+individuals who decide whether to release their data to any party,
+where that decision is based on information released.  Indeed, in
+differential privacy as typically explained, the database curator is
+trusted to hold all the information, and it's queriers of the DB that
+are untrusted.  In our setting, we don't trust any third party: it's
+entirely up to users to decide when/whether to release their data for
+particular purposes.  Therefore, in a sense we can view our work as
+complementary to differential privacy: our system bounds the amount
+anyone can learn about the data, but we might further trust the
+curator to release results to a broader audience as long as they are
+differentially private.
+
+On the other hand, there is implicitly a population that the
+individual is part of.  We might think of this as virtual database D.
+Imagine we have some function K over the virtual DB such that K, as in
+the airavat system, has mapreduce format, i.e.,
+reduce(g',acc,map(f,D)), and the f function maps virtual records
+(consisting of an individual's data) to values but the reduce function
+g' is equivalent to some function g (sum, average, etc.) but
+introduces noise in the final result.  Equivalently, we could have
+reduce(g,acc,map(f',D)) where f' introduces noise to the result of f,
+rather than adding noise to the result of g.  In this way we can
+represent the idea of differential privacy for a query f' on an
+individual, who decides whether to execute f' or not based on his
+personal privacy budget.  The individual knows nothing about g, and
+can therefore reason only about the effects of f'.  Then we would like
+to argue that for all g and acc, and all virtual databases D,D'
+differing in at most one row, Pr[reduce(g,acc,map(f',D)) \in S] \leq
+exp(E) * Pr[reduce(g,acc,map(f',D'))].  
+
+I think this would actually be hard to do, in general.  I believe the
+pan privacy paper does something like this, but for particular g.  The
+Airavat paper does not consider noise added to f, but to g, for
+particular g.  I need to read these papers.
+
+2) Flexibility: differential privacy fixes the total number of queries
+allowed.  We fix the amount of information that can be released.
+Therefore, we are happy with answering semantically equivalent
+queries repeatedly, whereas the reliance on noise of diffpriv would
+prevent this (the queries need to be randomized); i.e., the number of
+responses are fixed.
+
+As well, the addition of noise or randomness makes queries less
+useful.  When we are querying over a population, the noise can be
+dismissed as equivalent to sampling error.  But when queries are meant
+to serve an individual, noise may be inappropriate.  E.g., a horoscope
+for the wrong sign of the zodiac, arising from the addition of noise
+to a query, would not be useful at all.  So the individual trades of
+privacy and utility directly, and indeed can run experiments using our
+system to determine how a querier's beliefs would change given
+different sorts of responses.  E.g., the user can directly assess the
+information released by a randomized response compared to a direct
+one, and decide what to do.
+
+3) No worse on collusion: differential privacy has the same problem
+with collusion: it needs to track the privacy budget per principal,
+and permit no further queries when it is reached.  But collusion would
+defeat this tracking, just as it would tracking beliefs in our
+setting.
+
+4) Our setting has the drawback that a pre-belief must be estimated
+accurately.  However, we can do better than we've done in the paper
+now by considering a belief as a set of distributions, according to
+our abstraction, rather than a single distribution, as in Clarkson.
+Thus we can "hedge our bets" more.  Indeed, the latter representation
+has been shown equivalent to differential privacy under certain
+circumstances (Rastogi and Suciu).  So we could apply this
+representation and policy when vetting queries provided by third
+parties, if we wished to enforce that policy (though it remains to be
+determined whether queries could be vetted efficiently if they have
+this form).
+
+----------------------------------------------------------------------
+
+Note sent to Guy Rothblum:
+
+First and foremost I still don't understand "what I get" from
+differential privacy.  The security condition in the paper states that
+
+A randomized function K provides ε differential privacy if for all
+datasets D and D' differing by at most one row, and all S ⊆ range(K),
+Pr[K(D) ∈ S] ≤ exp(ε) * Pr[K(D') ∈ S] where the probability space in
+each case is over the coin flips of K.
+
+In short, the result of query K is only slightly more or less likely
+(by the amount exp(ε)) whether a particular record is in any database
+the query might be over.  As ε increases, the possible difference in
+K's output based on whether a record is present or not becomes more
+pronounced, and thus an attacker is more likely to learn something of
+interest about the missing record.  Moreover, an increase of ε seems
+inevitable as the number of queries increases: we must keep adding to
+our "privacy budget" as we perform more queries, since each could
+expand the overall knowledge gained.  Eventually this budget will
+reach some maximum deemed too high, and no further queries can be
+safely permitted.
+
+Do I have this right?  I feel like this is what I said in our meeting,
+but you suggested there was something wrong with my thinking.
+
+Another thing that I'm not sure about (and perhaps this is related) is
+how to think about auxiliary information.  The paper argues that
+perfect privacy is impossible, essentially because even if a
+particular record (corresponding to individual Bob) is not in the
+database, a query could reveal something about Bob depending on
+auxiliary information someone has about him.  Therefore, whether he
+participates or not in the database is immaterial: his privacy *could*
+be violated either way.  As such we just want to show that the chances
+of this happening are no worse if does participate.  The example in
+the paper is that AUX = "Turing is two inches taller than the average
+Lithuanian woman".  In this case, since Turing is not a Lithuanian
+woman, then a query over a database he is or is not in, would return
+exactly the same result.  Moreover, if we used a differentially
+private noise-adding algorithm to compute the average over this
+database, as stated in the paper, the true average (according to the
+DB) would not be reported, but it would be within the sampling error.
+So in the end we can learn Turing's height.  Differential privacy did
+not help us, as expected.
+
+My question then, is: where does AUX come from?  The example statement
+is pretty far-fetched, and the paper does not delve further into the
+idea.  Indeed it says "an extrovert who posts personal information on
+the web may destroy her own privacy, and the database should not be
+held accountable".  But it seems within the realm of possibility that
+Bob could participate in many different differentially-private
+databases, where results from one serve as AUX info for another.  In
+this case, the differential privacy guarantee seems a bit myopic; no
+individual curator is implicated, but in total they break privacy.  Is
+there anything to be said about this case?
+
+Related to the extrovert: is there anything differential privacy says
+about how a person ought to choose to share their information?  It
+seems to be speaking about joining a group, i.e., a database.  But
+what if the release of information is on facebook or a conversation
+with an individual?  Could we apply differential privacy in these
+settings?  The closest adaptation I can see would be to think of the
+world of individuals as a virtual database, and that questions asked
+of an individual are part of a larger "query" on the world.  Then my
+answers as an individual should include some kind of noise so that
+when aggregated they have utility, but in isolation they do not.  This
+is basically randomized response, which the paper shows is related to
+differential privacy.  Are there other connections to the "individual
+data release" scenario (which we should be worried about because it
+contributes to auxiliary information)?
+

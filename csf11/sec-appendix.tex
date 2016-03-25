@@ -1,0 +1,3523 @@
+\appendices
+
+\vspace*{.1in}
+\section{Concrete probabilistic semantics}
+\label{appendix:concrete}
+
+Here we briefly explain the concrete probabilistic semantics given in
+Figure~\ref{fig-sem-nondet2-core}.  More details can be found in
+Clarkson et al.~\cite{clarkson09quantifying}.
+
+The semantics of $\sskip$ is straightforward: it is the identity on
+distributions.  The semantics of sequences $\sseq{\stmt_1}{\stmt_2}$
+is also straightforward: the distribution that results from executing
+$\stmt_1$ with $\delta$ is given as input to $\stmt_2$ to produce
+the result.
+
+The semantics of assignment is $\delta \bparen{x \ra \aexp}$, which is
+defined as follows: 
+$$ \delta \bparen{x \ra \aexp} \defeq \lambda \sigma \lsep \sum_{\tau \; | \; \tau
+  \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma} \delta (\tau) $$ In
+words, the result of substituting an expression $\aexp$ for $x$ is a
+distribution where state $\sigma$ is given a probability that is the
+sum of the probabilities of all states $\tau$ that are equal to
+$\sigma$ when $x$ is mapped to the distribution on $\aexp$ in $\tau$.
+For implementation purposes, it will be useful to consider separately the
+case where assignment is invertible.
+
+When $x \ra \aexp$ is an invertible transformation, the formula for assignment can be simplified to the following, where $x \ra \aexp'$ is the inverse of $x \ra \aexp$.
+\[
+\delta \bparen{x \ra \aexp} \defeq \lambda \sigma \lsep \delta (\sigma\bparen{x \ra \eeval{\aexp'}{\sigma}})
+\]
+
+When $x \ra \aexp$ is not invertible, the original definition is equivalent to a projection followed by an assignment.  Let $V' = \dom{\delta} - \{x\}$ and let $\delta' = \project{\delta}{V'}$.  Then we have the following for a non-invertible assignment.
+\[\delta \bparen{x \ra \aexp} \defeq \lambda \sigma \lsep \aif \sigma(x) = \eeval{E}{\sigma}\athen
+\delta'(\project{\sigma}{V'}) \aelse 0 \]
+In the appendix, we show that this definition by cases is
+equivalent to the original definition (Theorem \ref{thm:pp:assign:eqdef}).
+
+The semantics for conditionals makes use of two operators on
+distributions which we now define.  First, given distributions
+$\delta_1$ and $\delta_2$ we define the \emph{distribution sum} as
+follows:
+$$ \delta_1 + \delta_2 \defeq \lambda \sigma \lsep \delta_1(\sigma) +
+\delta_2(\sigma) $$ In words, the probability mass for a given state
+$\sigma$ of the summed distribution is just the sum of the masses from
+the input distributions for $\sigma$.  Second, given a distribution
+$\delta$ and a boolean expression $\bexp$, we define the
+\emph{distribution conditioned on $\bexp$} to be
+$$ \dcond{\delta}{\bexp} \defeq \lambda \sigma \lsep \aif \eeval{\bexp}{\sigma} \athen
+\delta(\sigma) \aelse 0 $$
+In short, the resulting distribution retains only the probability mass
+from $\delta$ for states $\sigma$ in which $\bexp$
+holds.
+
+With these two operators, the semantics of conditionals can be stated
+simply: the resulting distribution is the sum of the distributions of
+the two branches, where the first branch's distribution is conditioned
+on $\bexp$ being true, while the second branch's distribution is
+conditioned on $\bexp$ being false.
+
+The semantics for probabilistic conditionals like that of conditionals
+but makes use of \emph{distribution scaling}, which is defined as
+follows: given $\delta$ and some scalar $p$ in $[0,1]$, we have
+$$ p \cdot \delta \defeq \lambda \sigma \lsep p \cdot \delta(\sigma) $$
+In short, the probability ascribed to each state is just the
+probability ascribed to that state by $\delta$ but multiplied by $p$.
+For probabilistic conditionals, we sum the distributions of the two
+branches, scaling them according to the odds $q$ and $1 - q$.
+
+The semantics of a single iteration of a while loop is
+essentially that of $\sif{B}{S}{\sskip}$ and the semantics of the
+entire loop is the fixed point of a function that composes the
+distributions produced by each iteration.  That such a fixed point exists
+is proved by Clarkson et al.~\cite{clarkson09quantifying}.
+
+Finally, the semantics of $\suniform{x}{n_1}{n_2}$, introduced in
+Section~\ref{sec:absinterp} is given as
+$$
+\begin{array}{rcl}
+\pevalp{\suniform{x}{n_1}{n_2}}{\delta} & = &
+\paren{\project{\delta}{V - \set{x}}} \times \delta'
+\end{array}
+$$
+Where $ V $ is the set of variables of $ \delta $, and $ \delta' $ is
+defined as follows.
+$$ \delta ' = \lambda \sigma \lsep \aif n_1 \leq \sigma(x) \leq n_2 \athen
+\frac{1}{n_2-n_1+1} \aelse 0 $$
+
+\vspace*{.1in}
+\section{Alternative (flawed) threshold security policy}
+\label{appendix:flawed}
+
+As an alternative to Definition~\ref{def:threshold}, suppose we used the
+following instead:
+$$\forall \sigma_L \in
+\nzset{\project{\delta'}{L}}.\,
+(\normal{\project{\dcond{\delta'}{\sigma_L}}{H}})(\sigma_H) \leq t$$
+Here is an example that illustrates why this definition is not safe, as it
+could underestimate the information a querier can learn.
+
+Suppose Bob's threshold for his birth year $\var{byear}$ is $t =
+0.05$.  He models a social networking site $X$ as believing his age is
+more likely between 20 and 40 than between 40 and 60, e.g., $1971 \leq
+\var{byear} < 1991$ with probability $0.6$ (thus, $0.03$ per
+possibility) and $1951 \leq \var{byear} < 1971$ with probability $0.4$
+(thus, $0.02$ per possibility).  If user Bob was born in 1965, then
+$X$'s believes his is actual birth year not as likely a more recent
+year, say 1975; in any case $X$ does not currently believe any
+possibility above Bob's threshold.  Now suppose $X$ submits program
+$S$ that determines whether Bob's birth year is even.  The revised
+belief will include only even (when $\var{output} = \strue$) or odd
+(when $\var{output} = \sfalse$) birthdays, increasing the likelihood
+of years in the range $[1971,1991)$ to be $0.06$ per point, and the
+likelihood of years in the range $[1951,1971)$ to be $0.04$ per point.
+Bob's birthday is 1965, and its probability $0.04$ is less than $t$,
+so according to the flawed definition the agent would respond to this
+query.  But if this query result is returned, $X$ will see that there
+are ten possibilities of birth year that are above Bob's threshold.
+$X$ can deduce that none of these possibilities is Bob's actual birth
+year, or else the query would have been rejected.  Excluding these
+possibilities, he knows that Bob's birth year is one of ten
+possibilities between 1951 and 1971 ascribing to each a probability
+$0.1$ which exceeds Bob's threshold of $0.05$.
+
+\vspace*{.1in}
+\section{Example queries} \label{appendix:queries}
+
+%\input{temp}
+
+We provide here the queries and prebeliefs we used for the experiments
+in Section~\ref{sec:impl}. The queries are described as functions
+from some set of inputs to some set of outputs. The exact syntax is as
+follows.
+$$
+\begin{array}{l}
+\squerydefk \; queryname \; in_1 \cdots in_n \ra out_1 \cdots out_m \; : \\
+\;\; querybody \\
+\end{array}
+$$
+
+To specify a query invocation we use the following syntax.
+$$
+\begin{array}{l}
+\squeryk \; queryname \; : \\
+\;\; in_1 \; := \; val_1; \\
+\;\; \cdots \\
+\;\; in_n \; := \; val_n
+\end{array}
+$$
+
+Each experiment must also specify the values of the secrets being
+queried, and the querier's prebelief.  Each specification is a merely
+a program that sets the values of these variables.  For the actual
+secret values this program begins with the declaration $ \ssecretk$;
+the resulting state of executing program is taken to be the secret
+state.  The program to set the prebelief begins $ \sbeliefk$ and has
+the same format; note that this program will use $\spifk$ or
+$\suniform{x}{n_1}{n_2}$ to give secrets different possible values
+with different probabilities.  
+
+We now give the content of the queries used in the experiments.
+
+\subsubsection{Birthday}
+For the small stateset size birthday experiments we used the following
+secret and prebelief.
+$$ \ssecretk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{s\text{\_}bday}{270}\; ;\\
+  \sassign{s\text{\_}byear}{1980}\\
+\end{array}
+}\end{displaymath}
+$$ \sbeliefk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \suniform{s\text{\_}bday}{0}{364}\; ;\\
+  \suniform{s\text{\_}byear}{1956}{1992}\\
+\end{array}
+}\end{displaymath}
+
+The two queries used were as follows.
+
+$$ \squerydefk \; bday \; : \;c\text{\_}day \; \ra \; output$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sifk \; \ebinop{\wedge}{\ebinop{\geq}{s\text{\_}bday}{c\text{\_}day}}{\ebinop{>}{\ebinop{+}{c\text{\_}day}{7}}{s\text{\_}bday}} \; \sthenk\\
+  \;\;\;\sassign{output}{1}\\
+  \selsek\\
+  \;\;\;\sassign{output}{0}\\
+\end{array}
+}\end{displaymath}
+
+$$ \squerydefk \; spec \; : \;c\text{\_}year \; \ra \; output$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{age}{\ebinop{-}{c\text{\_}year}{s\text{\_}byear}}\; ;\\
+  \sifk \; \ebinop{\vee}{\ebinop{\vee}{\ebinop{\vee}{\ebinop{\vee}{\ebinop{=}{age}{10}}{\ebinop{=}{age}{20}}}{\ebinop{=}{age}{30}}}{\ebinop{=}{age}{40}}}{\ebinop{=}{age}{50}} \; \sthenk\\
+  \;\;\;\sassign{output\text{\_}temp}{1}\\
+  \selsek\\
+  \;\;\;\sassign{output\text{\_}temp}{0}\; ;\\
+  \spifk\; 1/10 \; \sthenk\\
+  \;\;\;\sassign{output}{1}\\
+  \selsek\\
+  \;\;\;\sassign{output}{output\text{\_}temp}\\
+\end{array}
+}\end{displaymath}
+
+The statistics shown include the time spent processing this initial
+setup as well as the following sequences of queries.
+
+\begin{itemize}
+\item{} A single bday query alone.
+$$ \squeryk \; bday \; : $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{c\text{\_}day}{260}\\
+\end{array}
+}\end{displaymath}
+
+\item{} Two bday queries.
+$$ \squeryk \; bday \; : $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{c\text{\_}day}{261}\\
+\end{array}
+}\end{displaymath}
+
+\item{} Two bday queries followed by a spec query.
+$$ \squeryk \; spec \; : $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{c\text{\_}year}{2011}\\
+\end{array}
+}\end{displaymath}
+
+\end{itemize}
+
+\subsubsection{Birthday (large)}
+
+For the larger statespace birthday example we used the following
+secret and prebelief generators.
+$$ \ssecretk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{s\text{\_}bday}{270}\; ;\\
+  \sassign{s\text{\_}byear}{1980}\\
+\end{array}
+}\end{displaymath}
+$$ \sbeliefk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \suniform{s\text{\_}bday}{0}{364}\; ;\\
+  \suniform{s\text{\_}byear}{1910}{2010}\\
+\end{array}
+}\end{displaymath}
+The queries used were identical to the ones for the smaller statespace
+birthday example.
+
+\subsubsection{Pizza}
+
+The pizza example is slightly more complicated, especially in the
+construction of the prebelief.  This example models a targeted
+Facebook advertisement for a local pizza shop.  There are four
+relevant secret values.  The level of school currently being attended
+by the Facebook user
+is given by \verb|s_in_school_type|, which is an integer
+ranging from 0 (not in school) to 6 (Ph.D. program).  Birth year
+is as before and \verb|s_address_lat| and \verb|s_address_long|
+give the latitude and longitude of the user's home address (represented as
+decimal degrees scaled by a factor of
+$10^6$ and converted to an integer).
+
+The initial belief models the fact that each subsequent level of
+education is less likely and also captures the correlation between current
+educational level and age.  For example, a user is given an approximately 0.05 chance of
+currently being an undergraduate in college, and college attendees are assumed to be born
+no later than 1985 (whereas elementary school students may be born as
+late as 2002).
+
+rendering latex
+$$ \ssecretk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{s\text{\_}in\text{\_}school\text{\_}type}{4}\; ;\\
+  \sassign{s\text{\_}birth\text{\_}year}{1983}\; ;\\
+  \sassign{s\text{\_}address\text{\_}lat}{39003178}\; ;\\
+  \sassign{s\text{\_}address\text{\_}long}{-76958199}\\
+\end{array}
+}
+\end{displaymath}
+$$ \sbeliefk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \spifk\; 4/24 \; \sthenk\\
+  \;\;\;\suniform{s\text{\_}in\text{\_}school\text{\_}type}{1}{1}\; ;\\
+  \;\;\;\suniform{s\text{\_}birth\text{\_}year}{1998}{2002}\\
+  \selsek\\
+  \;\;\;\spifk\; 3/19 \; \sthenk\\
+  \;\;\;\;\;\;\suniform{s\text{\_}in\text{\_}school\text{\_}type}{2}{2}\; ;\\
+  \;\;\;\;\;\;\suniform{s\text{\_}birth\text{\_}year}{1990}{1998}\\
+  \;\;\;\selsek\\
+  \;\;\;\;\;\;\spifk\; 2/15 \; \sthenk\\
+  \;\;\;\;\;\;\;\;\;\suniform{s\text{\_}in\text{\_}school\text{\_}type}{3}{3}\; ;\\
+  \;\;\;\;\;\;\;\;\;\suniform{s\text{\_}birth\text{\_}year}{1985}{1992}\\
+  \;\;\;\;\;\;\selsek\\
+  \;\;\;\;\;\;\;\;\;\spifk\; 1/12 \; \sthenk\\
+  \;\;\;\;\;\;\;\;\;\;\;\;\suniform{s\text{\_}in\text{\_}school\text{\_}type}{4}{4}\; ;\\
+  \;\;\;\;\;\;\;\;\;\;\;\;\suniform{s\text{\_}birth\text{\_}year}{1980}{1985}\\
+  \;\;\;\;\;\;\;\;\;\selsek\\
+  \;\;\;\;\;\;\;\;\;\;\;\;\suniform{s\text{\_}in\text{\_}school\text{\_}type}{0}{0}\; ;\\
+  \;\;\;\;\;\;\;\;\;\;\;\;\suniform{s\text{\_}birth\text{\_}year}{1900}{1985}\; ;\\
+  \suniform{s\text{\_}address\text{\_}lat}{38867884}{39103178}\; ;\\
+  \suniform{s\text{\_}address\text{\_}long}{-77058199}{-76825926}\\
+\end{array}
+}
+\end{displaymath}
+
+The query itself targets the pizza advertisement
+at users who are either 1) in college, 2) aged 18 to 28, or 3) close to the pizza
+shop (within a square region that is 2.5 miles on each side and centered on the pizza
+shop).  If any of these conditions are satisfied, then the query returns 1,
+indicating that the ad can be displayed.  The full text of the query is given below.
+
+$$ \squerydefk \; pizza \; : \; \; \ra \; output$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sifk \; s\text{\_}in\text{\_}school\text{\_}type \; \geq \; 4 \; \sthenk\\
+  \;\;\;\sassign{in\text{\_}school}{1}\\
+  \selsek\\
+  \;\;\;\sassign{in\text{\_}school}{0}\; ;\\
+  \sassign{age}{\ebinop{-}{2010}{s\text{\_}birth\text{\_}year}}\; ;\\
+  \sifk \; age \; \geq \; 18 \; \wedge \; age \; \leq \; 28 \; \sthenk\\
+  \;\;\;\sassign{age\text{\_}criteria}{1}\\
+  \selsek\\
+  \;\;\;\sassign{age\text{\_}criteria}{0}\; ;\\
+  \sassign{lr\text{\_}lat}{38967884}\; ;\\
+  \sassign{ul\text{\_}lat}{39003178}\; ;\\
+  \sassign{lr\text{\_}long}{-76958199}\; ;\\
+  \sassign{ul\text{\_}long}{-76925926}\; ;\\
+  \sifk \; s\text{\_}address\text{\_}lat \; \leq \;
+  ul\text{\_}lat \; \wedge \\
+  \;\;\;\; s\text{\_}address\text{\_}lat \; \geq \;
+  lr\text{\_}lat \; \wedge \\
+  \;\;\;\; s\text{\_}address\text{\_}long \; \geq \;
+  lr\text{\_}long \; \wedge \\
+  \;\;\;\; s\text{\_}address\text{\_}long \; \leq \; ul\text{\_}long \; \sthenk\\
+  \;\;\;\sassign{in\text{\_}box}{1}\\
+  \selsek\\
+  \;\;\;\sassign{in\text{\_}box}{0}\; ;\\
+  \sifk \; \paren{in\text{\_}school \; = \; 1 \; \vee \;
+  age\text{\_}criteria \; = \; 1} \; \wedge \\
+  \;\;\;\; in\text{\_}box \; = \; 1 \; \sthenk\\
+  \;\;\;\sassign{output}{1}\\
+  \selsek\\
+  \;\;\;\sassign{output}{0}\\
+\end{array}
+}
+\end{displaymath}
+
+\subsubsection{Photo}
+
+The photo query is a direct encoding of a case study that Facebook
+includes on their advertising information
+page~\cite{wedding-case-study}.  The advertisement was for CM
+Photographics, and targets offers for wedding photography packages at
+women between the ages of 24 and 30 who list in their profiles that
+they are engaged.  The secret state consists of birth year, as before,
+gender (0 indicates male, 1 indicates female), and ``relationship
+status,'' which can take on a value from 0 to 9.  Each of these
+relationship status values indicates one of the status choices
+permitted by the Facebook software.  The example below involves only
+four of these values, which are given below.
+\begin{description}
+\item[0] No answer
+\item[1] Single
+\item[2] In a relationship
+\item[3] Engaged
+\end{description}
+The secret state and prebelief are as follows.
+$$ \ssecretk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{s\text{\_}birth\text{\_}year}{1983}\; ;\\
+  \sassign{s\text{\_}gender}{0}\; ;\\
+  \sassign{s\text{\_}relationship\text{\_}status}{0}\\
+\end{array}
+}
+\end{displaymath}
+$$ \sbeliefk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \suniform{s\text{\_}birth\text{\_}year}{1900}{2010}\; ;\\
+  \suniform{s\text{\_}gender}{0}{1}\; ;\\
+  \suniform{s\text{\_}relationship\text{\_}status}{0}{3}\\
+\end{array}
+}
+\end{displaymath}
+
+The query itself is the following.
+$$ \squerydefk \; cm\text{\_}advert \; : \; \; \ra \; output$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{age}{\ebinop{-}{2010}{s\text{\_}birth\text{\_}year}}\; ;\\
+  \sifk \; age \; \geq \; 24 \; \wedge \; age \; \leq \; 30 \; \sthenk\\
+  \;\;\;\sassign{age\text{\_}sat}{1}\\
+  \selsek\\
+  \;\;\;\sassign{age\text{\_}sat}{0}\; ;\\
+  \sifk \; s\text{\_}gender \; = \; 1 \; \wedge \\
+  \;\;\;\; s\text{\_}relationship\text{\_}status \; = \;
+  3 \; \wedge \\
+  \;\;\;\; age\text{\_}sat \; = \; 1 \; \sthenk\\
+  \;\;\;\sassign{output}{1}\\
+  \selsek\\
+  \;\;\;\sassign{output}{0}\\
+\end{array}
+}
+\end{displaymath}
+\vspace{5mm} % !!! formatting
+
+\subsubsection{Travel}
+
+This example is another Facebook advertising case
+study~\cite{visitbritain-case-study}.  It is based on an ad campaign
+run by Britain's national tourism agency, VisitBritain.  The campaign
+targeted English-speaking Facebook users currently residing in
+countries with strong ties to the United Kingdom.  They further filtered by
+showing the advertisement only to college graduates who were at least 21 years of age.
+
+We modeled this using four secret values: country, birth year, highest
+completed education level, and primary language.  As with other
+categorical data, we represent language and country using an
+enumeration.  We ranked countries by number of Facebook users as
+reported by socialbakers.com.  This resulted in the US being country
+number 1 and the UK being country 3.  To populate the list of
+countries with ``strong connections'' to the UK, we took a list of
+former British colonies.  For the language attribute, we consider a
+50-element enumeration where 0 indicates ``no answer'' and 1 indicates
+``English'' (other values appear in the prebelief but are not used in
+the query).
+
+$$ \ssecretk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{country}{1}\; ;\\
+  \sassign{birth\text{\_}year}{1983}\; ;\\
+  \sassign{completed\text{\_}school\text{\_}type}{4}\; ;\\
+  \sassign{language}{5}\\
+\end{array}
+}
+\end{displaymath}
+
+$$ \sbeliefk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \suniform{country}{1}{200}\; ;\\
+  \suniform{birth\text{\_}year}{1900}{2011}\; ;\\
+  \suniform{language}{1}{50}\; ;\\
+  \suniform{completed\text{\_}school\text{\_}type}{0}{5}\\
+\end{array}
+}
+\end{displaymath}
+
+$$ \squerydefk \; travel \; : \; \; \ra \; output$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sifk \; country \; = \; 1 \; \vee \; country \; = \; 3 \; \vee \\
+  \;\;\;\; country \; = \; 8 \; \vee \; country \; = \; 10 \; \vee \\
+  \;\;\;\; country \; = \; 18 \; \sthenk\\
+  \;\;\;\sassign{main\text{\_}country}{1}\\
+  \selsek\\
+  \;\;\;\sassign{main\text{\_}country}{0}\; ;\\
+  \sifk \; country \; = \; 169 \; \vee \; country \; = \;
+  197 \; \vee \\
+  \;\;\;\; country \; = \; 194 \; \vee \; country \; = \;
+  170 \; \vee \\
+  \;\;\;\; country \; = \; 206 \; \vee \; country \; = \;
+  183 \; \vee \\
+  \;\;\;\; country \; = \; 188 \; \sthenk\\
+  \;\;\;\sassign{island}{1}\\
+  \selsek\\
+  \;\;\;\sassign{island}{0}\; ;\\
+  \sassign{age}{\ebinop{-}{2010}{birth\text{\_}year}}\; ;\\
+  \sifk \; language \; = \; 1 \; \wedge \\
+  \;\;\;\; \paren{main\text{\_}country \; = \; 1 \; \vee \; island \;
+  = \; 1} \; \wedge \\
+  \;\;\;\; age \; \geq \; 21 \; \wedge \\
+  \;\;\;\; completed\text{\_}school\text{\_}type \; \geq \; 4 \; \sthenk\\
+  \;\;\;\sassign{output}{1}\\
+  \selsek\\
+  \;\;\;\sassign{output}{0}\\
+\end{array}
+}
+\end{displaymath}
+
+%\vspace*{.1in}
+\section{Soundness proofs for $ \ppolys $} \label{appendix:proof1}
+
+%\begin{DIFnomarkup}
+
+\subsection{Projection}
+
+The proof of projection relies heavily on splitting up the support of a
+distribution into equivalence classes based on the states they project
+to. We will have $ \sigma, \sigma' \in \support{\delta} $ belonging to
+the same equivalence class iff $ \project{\sigma}{V}
+= \project{\sigma'}{V} $. The details are formalized in the following definition.
+
+\begin{definition} \emph{Equivalence classes under projection.}
+\begin{itemize}
+\item{} $ \eqclass{\sigma_V}{\delta}{V} $ is an equivalence class of
+elements of 
+$ \support{\delta} $ that project to $ \sigma_V $ (when projected to
+variables $ V $). Formally,
+$ \eqclass{\sigma_V}{\delta}{V} \defeq \set{\sigma \in \support{\delta} \given \project{\sigma}{V}
+= \sigma_V} $.
+
+\item{} $ \eqclassc{\sigma_V}{\delta}{V} $ is a subset of
+$ \support{\delta} $ that project to anything but $ \sigma_V $ or formally
+$ \eqclassc{\sigma_V}{\delta}{V} \defeq \set{\sigma \in \support{\delta} \given
+\project{\sigma}{V} \neq \sigma_V} $. 
+
+\item{} $ \eqclass{\sigma_V}{\getpoly{}}{V} $ is a subset of
+$ \pconc{C} $ that project to $ \sigma_V $ (when projected to
+variables $ V $). Formally,
+$ \eqclass{\sigma_V}{\getpoly{}}{V} \defeq \set{\sigma \in \pconc{\getpoly{}} \given \project{\sigma}{V}
+= \sigma_V} $.
+
+\item{} $ \eqclassc{\sigma_V}{\getpoly{}}{V} $ is a subset of
+$ \pconc{\getpoly{}} $ that project to anything but $ \sigma_V $ or formally
+$ \eqclassc{\sigma_V}{\getpoly{}}{V} \defeq \set{\sigma \in \pconc{\getpoly{}} \given
+\project{\sigma}{V} \neq \sigma_V} $.
+\end{itemize}
+\end{definition}
+
+\begin{remark} \label{thm:pp:project:eqclass} Let $ V \subseteq V' \subseteq \fv{\delta} $, 
+$ \sigma \in \support{\delta} $, and
+$ \sigma_V, \sigma'_V \in \support{\project{\delta}{V}} $.
+
+\begin{subtheorem} \label{thm:pp:project:eqclass:project}
+$ \project{\paren{\project{\sigma}{V'}}}{V} = \project{\sigma}{V} $
+\end{subtheorem}
+
+The sets of $ \set{\eqclass{\sigma_V}{\delta}{V}}_{\sigma_V \in \support{\project{\delta}{V}}} $ form a partition of
+$ \support{\delta} $, equivalently the following two claims.
+
+\begin{subtheorem} \label{thm:pp:project:eqclass:cover}
+$ \support{\delta}
+= \bigcup_{\sigma_V \in \support{\project{\delta}{V}}} \eqclass{\sigma_V}{\delta}{V}
+$
+\end{subtheorem}
+
+\begin{subtheorem} \label{thm:pp:project:eqclass:disjoint}
+$ \eqclass{\sigma_V}{\delta}{V} \cap \eqclass{\sigma'_V}{\delta}{V}
+= \emptyset $ whenever $ \sigma_V \neq \sigma'_V $
+\end{subtheorem}
+
+Likewise, for any $ \sigma_{V} \in \support{\project{\delta}{V}} $,
+the sets of
+$ \set{\eqclass{\sigma_{V'}}{\delta}{V'}}_{\sigma_{V'} \in \eqclass{\sigma_V}{\project{\delta}{V'}}{V}}
+$ form a partition of $ \eqclass{\sigma_{V}}{\delta}{V} $, implying
+also the following claim.
+
+\begin{subtheorem} \label{thm:pp:project:eqclass:order}
+$ \eqclass{\sigma_V}{\delta}{V}
+= \bigcup_{\sigma_{V'} \in \eqclass{\sigma_V}{\project{\delta}{V'}}{V}} \eqclass{\sigma_{V'}}{\delta}{V'}
+$ 
+\end{subtheorem}
+
+The equivalence classes in terms of the concrete support sets as
+related to the abstract support sets are expressed in the following
+manner.
+
+\begin{subtheorem} \label{thm:pp:project:eqclass:subsets}
+$ \eqclass{\sigma_V}{\delta}{V} \subseteq \eqclass{\sigma_V}{\getpoly{}}{V}
+$ and 
+$ \eqclassc{\sigma_V}{\delta}{V} \subseteq \eqclassc{\sigma_V}{\getpoly{}}{V}
+$ whenever $ \support{\delta} \subseteq \pconc{\getpoly{}} $
+\end{subtheorem}
+
+Finally, the concrete projection operation can be rewritten in terms
+of the equivalence classes, a fact we will repeatedly use in the
+proofs to follow without explicitly stating it.
+
+\begin{subtheorem} \label{thm:pp:project:eqclass:projection}
+$ \project{\delta}{V} = \lambda \sigma_V \lsep \sum_{\sigma \in \eqclass{\sigma_V}{\delta}{V}} \delta
+(\sigma) $
+\end{subtheorem}
+
+\end{remark}
+
+\begin{proof} All of these are merely expansions of the various
+definitions involved. Note that the two parts
+of \rref{thm:pp:project:eqclass:subsets} are not contradictory as
+$ \eqclass{\sigma_V}{\delta}{V} $ and $ \eqclassc{\sigma_V}{\delta}{V}
+$ are not set complements of each other when viewed as subsets of
+$ \pconc{\poly{}} $, though they are complements when viewed as
+subsets of $ \support{\delta} $.
+\end{proof}
+
+\begin{lemma}[Conservation of Mass]\label{thm:pp:project:mass} If $ V \subseteq \fv{\delta} $ then $ \pmass{\delta} = \pmass{\project{\delta}{V}} $.
+\end{lemma}
+
+\begin{proof} Let us consider the terms of the projected mass sum.
+\begin{align*}
+\pmass{\project{\delta}{V}} & = \sum_{\sigma_V \in \support{\project{\delta}{V}}} \paren{\sum_{\sigma \in \eqclass{\sigma_V}{\delta}{V}}\delta(\sigma)} \\
+ & = \sum_{\sigma \in \support{\delta}} \delta (\sigma) \\ &
+ = \pmass{\delta}
+\end{align*}
+
+The terms in the double sum are the same as those in the single sum as
+all terms of the first are accounted for in the second due
+to \rref{thm:pp:project:eqclass:cover} and none are double counted due
+to \rref{thm:pp:project:eqclass:disjoint}.
+\end{proof}
+
+\begin{definition} \emph{Concrete forget} can be defined in terms of a projection to
+all but one variable. That is, $ \forget{x}{\delta}
+\defeq \project{\delta}{\fv{\delta} - \set{x}} $. Also,
+$ \forget{x_1, \cdots, x_n}{\delta} \defeq \forget{x_2, \cdots,
+x_n}{\forget{x_1}{\delta}} $.
+\end{definition}
+
+The correspondence between repeated concrete forget and a projection
+involving removal of more than one variable will be demonstrated shortly.
+
+\begin{lemma}[Order of Projection]\label{thm:pp:project:order} If $ V \subseteq
+V' \subseteq \fv{\delta} $ then
+$ \project{\paren{\project{\delta}{V'}}}{V} = \project{\delta}{V} $ .
+\end{lemma}
+
+\begin{proof} Let $ \sigma_V \in \project{\delta}{V} $.
+\begin{align}
+\paren{\project{\paren{\project{\delta}{V'}}}{V}}(\sigma_V)
+& = \sum_{\sigma_{V'} \in \eqclass{\sigma_V}{ \project{\delta}{V'}
+}{V}} \paren{ \sum_{\sigma \in \eqclass{\sigma_{V'}}{\delta}{V'}
+} \delta (\sigma) } \\ &
+= \sum_{\sigma \in \bigcup_{\sigma_{V'} \in \eqclass{\sigma_V}{ \project{\delta}{V'}
+}{V} }} \delta(\sigma) \\ &
+= \sum_{\sigma \in \eqclass{\sigma_V}{\delta}{V} } \delta (\sigma) \\
+& = \paren{\project{\sigma}{V}}(\sigma_V)
+\end{align}
+
+The collapse of the double sums on (1) to (2) is due to the
+correspondence between the terms of the double sum and the single sum
+due to \rref{thm:pp:project:eqclass:cover} and \rref{thm:pp:project:eqclass:disjoint}. The equality of the
+union of equivalence classes, (2) to (3) is due
+to \rref{thm:pp:project:eqclass:order}.
+\end{proof}
+
+\begin{corollary}\label{thm:pp:project:forgetseq} $ \project{\delta}{V} = \forget{x_1, \cdots,
+x_n}{\delta}$ where $ \fv{\delta} - V = \set{x_1, \cdots, x_n} $.
+\end{corollary}
+
+\begin{proof} Let us show this by induction on the size of
+$ \vcomp \defeq \fv{\delta} - V $. When $ \setsize{\vcomp} = 0 $ or
+$ \setsize{\vcomp} = 1 $, the claim holds vacuously or by
+definition of concrete forget, respectively.
+
+Let us assume the claim for $ \setsize{\vcomp} = m - 1 < n $ and consider
+the case when $ \setsize{\vcomp} = m \leq n $.
+
+\begin{align*}
+\project{\delta}{V}
+& = \project{\paren{\project{\delta}{V
+\cup \set{x_1}}}}{V} & \mathstep{by \lref{thm:pp:project:order}}\\
+& = \project{\forget{x_1}{\delta}}{V} \\
+& = \forget{x_2, \cdots,
+x_m}{\forget{x_1}{\delta}} & \mathstep{by induction} \\
+& = \forget{x_1, \cdots, x_m}{\delta}
+\end{align*}
+
+Thus, by induction, the claim holds for $ m = n $.
+\end{proof}
+
+\begin{remark}[Counting Variations]\label{thm:pp:project:counting}
+Two simple counting arguments are required for the further proofs.
+
+\begin{itemize}
+\item[(i)] If $ m $ objects are distributed fully into two bins, with one
+of the bins having space for no more than $ a $ objects, then the
+other must have at least $ m - a $ objects in it.
+\item[(ii)] If $ m $ objects are to be packed into bins of sizes $
+a_1, \cdots, a_n $, with $ \sum_{i} a_i \geq m $, the least number of
+bins that can be used to fit all $ m $ objects is greater or equal to
+$ \ceil{m / a^*} $ where $ a^* \geq \max_i a_i $.
+\end{itemize}
+\end{remark}
+
+\begin{proof} Part (i) is immediate. For part (ii), consider some
+optimal set of bins used to pack the $ m $ objects. This set of
+bins would also let one pack $ m $ items assuming each bin had space
+for exactly $ a^* $ objects as this is an upper bound on the size of
+each bin. Thus the space of solutions to the original packing problem
+is a subset of the space of solutions to the altered packing problem
+where all bins are increased to fit $ a^* $ items. Thus the solution
+for the original cannot use fewer bins than the optimal solution for
+the altered problem. For this alternate problem, the minimum number of bins used
+to pack all $ m $ items is exactly $ \ceil{m / a^*} $ by a
+generalization of the pigeonhole principle.
+\end{proof}
+
+\begin{replemma}{lem:pp:forget}[Soundness of Forget]
+If $\delta \in \ppconc{\pp{}}$ then $\forget{y}{\delta} \in \ppconc{\forget{y}{\pp{}}}$.
+\end{replemma}
+
+\begin{proof} Let $ \delta \in \ppconc{P} $, $ V = \fv{\delta}
+- \set{y} $, and $ \delta_2 = \project{\delta}{V}$. By assumption
+  $ \delta $ has the following properties.
+
+\begin{align}
+\label{thm:pp:forget:given1a} & \support{\delta} \subseteq \pconc{C} \\
+\label{thm:pp:forget:given2a}& \smin{} \leq \setsize{\support{\delta}} \leq \smax{} \\
+\label{thm:pp:forget:given3a}& \mmin{} \leq \pmass{\delta} \leq \mmax{} \\
+\label{thm:pp:forget:given4a}& \forall \sigma \in \support{\delta} \;
+. \; \pmin{} \leq \delta(\sigma) \leq \pmax{}
+\end{align}
+
+Let $ \pp{2} = \forget{y}{\pp{}} $. $ \pp{2} $ thus has the following
+properties.
+
+\begin{align}
+& \getpoly{2} = \forget{y}{C} \\
+& \pmin{2} = \pmin{} \cdot \maxparen{\minh{y} - \paren{\psize{C}
+- \smin{}}, 1} \\
+& \pmax{2} = \pmax{} \cdot \minparen{\maxh{y}, \smax{}} \\
+& \smin{2} = \ceil{\smin{} / \maxh{y}} \\
+& \smax{2} = \minparen{\psize{\getpoly{2}}, \smax{}} \\
+& \mmin{2} = \mmin{} \\
+& \mmax{2} = \mmax{}
+\end{align}
+
+The quantities $ \minh{y} $ and $ \maxh{y} $ are defined to exhibit
+the following properties.
+
+\begin{align}
+\label{thm:pp:forget:given1b} & \minh{y} \leq \min_{\sigma_V \in \pconc{\getpoly{2}}} \setsize{\eqclass{\sigma_V}{C}{V}} \\
+\label{thm:pp:forget:given2b} & \maxh{y} \geq \max_{\sigma_V \in \pconc{\getpoly{2}}} \setsize{\eqclass{\sigma_V}{C}{V}}
+\end{align}
+
+To show that $ \delta_2 \in \ppconc{\forget{y}{\pp{}}} $ we need to show the following.
+
+\begin{align}
+\label{thm:pp:forget:cond1} & \support{\delta_2} \subseteq \pconc{\getpoly{2}} \\
+\label{thm:pp:forget:cond2} & \smin{2} \leq \setsize{\support{\delta_2}} \leq \smax{2} \\
+\label{thm:pp:forget:cond3} & \mmin{2} \leq \pmass{\delta_2} \leq \mmax{2} \\
+\label{thm:pp:forget:cond4} & \forall \sigma_V \in \support{\delta_2} \qsep \pmin{2} \leq \delta_2(\sigma_V) \leq \pmax{2}
+\end{align}
+
+Let us show each of these in turn.
+
+\begin{subproof}{\clref{thm:pp:forget:cond1} -- Support} Let $ \sigma_V \in \support{\delta_2}
+$. Thus $ \delta_2(\sigma_V)
+= \sum_{\sigma \in \eqclass{\sigma_V}{\delta}{V}} \delta(\sigma) > 0 $ so
+there exists $ \sigma \in \eqclass{\sigma_V}{\delta}{V} $ with
+$ \delta(\sigma) > 0 $. So $ \sigma \in \support{\delta} $. Therefore,
+by \cnumref{thm:pp:forget:given1a}, $ \sigma \in \pconc{\getpoly{}}
+$, therefore $ \sigma_V \in \pconc{\getpoly{2}} $ by definition of
+polyhedron forget. Therefore
+$ \support{\delta_2} \subseteq \pconc{\getpoly{2}} $.
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:forget:cond2} Support points} First let us
+show the following claim.
+\begin{align}
+\label{thm:pp:forget:cond1b} & \max_{\sigma_V \in \support{\delta_2}} \setsize{\eqclass{\sigma_V}{\delta}{V}} \leq \maxh{y}
+\end{align}
+
+By construction of $ \maxh{y} $, we have $ \maxh{y} \geq \max_{\sigma_V \in \pconc{C_2}} \setsize{\eqclass{\sigma_V}{C}{V}}
+$. Now, $ \support{\delta_2} \subseteq \pconc{\getpoly{2}} $
+by \cnumref{thm:pp:forget:cond1}. Also for any
+$ \sigma_V \in \support{\delta_2} $, we have
+$ \eqclass{\sigma_V}{\delta}{V} \subseteq \eqclass{\sigma_V}{\getpoly{}}{V}
+$ by \rref{thm:pp:project:eqclass:subsets}. Therefore
+$ \max_{\sigma_V \in \pconc{C_2}} \setsize{\eqclass{\sigma_V}{C}{V}} \geq \max_{\sigma_V \in \support{\delta_2}}\setsize{\eqclass{\sigma_V}{\getpoly{}}{V}} \geq \max_{\sigma_V \in \support{\delta}} \setsize{\eqclass{\sigma_V}{\delta}{V}}
+$. Thus concluding 
+$ \maxh{y} \geq \max_{\sigma_V \in \support{\delta_2}} \setsize{\eqclass{\sigma_V}{\delta}{V}}
+$.
+
+Consider the elements of $ \support{\delta} $ as they map via state
+projection to elements of $ \support{\delta_2} $. Let us view the
+elements of the later as bins, with the elements of the former as
+objects to pack into the bins. By \cnumref{thm:pp:forget:cond1b}, we
+know no bin has more than $ \maxh{y} $ objects, thus we can
+apply \rref{thm:pp:project:counting} to conclude there are at least
+$ \ceil{\setsize{\support{\delta}} / \maxh{y}} $ non-empty bins, or in
+other words,
+$ \setsize{\support{\delta_2}} \geq \ceil{\setsize{\support{\delta}}
+/\maxh{y}} $. This is itself at least as large as $ \ceil{\smin{}
+/ \maxh{y}} = \smin{2} $ by \cnumref{thm:pp:forget:given2a}. Therefore
+$ \setsize{\support{\delta_2}} \geq \smin{2} $.
+
+For the other side of the inequality, note that the number of bins
+used, or $ \setsize{\support{\delta_2}} $ cannot exceed
+$ \setsize{\support{\delta}} \leq \smax{} $ itself. It also cannot
+exceed $ \setsize{\pconc{\getpoly{2}}} = \psize{\getpoly{2}} $
+given \cnumref{thm:pp:forget:cond1}. Therefore
+$ \support{\delta_2} \leq \minparen{\psize{\getpoly{2}}, \smax{}} $,
+concluding requirement \cnumref{thm:pp:forget:cond2}.
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:forget:cond3} Mass} This requirement holds
+trivially due to \lref{thm:pp:project:mass} and
+assumption \cnumref{thm:pp:forget:given3a}.
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:forget:cond4} Probability} Let us first show the following claim.
+\begin{align}
+\label{thm:pp:forget:cond2b}
+& \min_{\sigma_V \in \support{\delta_2}} \setsize{\eqclass{\sigma_V}{\delta}{V}} \geq \minh{y}
++ \smin{} - \psize{\getpoly{}}
+\end{align}
+
+Let $ \sigma_V \in \support{\delta_2} $. Let us consider the size of
+$ \eqclassc{\sigma_V}{\delta}{V} $.
+
+\begin{align*}
+\setsize{\eqclassc{\sigma_V}{\delta}{V}}
+& \leq \setsize{\eqclassc{\sigma_V}{\getpoly{}}{V}}
+& \mathstep{by \rref{thm:pp:project:eqclass:subsets}}\\
+& = \psize{\getpoly{}} - \setsize{\eqclass{\sigma_V}{\getpoly{}}{V}} \\
+& \leq \psize{\getpoly{}}
+- \min_{\tau_V \in \pconc{\getpoly{2}}} \setsize{\eqclass{\tau_V}{\getpoly{}}{V}} \\
+& \leq \psize{\getpoly{}} - \minh{y} & \mathstep{by \cnumref{thm:pp:forget:given1b}}
+\end{align*}
+
+Let us view now the elements of $ \support{\delta} $ as mapping (via
+projection) into two bins, $ \eqclass{\sigma_V}{\delta}{V} $ and
+$ \eqclassc{\sigma_V}{\delta}{V} $. By the argument above, we know the
+second bin cannot hold more than $ \psize{\getpoly{}} - \minh{y} $ elements,
+thus, by \rref{thm:pp:project:counting} (i), it must be the case that the
+first bin contains at least $ \setsize{\support{\delta}}
+- \paren{\psize{\getpoly{}} - \minh{y}} $ elements. This itself is no
+smaller than $ \smin{} - \psize{\getpoly{}} + \minh{y} $
+by \cnumref{thm:pp:forget:given2a}. Therefore
+$ \setsize{\eqclass{\sigma_V}{\delta}{V}} \geq \smin{} - \psize{\getpoly{}} + \minh{y} $
+and thus claim \cnumref{thm:pp:forget:cond2b} holds.
+
+Consider now $ \sigma_V \in \support{\delta_2}
+$. By \cnumref{thm:pp:forget:given4a} and the concrete projection
+definition, it must be the case that $ \delta_2(\sigma_V)
+= \sum_{\sigma \in \eqclass{\sigma_V}{\delta}{V}} \delta(\sigma) \geq \pmin{}
+$.
+Also,
+
+\begin{align*}
+\delta_2(\sigma_V)
+& = \sum_{\sigma \in \eqclass{\sigma_V}{\delta}{V}} \delta(\sigma) \\
+& \geq \sum_{\sigma \in \eqclass{\sigma_V}{\delta}{V}} \pmin{}
+& \mathstep{by \cnumref{thm:pp:forget:given4a}}\\
+& = \setsize{\eqclass{\sigma_V}{\delta}{V}} \cdot \pmin{} \\
+& \geq \paren{\minh{y} + \smin{} - \psize{\getpoly{}}} \cdot \pmin{}
+& \mathstep{by \cnumref{thm:pp:forget:cond2b}}
+\end{align*}
+
+Therefore,
+$ \delta_2(\sigma_V) \geq \pmin{} \cdot \minparen{1, \minh{y}
++ \smin{} - \psize{\getpoly{}}} $ $ = \pmin{2} $, concluding one
+inequality of the last condition.
+
+For the other inequality, let us once more consider a general
+$ \sigma_V \in \support{\delta_2} $. 
+
+\begin{align*}
+\delta_2(\sigma_V)
+& = \sum_{\sigma \in \eqclass{\sigma_V}{\delta}{V}} \delta(\sigma) \\
+& \leq \sum_{\sigma \in \eqclass{\sigma_V}{\delta}{V}} \pmax{}
+& \mathstep{by \cnumref{thm:pp:forget:given4a}} \\
+& = \setsize{\eqclass{\sigma_V}{\delta}{V}} \cdot \pmax{} \\
+& \leq \maxh{y} \cdot \pmax{} & \mathstep{by \cnumref{thm:pp:forget:cond1b}}
+\end{align*}
+
+Since $ \eqclass{\sigma_V}{\delta}{V} \subseteq \support{\delta} $, we have
+$ \setsize{\eqclass{\sigma_V}{\delta}{V}} \leq \setsize{\support{\delta}}
+ \leq \smax{} $ (by \cnumref{thm:pp:forget:given2a}). Thus we can also bound
+ $ \delta_2 (\sigma_V) $ by $ \smax{} \cdot \pmax{} $. Therefore,
+ $ \delta_2(\sigma_V) \leq \pmax{} \cdot \minparen{\maxh{y}, \smax{}} $,
+ completing the last claim.
+\end{subproof}
+\end{proof}
+
+\begin{lemma}[Soundness of Projection] \label{lem:pp:project}
+If $\delta \in \ppconc{\pp{}}$ then
+$\project{\delta}{V} \in \ppconc{\project{\pp{}}{V}}$.
+\end{lemma}
+
+\begin{proof} Let us show this by induction on the size of
+$ \vcomp \defeq \fv{\delta} - V $. When $ \setsize{\vcomp} = 0 $ there
+is no projection to be done, when $ \setsize{\vcomp} = 1 $, the claim
+holds by \lref{lem:pp:forget}. Let us assume the claim holds for
+$ \setsize{\vcomp} = n - 1 $ and look at the case where
+$ \setsize{\vcomp} = n $.
+
+Let us write $ \vcomp = \set{x_1, \cdots,
+x_n} $. Thus $ \project{\delta}{V} = \forget{x_1, \cdots, x_n}{\delta}
+$ by Corollary~\ref{thm:pp:project:forgetseq}. By definition of
+forget, we also have $ \forget{x_1, \cdots, x_n}{\delta}
+= \forget{x_2, \cdots, x_n}{\forget{x_1}{\delta}} $ and
+$ \forget{x_1, \cdots, x_n}{\pp{}} = \forget{x_2, \cdots,
+x_n}{\forget{x_1}{\pp{}}} $. By \lref{lem:pp:forget}, we know that
+$ \forget{x_1}{\delta} \in \ppconc{\forget{x_1}{\pp{}}} $, therefore,
+by induction, $ \project{\delta}{V} = \forget{x_2, \cdots,
+x_n}{\forget{x_1}{\delta}} \in \forget{x_2, \cdots,
+x_n}{\forget{x_1}{\pp{}}} = \project{\pp{}}{V} $.
+\end{proof}
+
+\subsection{Assignment}
+We begin with some useful notation. 
+\begin{notation} Let $ \sigma $ be a state, $ E $
+be an expression, $ x $ be a variable, $ S \subseteq \states $, $
+V \subseteq \vars $.
+
+\begin{itemize}
+\item{}
+$ \stassign{\sigma}{x}{E} \defeq \sigma \bparen{x \ra \eeval{E}{\sigma}}
+$
+\item{} $ \stsassign{S}{x}{E}
+\defeq \set{\stassign{\sigma}{x}{E} \given \sigma \in S} $.
+\item{} $ \project{S}{V} \defeq \set{\project{\sigma}{V} \given \sigma \in S} $
+\end{itemize}
+\end{notation}
+
+\begin{definition} 
+A state $ \sigma $ is \emph{feasible} for $ \bassign{x}{E} $ iff
+$ \sigma \in \stsassign{\states}{x}{E} $. We will say that $ \sigma $
+is merely feasible if the assignment is clear from the context.
+\end{definition}
+
+\begin{definition} $ \funassign{x}{E} $ is the function from $ \states
+$ to feasible states (for $ \bassign{x}{E} $) defined by
+$ \funassign{x}{E} : \sigma \mapsto \stsassign{\sigma}{x}{E} $
+\end{definition}
+
+\begin{definition} The inverted equivalence class for $ \sigma $ under assignment $ \bassign{x}{E} $
+is the set of states that map to $ \sigma $. We define two varieties,
+one over all possible states and one for just the states in the
+support of a distribution.
+\begin{itemize} 
+\item{} $ \eqassign{\sigma}{x}{E} \defeq \set{\tau \given \stassign{\tau}{x}{E}
+= \sigma} $
+\item{} $ \eqassignsup{\sigma}{x}{E}{\delta}
+\defeq \set{\tau \in \support{\delta} \given \stassign{\tau}{x}{E}
+= \sigma} $
+\end{itemize}
+
+\end{definition}
+
+Note that $ \sigma $ is feasible iff $ \eqassign{\sigma}{x}{E} \neq \emptyset $.
+
+\begin{definition} An assignment $ \bassign{x}{E} $ is invertible iff
+$ \funassign{x}{E} $ is invertible. We will denote
+$ \funinvassign{x}{E} $ as the inverse of $ \funassign{x}{E} $, if it
+is invertible. The invertability of $ \funassign{x}{E} $ is
+characterized by the existence of the inverse, having the property,
+that for every $ \sigma \in \states $, we have
+$ \funinvassign{x}{E} \paren{\funassign{x}{E} \paren{\sigma}} = \sigma
+$. Equivalently, for every feasible state $ \sigma $,
+$ \funassign{x}{E}\paren{\funinvassign{x}{E}\paren{\sigma}} = \sigma
+$.
+
+We can also characterize invertability via inverted equivalence
+classes. $ \bassign{x}{E} $ is invertible iff for every feasible
+$ \sigma $, $ \setsize{\eqassign{\sigma}{x}{E}} = 1 $.
+
+We will say $ E $ is invertible if the variable is clear from the
+context.
+
+\end{definition}
+
+Note that since $ \funassign{x}{E} $ only changes the $ x $ component
+of a state, the inverse, $ \funinvassign{x}{E} $, also only changes
+the $ x $ component, if the inverse exists. This doesn't mean,
+however, that the inverse can be represented by an assignment of some
+$ E' $ to $ x $. Furthermore, since our language for expressions lacks
+division and non-integer constants, no assignment's inverse can be
+represented by an assignment.
+
+\begin{definition} The expression $ E $ is \emph{integer linear} iff $
+E = n_1 \times x_1 + \cdots + n_m \times x_m $, where $ n_i $ are
+integer constants, and $ x_i $ are variables. We assume that all the
+variables in a given context are present. We will generally use $ x_i
+$ and $ n_i $ to refer to the contents of a integer linear expression.
+\end{definition}
+
+From now on, we will assume all expressions $ E $ are integer
+linear. Programs containing non-linear expressions are just not
+handled by our system at this stage and linear expressions not fully
+specified are equivalent to integer linear expressions with $ n_i = 0
+$ for variables unused in the original expression.
+
+\begin{lemma} \label{thm:pp:assign:zero} $ \bassign{x_1}{E} $ is non-invertible iff $ n_1 = 0
+$. In other words, $ \bassign{x_1}{E} $ is non-invertible iff $ E $ doesn't depend on $
+x_1 $.
+\end{lemma}
+\begin{proof}
+\textbf{($ \Rightarrow $)}
+Assume otherwise. Thus $ E $ is non-invertible but $ n_1 \neq 0 $. So
+we have a feasible state $ \sigma $ with
+$ \setsize{\eqassign{\sigma}{x_1}{E}} \neq 1 $. Since feasible states
+have non empty inverted equivalence sets, it must be that
+$ \setsize{\eqassign{\sigma}{x_1}{E}} \geq 2 $. So let
+$ \tau, \tau' \in \eqassign{\sigma}{x_1}{E} $ with $ \tau \neq \tau'
+$. So $ \stassign{\tau}{x_1}{E} = \stassign{\tau'}{x_1}{E} = \sigma
+$. Since assignment to $ x_1 $ doesn't change the state other than in
+its value of $ x_1 $, $ \tau $ and $ \tau' $ can only differ in their
+value for $ x_1 $.
+
+But since $ \tau $ and $ \tau' $ are identical after the assignment,
+we have,
+
+\begin{align*}
+\stassign{\tau}{x_1}{E}(x_1) & = n_1 \tau (x_1) + n_2 \tau
+(x_2) + \cdots + n_m \tau(x_m) \\ & = n_1 \tau (x_1) + n_2 \tau' (x_2)
++ \cdots + n_m \tau' (x_m) \\
+& = n_1 \tau' (x_1) + n_2 \tau' (x_2) + \cdots + n_m \tau' (x_m) \\
+& = \stassign{\tau'}{x_1}{E}(x_1) 
+\end{align*}
+
+Canceling out the common $ \tau'(x_i) $ terms, we have $
+n_1 \tau(x_1) = n_1 \tau'(x_1) $ and since $ n_1 \neq 0 $, we conclude
+$ \tau(x_1) = \tau'(x_1) $, contradicting $ \tau \neq \tau' $.
+
+\textbf{($ \Leftarrow $)} Let $ \sigma $ be a feasible state and let
+$ \tau \in \eqassign{\sigma}{x_1}{E} $. Let $ \tau'
+= \stassign{\tau}{x_1}{\tau(x_1) + 1} $. Since $ E $ doesn't depend
+on $ x_1 $, we have $ \eeval{E}{\tau} = \eeval{E}{\tau'} $ and
+therefore $ \stassign{\tau'}{x_1}{E} = \stassign{\tau}{x_1}{E}
+= \sigma $ and so we have $ \tau, \tau' \in \eqassign{\sigma}{x_1}{E}
+$ with $ \tau \neq \tau' $, therefore $ E $ is non-invertible.
+\end{proof}
+
+\begin{lemma} \label{thm:pp:assign:nifeasible} Assume $ \bassign{x}{E} $ is non-invertible. $ \sigma $
+is feasible iff $ \stassign{\sigma}{x}{E} = \sigma $.
+\end{lemma}
+
+\begin{proof} \textbf{($\Rightarrow$)} Let $ \sigma $ be
+feasible. Thus $ \sigma = \stassign{\tau}{x}{E} $ for some
+$ \tau \in \states $. Since $ E $ doesn't depend on $ x $
+by \lref{thm:pp:assign:zero}, we have
+$ \stassign{\paren{\stassign{\tau}{x}{E}}}{x}{E} = \stassign{\tau}{x}{E}
+= \sigma $. So $ \stassign{\sigma}{x}{E} = \sigma $.
+
+\textbf{($\Leftarrow$)} Assume $ \stassign{\sigma}{x}{E} = \sigma
+$. Thus $ \sigma \in \stsassign{\states}{x}{E} $ by definition.
+\end{proof}
+
+\begin{lemma} \label{thm:pp:assign:eqproject} Assume $ \bassign{x}{E} $ is non-invertible. Let
+$ \delta $ be a distribution with $ x \in \fv{\delta} $ and let $ V =
+\fv{\delta} - \set{x} $. If $ \sigma
+$ is feasible, then $ \eqassignsup{\sigma}{x}{E}{\delta}
+= \eqclass{\project{\sigma}{V}}{\delta}{V} $.
+
+%\begin{subtheorem} For every
+%$ \sigma_{V} \in \support{\forget{x}{\delta}} $, there exists a
+%unique feasible $ \tau \in \support{\delta} $ with
+%$ \project{\tau}{V} = \sigma_{V} $.
+%\end{subtheorem}
+\end{lemma}
+
+\begin{proof} Let $ \tau \in \eqassignsup{\sigma}{x}{E}{\delta} $. So
+$ \stassign{\tau}{x}{E} = \sigma $ and $ \tau \in \support{\delta}
+$. But the assignment only changes $ x $, thus $ \project{\tau}{V}
+= \project{\sigma}{V} $, therefore
+$ \tau \in \eqclass{\project{\sigma}{V}}{\delta}{V} $. Thus
+$ \eqassignsup{\sigma}{x}{E}{\delta} \subseteq \eqclass{\project{\sigma}{V}}{\delta}{V} $.
+
+Let $ \tau \in \eqclass{\project{\sigma}{V}}{\delta}{V} $. So
+$ \tau \in \support{\delta} $ and $ \project{\tau}{V}
+= \project{\sigma}{V} $. Since $ E $ doesn't depend on $ x $, we have
+$ \stassign{\tau}{x}{E} = \stassign{\sigma}{x}{E} = \sigma $; the second
+equality follows from \lref{thm:pp:assign:nifeasible} as $ \sigma $ is
+feasible by assumption. So
+$ \tau \in \eqassignsup{\sigma}{x}{E}{\delta} $. Therefore
+$ \eqclass{\project{\sigma}{V}}{\delta}{V} \subseteq \eqassignsup{\sigma}{x}{E}{\delta}
+$.
+
+%\textbf{(ii)} Since $ E $ does not depend on $ x $, we can evaluate it
+%on $ \sigma_{V} $. Let $ \tau = \sigma_{V} \cup \set{x
+%= \eeval{E}{\sigma_{V}}} $, a state extended to include $ x $ whose
+%value is set to $ \eeval{E}{\sigma_{V}} $.  !!! todo or remove !!!
+\end{proof}
+
+%\begin{lemma} If $ \bassign{x}{E} $ is invertible, then
+%$ \funinvassign{x}{E} $ can be defined via $ \funassign{x}{E}
+%: \sigma \mapsto \stassign{\sigma}{x}{f(\sigma)} $ for some function $
+%f $. That is, the inverse of an assignment to $ x $ only modifies the
+%value of $ x $.
+%\end{lemma}
+%
+%\begin{proof} Without the loss of generality, let us set $ x = x_1
+%$. We have $ E = n_1 x_1 + \cdots + n_m x_m $. Let us define $
+%f $ via $ f : \sigma \mapsto \frac{1}{n_1}\bparen{\sigma(x_1)
+%- \sum_{i=2}^{m} n_i \sigma(x_i)} $. Note that $
+%n_1 \neq 0 $ by \lref{thm:pp:assign:zero}.
+%
+%Let $ \sigma $ be a state. Let us show that
+%$ \funinvassign{x_1}{E}\paren{\funassign{x_1}{E}\paren{\sigma}}
+%= \sigma $. Let $ \sigma' = \funassign{x_1}{E}\paren{\sigma} $. Since
+%both $ \funassign{x_1}{E} $ and $ \funinvassign{x_1}{E} $ only change the
+%values of $ x_1 $, we know that the non-$x_1$ components of
+%$ \sigma $ , $ \sigma' $, and $ \funinvassign{x_1}{E} $ are
+%identical. So let us look at the $ x_1 $ component.
+%$$ \sigma'(x_1) = \sum_{i=1}^{m} n_1 \sigma(x_i) $$
+%So,
+%
+%\begin{align*}
+%& \paren{\funinvassign{x_1}{E}\sigma'}(x_1) \\
+%& \; = \frac{1}{n_1} \bparen{\sigma'(x_1)
+%- \sum_{i=2}^{m}n_i \sigma'(x_i) } \\
+%& \; = \frac{1}{n_1} \bparen{n_1 \sigma(x_1)
+%+ \sum_{i=2}^{m}n_i \sigma(x_i) - \sum_{i=2}^{m}n_i \sigma'(x_i)} \\
+%& \; = \frac{1}{n_1} \bparen{n_1 \sigma(x_1)
+%+ \sum_{i=2}^{m}n_i \sigma(x_i) - \sum_{i=2}^{m}n_i \sigma(x_i)} \\
+%& \; = \frac{1}{n_1} \bparen{n_1 \sigma(x_1)} \\
+%& \; = \sigma(x_1)
+%\end{align*}
+%
+%Thus the $x_1$ component of $ \funinvassign{x_1}{E}(\sigma') $ is also
+%identical to that of $ \sigma $, hence
+%$ \funinvassign{x_1}{E}(\sigma') = \sigma $.
+%\end{proof}
+
+\begin{remark} \label{thm:pp:assign:one-inverse} Assume $ \bassign{x}{E} $ is invertible. For every
+feasible $ \sigma $, we have $ \eqassign{\sigma}{x}{E}
+= \set{\funinvassign{x}{E}(\sigma)} $.
+\end{remark}
+
+\begin{proof} Invertability tells us that $ \eqassign{\sigma}{x}{E} $
+has only one element. The function $ \funinvassign{x}{E} $, given
+the feasible $ \sigma $, produces an element of
+$ \eqassign{\sigma}{x}{E} $, as
+$ \stassign{\paren{\funinvassign{x}{E}(\sigma)}}{x}{E} = \sigma $.
+\end{proof}
+
+\begin{definition} We define an alternate means of assignment,
+$ \deassign{\delta}{x}{E} $. Let $ V = \fv{\delta} - \set{x} $.
+
+\begin{itemize}
+\item{} If $ \bassign{x}{E} $ is invertible, then
+\begin{align*}
+\deassign{\delta}{x}{E} = \lambda \sigma \lsep \aif & \sigma \text{ is
+feasible} \\
+& \athen \delta \paren{\funinvassign{x}{E}(\sigma)} \\
+& \aelse 0
+\end{align*}
+\item{} If $ \bassign{x}{E} $ is not invertible, then
+\begin{align*}
+\deassign{\delta}{x}{E} = \lambda \sigma \lsep \aif & \sigma \text{ is
+feasible} \\
+& \athen \project{\delta}{V} \paren{\project{\sigma}{V}} \\
+& \aelse 0
+\end{align*}
+\end{itemize}
+
+\end{definition}
+
+\begin{lemma} \label{thm:pp:assign:eqdef} For any $ \delta $, $ \dassign{\delta}{x}{E}
+= \deassign{\delta}{x}{E} $.
+\end{lemma}
+
+\begin{proof} Let $ \delta' = \dassign{\delta}{x}{E} $ and $ \delta''
+= \deassign{\delta}{x}{E} $.
+\begin{align*}
+\delta'(\sigma)
+& = \sum_{\tau \given \stassign{\tau}{x}{E} = \sigma} \delta (\tau) \\
+& = \sum_{\tau \in \eqassignsup{\sigma}{x}{E}{\delta}} \delta (\tau)
+\end{align*}
+
+\textbf{Case 1: $ \bassign{x}{E} $ is invertible}
+
+If $ \sigma $ is feasible, $ \eqassign{\sigma}{x}{E} $ has only one
+element, $ \sigma^{-1} = \funinvassign{x}{E}(\sigma) $,
+by \rref{thm:pp:assign:one-inverse}. So $ \delta'(\sigma)
+= \delta(\sigma^{-1}) = \delta''(\sigma) $. Note that when
+$ \sigma^{-1} $ is not in $ \support{\delta} $ then $ \delta'(\sigma)
+= 0 = \delta''(\sigma) $.
+
+If $ \sigma $ is not feasible then $ \eqassign{\sigma}{x}{E}
+= \emptyset $ so $ \delta'(\sigma) = 0 = \delta''(\sigma) $.
+
+\textbf{Case 2: $ \bassign{x}{E} $ is non-invertible}
+
+If $ \sigma $ is feasible, then by \lref{thm:pp:assign:eqproject} we
+have $ \eqassignsup{\sigma}{x}{E}{\delta}
+= \eqclass{\project{\sigma}{V}}{\delta}{V} $.
+
+\begin{align*}
+\delta'(\sigma)
+& = \sum_{\tau \in \eqassignsup{\sigma}{x}{E}{\delta}} \delta (\tau) \\
+& = \sum_{\tau \in \eqclass{\project{\sigma}{V}}{\delta}{V}} \delta
+(\tau)  \\
+& = \paren{\project{\delta}{V}}(\project{\sigma}{V}) \\
+& = \delta''(\sigma)
+\end{align*}
+
+If $ \sigma $ is not feasible then
+$ \eqassignsup{\sigma}{x}{E}{\delta} = \emptyset $ so
+$ \delta'(\sigma) = 0 = \delta''(\sigma) $.
+
+\end{proof}
+
+\begin{lemma} \label{thm:pp:assign:support} Assume $ \bassign{x}{E} $ is invertible, then $ \support{\delta}
+= \set{\funinvassign{x}{E}(\sigma) \given \sigma \in \support{\deassign{\delta}{x}{E}}} $.
+\end{lemma}
+
+\begin{proof} Let $ \delta_2 = \deassign{\delta}{x}{E} $. Let $ \tau \in \support{\delta} $. So
+$ \sigma \defeq \stassign{\tau}{x}{E} \in \support{\delta_2} $ and
+$ \funinvassign{x}{E}(\sigma) = \tau $. So
+$ \tau \in \set{\funinvassign{x}{E}(\sigma) \given \sigma \in
+\support{\delta_2}} $.
+
+Let
+$ \tau \in \set{\funinvassign{x}{E}(\sigma) \given \sigma \in \support{\delta_2}}
+$. So $ \tau = \funinvassign{x}{E}(\sigma) $ for some
+$ \sigma \in \support{\delta_2} $. So there exists $ \tau' \in
+\support{\delta} $ such that $ \stassign{\tau'}{x}{E} = \sigma $. But
+$ \funinvassign{x}{E}(\sigma)
+= \funinvassign{x}{E}(\funassign{x}{E}(\tau')) = \tau' $ so $ \tau'
+= \tau $ as $ \tau = \funinvassign{x}{E}(\sigma) $. So $ \tau \in
+\support{\delta} $.
+\end{proof}
+
+\begin{replemma}{lem:pp:assign}[Soundness of Assignment]
+If $\delta \in \ppconc{\pp{}}$ then $\dassign{\delta}{x}{E} \in \ppconc{\dassign{\pp{}}{x}{E}}$.
+\end{replemma}
+
+\begin{proof} Let $ V = \fv{\delta} - \set{x} $. By assumption, we
+have the following.
+\begin{align}
+\label{thm:pp:assign:given1a} & \support{\delta} \subseteq \pconc{\getpoly{}} \\
+\label{thm:pp:assign:given2a}& \smin{} \leq \setsize{\support{\delta}} \leq \smax{} \\
+\label{thm:pp:assign:given3a}& \mmin{} \leq \pmass{\delta} \leq \mmax{} \\
+\label{thm:pp:assign:given4a}& \forall \sigma \in \support{\delta} \;
+. \; \pmin{} \leq \delta(\sigma) \leq \pmax{}
+\end{align}
+
+Let $ \pp{2} = \dassign{\pp{}}{x}{E} $ and $ \delta_2
+= \dassign{\delta}{x}{E} = \deassign{\delta}{x}{E}
+$. \lref{thm:pp:assign:eqdef} lets us use
+$ \dassign{\delta}{x}{E} $ or $ \deassign{\delta}{x}{E} $ interchangeably.
+
+We consider two cases.
+\textbf{Case 1: $ \bassign{x}{E} $ is invertible}
+
+In this case, $ \pp{2} $ is defined with $ \getpoly{2} = \dassign{C}{x}{E} $ and all
+other parameters as in $ \pp{} $. Thus we need to show the following.
+\begin{align}
+\label{thm:pp:assign:cond1a}& \support{\delta_2} \subseteq \pconc{\getpoly{2}} \\
+\label{thm:pp:assign:cond2a}& \smin{}
+= \smin{2} \leq \setsize{\support{\delta_2}} \leq \smax{2} = \smax{} \\
+\label{thm:pp:assign:cond3a}& \mmin{}
+= \mmin{2} \leq \pmass{\delta_2} \leq \mmax{2} = \mmax{} \\
+\label{thm:pp:assign:cond4a}& \forall \sigma \in \support{\delta_2} \;
+. \; \pmin{} = \pmin{2} \leq \delta_2(\sigma) \leq \pmax{2} = \pmax{}
+\end{align}
+
+\begin{subproof}{\clref{thm:pp:assign:cond1a} Support} By definition,
+$ \pconc{\getpoly{2}}
+= \set{\stassign{\sigma}{x}{E} \given \sigma \in \pconc{\getpoly{}}}
+$. Let $ \tau \in \support{\delta_2} $, so we have $ \sigma \in
+\support{\delta} \subseteq \pconc{\getpoly{}} $ with $ \stassign{\sigma}{x}{E} = \tau $. So
+$ \tau \in \pconc{\getpoly{2}} $. So $ \tau \in \pconc{\getpoly{2}} $
+and thus $ \support{\delta_2} \subseteq \pconc{\getpoly{2}} $.
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:assign:cond2a} Support points}
+By \lref{thm:pp:assign:support} we have $ \support{\delta}
+= \set{\funinvassign{x}{E}(\sigma) \given \sigma \in \support{\delta_2}}
+$. Inverse functions are necessarily injective over their domain, and
+since $ \support{\delta_2} $ are all feasible (thus in the domain of
+the inverse), we have
+$ \setsize{\set{\funinvassign{x}{E}(\sigma) \given \sigma \in \support{\delta_2}}}
+= \setsize{\support{\delta_2}} $. So $ \setsize{\support{\delta}}
+= \setsize{\support{\delta_2}} $. This, together
+with \cnumref{thm:pp:assign:given2a}, completes the claim.
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:assign:cond3a} Mass} Note again that
+$ \support{\delta_2} \subseteq \stsassign{\states}{x}{E} $. That is,
+all possible states are feasible. So we can write:
+\begin{align*}
+\pmass{\delta_2} & = \sum_{\sigma \in \support{\delta_2}} \delta_2
+(\sigma) \\
+ & = \sum_{\sigma \in \support{\delta_2}} \delta
+ ( \funinvassign{x}{E}(\sigma) ) & \mathstep{by defn. of $ \delta_2
+ $} \\
+ & = \sum_{\tau \in \support{\delta}} \delta (\tau) & \mathstep{by \lref{thm:pp:assign:support}} \\
+ & = \pmass{\delta}
+\end{align*}
+
+The above, together with \cnumref{thm:pp:assign:given3a}, completes
+this claim.
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:assign:cond4a} Probability} Since
+$ \support{\delta_2} $ are feasible, we have, for every
+$ \sigma \in \support{\delta_2} $, $ \delta_2(\sigma)
+= \delta(\funinvassign{x}{E}(\sigma)) $. But also,
+$ \funinvassign{x}{E}(\sigma) \in \support{\delta} $. Taking this,
+and \cnumref{thm:pp:assign:given4a}, completes this claim, and
+soundness in the invertible case.
+\end{subproof}
+
+\textbf{Case 2: $ \bassign{x}{E} $ is non-invertible} In this case,
+$ \pp{2} $ is defined via the forget operation. If $ \pp{1}
+= \forget{x}{\pp{}} $ and $ \poly_1 = (\cons_1, V_1) $, then $ \pp{2}
+= \dassign{\pp{}}{x}{E} $ has $ \getpoly{2} = (\cons_1 \cup \set{x =
+E}, V_1 \cup \set{x}) $, and all other parameters as in $ \pp{1} $.
+
+We need to show the following four claims.
+
+\begin{align}
+\label{thm:pp:assign:cond1b}& \support{\delta_2} \subseteq \pconc{\getpoly{2}} \\
+\label{thm:pp:assign:cond2b}& \smin{1}
+= \smin{2} \leq \setsize{\support{\delta_2}} \leq \smax{2} = \smax{1} \\
+\label{thm:pp:assign:cond3b}& \mmin{1}
+= \mmin{2} \leq \pmass{\delta_2} \leq \mmax{2} = \mmax{1} \\
+\label{thm:pp:assign:cond4b}& \forall \sigma \in \support{\delta_2} \;
+. \; \pmin{1} = \pmin{2} \leq \delta_2(\sigma) \leq \pmax{2} = \pmax{1}
+\end{align}
+
+Recall the definition of $ \delta_2 $:
+\begin{align*}
+\deassign{\delta}{x}{E} = \lambda \sigma \lsep \aif & \sigma \text{ is
+feasible} \\
+& \athen \project{\delta}{V} \paren{\project{\sigma}{V}} \\
+& \aelse 0
+\end{align*}
+
+\begin{subproof}{\clref{thm:pp:assign:cond1b} Support} Let
+$ \sigma \in \support{\delta_2} $. So
+$ \project{\sigma}{V} \in \support{\project{\delta}{V}} $. so there
+exists $ \tau \in \support{\delta} \subseteq \pconc{\getpoly{}} $ with $ \project{\tau}{V}
+= \project{\sigma}{V} $. So
+$ \project{\tau}{V} \in \pconc{\forget{x}{\getpoly{}}}
+= \pconc{\getpoly{1}} $. So $ \tau \in \pconc{(\cons_1, V_1 \cup \set{x})}
+$ as the add dimension operation leaves $ x $ unconstrained. The
+non-constraint of $ x $ also tells us that
+$ \sigma \in \pconc{(\cons_1, V_1 \cup \set{x})} $ as we have
+$ \project{\sigma}{V} = \project{\tau}{V} $.
+
+Since $ \sigma \in \support{\delta_2}$, $ \sigma $ is feasible so
+$ \sigma $ satisfies the $ x = E $ constraint as $ \sigma
+= \stassign{\tau}{x}{E} $ for some $ \tau $. Thus, overall, we have
+$ \sigma \in \pconc{(\cons_1 \cup \set{x = E}, V_1 \cup \set{x})}
+= \pconc{\getpoly{2}} $.
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:assign:cond2b} Support points} Let $ \delta_1 =
+\project{\delta}{V} = \forget{x}{\delta} $. By soundness of
+forget (\lref{lem:pp:forget}), we have the following.
+
+$$ \smin{1} = \smin{2} \leq \setsize{\support{\delta_1}} \leq \smax{2}
+= \smax{1} $$
+
+All we need to show, then, is the following.
+
+\begin{align}
+\label{thm:pp:assign:claim1} \setsize{\support{\delta_1}} = \setsize{\support{\delta_2}}
+\end{align}
+
+Let us show this by establishing a bijection $ f $ between the two sets. Let us define $ f
+: \support{\delta_1} \ra \support{\delta_2} $ via $ f
+: \sigma_V \mapsto \sigma_V \cup \set{x = \eeval{E}{\sigma_V}} $.
+
+To show $ f $ is injective, let $ \sigma_V, \sigma_V'$ be such that $
+f(\sigma_V) = f(\sigma_V') $. Since $ f $ does not change any part of
+the state other than adding $ x $, it must be that $ \sigma_V
+= \sigma_V' $.
+
+To show that $ f $ is surjective, consider
+$ \sigma \in \support{\delta_2} $. So $ \sigma $ is feasible, so
+$ \stassign{\sigma}{x}{E} = \sigma $
+by \lref{thm:pp:assign:nifeasible}. Also
+$ \project{\sigma}{V} \in \support{\sigma_V} $, considering the
+definition of $ \sigma_2 $. Since $ E $ doesn't depend on $ x $, we
+can write $ \eeval{E}{\sigma} = \eeval{E}{\project{\sigma}{V}} $,
+therefore $ f(\project{\sigma}{V}) = \project{\sigma}{V} \cup \set{x
+= \eeval{E}{\project{\sigma}{V}}} = \stassign{\sigma}{x}{E} = \sigma
+$.
+
+Since $ f $ is injective and surjective, it is a bijection and thus
+$ \setsize{\support{\delta_1}} = \setsize{\support{\delta_2}} $.
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:assign:cond3b} Mass} Let $ \delta_1 =
+\project{\delta}{V} = \forget{x}{\delta} $. Let us show the following claim.
+
+\begin{align}
+\label{thm:pp:assign:claim2} LHS = \support{\delta_1}
+= \set{\project{\sigma}{V} \given \sigma \in \support{\delta_2}} =
+RHS
+\end{align}
+
+Let $ \sigma_V \in \support{\delta_1} $. So there exists
+$ \sigma \in \support{\delta} $ with $ \project{\sigma}{V} = \sigma_V
+$. So $ \stassign{\sigma}{x}{E} \in \support{\delta_2} $. But the
+assignment doesn't change anything but $ x $, so it must be that
+$ \project{\paren{\stassign{\sigma}{x}{E}}}{V}
+= \project{\sigma}{V} $, therefore
+$ \sigma_V = \project{\sigma}{V} \in \set{\project{\tau}{V} \given \tau \in \support{\delta_2}}
+$. Thus $ LHS \subseteq RHS $.
+
+On the other side, let $ \sigma \in \support{\delta_2} $, so $ \sigma
+= \stassign{\tau}{x}{E} $ for some $ \tau \in \support{\delta} $, by
+the original definition of distribution assignment. So
+$ \project{\tau}{V} \in \support{\delta_1} $. But
+$ \project{\paren{\stassign{\tau}{x}{E}}}{V} = \project{\tau}{V} $ as
+the assignment doesn't change anything but $ x $. So
+$ \project{\sigma}{V}
+= \project{\paren{\stassign{\tau}{x}{E}}}{V}
+= \stassign{\tau}{x}{E} \in \support{\delta_1} $, concluding that $
+RHS \subseteq LHS $, and thus $ LHS = RHS $.
+
+Note that this, together with \cnumref{thm:pp:assign:claim1}, show
+that not only are the sets equal, but also no two elements of
+$ \support{\delta_2} $ can map, via projection to $ V $, to the same
+element of $ \support{\delta_1} $.
+
+By soundness of forget (\lref{lem:pp:forget}), we have the following.
+$$ \mmin{1} = \mmin{2} \leq \pmass{\delta_1} \leq \mmax{2}
+= \mmax{1} $$
+
+Again, we proceed to show that $ \pmass{\delta_1} = \pmass{\delta_2}
+$.
+
+\begin{align*}
+\pmass{\delta_1}
+&= \sum_{\sigma_V \in \support{\delta_1}} \delta_1 (\sigma_V) \\
+&= \sum_{\sigma \in \support{\delta_2}}  \delta_1
+(\project{\sigma}{V}) & \mathstep{by \cnumref{thm:pp:assign:claim1} and
+\cnumref{thm:pp:assign:claim2}} \\
+&= \sum_{\sigma \in \support{\delta_2}} \delta_2 (\sigma)
+& \mathstep{by defn. of $ \delta_2 $} \\
+&= \pmass{\delta_2}
+\end{align*}
+
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:assign:cond4b} Probability} Let
+$ \sigma \in \support{\delta_2} $. So $ \sigma $ is feasible, so
+$ \delta_2(\sigma) = \paren{\project{\delta}{V}}(\project{\sigma}{V})
+> 0 $. Therefore
+$ \project{\sigma}{V} \in \support{\project{\delta}{V}} $. Thus, by
+soundness of forget (\lref{lem:pp:forget}), we have
+$ \pmin{2}
+= \pmin{1} \leq \paren{\project{\delta}{V}}(\project{\sigma}{V}) \leq \pmax{1}
+= \pmax{2}
+$, concluding the claim and the lemma.
+\end{subproof}
+\end{proof}
+
+%\begin{theorem}
+%\label{thm:assignment-by-cases}
+%Let $\delta \bparen{x \ra \aexp}$ be defined as follows.
+%\begin{equation}
+%\label{thm:assignment-by-cases:original-def}
+%\delta \bparen{x \ra \aexp} \defeq \lambda \sigma \lsep \sum_{\tau \; | \; \tau
+%  \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma} \delta (\tau)
+%\end{equation}
+%Let $\delta \aparen{x \ra \aexp}$ be defined as follows, when $x \ra \aexp$ is invertible.
+%\begin{equation}
+%\label{thm:assignment-by-cases:invertible-def}
+%\delta \aparen{x \ra \aexp} \defeq \lambda \sigma \lsep \delta (\sigma\bparen{x \ra \eeval{\aexp'}{\sigma}})
+%\end{equation}
+%Let $V' = \dom{\delta} - \{x\}$ and $\delta' = \project{\delta}{V'}$.
+%Let $\delta \aparen{x \ra \aexp}$ be defined as follows when $x \ra \aexp$ is non-invertible.
+%\begin{equation}
+%\label{thm:assignment-by-cases:noninvertible-def}
+%\delta \aparen{x \ra \aexp} \defeq \lambda \sigma \lsep \aif \sigma(x) = \eeval{E}{\sigma}\athen
+%\delta'(\project{\sigma}{V'}) \aelse 0
+%\end{equation}
+%Then $\delta \bparen{x \ra \aexp} = \delta \aparen{x \ra \aexp}$.
+%\end{theorem}
+%
+%\begin{proof}
+%If $x \ra \aexp$ is invertible, then for each $\sigma$, there is exactly one $\tau$ such that $\tau \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma$.  Furthermore, $\tau = \sigma \bparen{x \ra \eeval{\aexp'}{\sigma}}$ for some $\aexp'$.  Thus, the summation in (\ref{thm:assignment-by-cases:original-def}) reduces to a single case where $\tau = \sigma \bparen{x \ra \eeval{\aexp'}{\sigma}}$, which is equivalent to (\ref{thm:assignment-by-cases:invertible-def}).
+%
+%If $x \ra \aexp$ is non-invertible, then the value of $\aexp$ does not depend on $x$ (all linear updates with a non-zero coefficient for $x$ are invertible).  Thus we have $\sigma(x) = \eeval{\aexp}{\sigma}$ if and only if $\sigma(x) = \eeval{\aexp}{(\project{\sigma}{V'})}$.  Similarly, we have
+%\[\tau \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma\]
+%if and only if
+%\[(\project{\tau}{V'}) \bparen{x \ra \eeval{\aexp}{(\project{\tau}{V'})}} = \sigma\]
+%for the $\tau$ from the summation in (\ref{thm:assignment-by-cases:original-def}).  This implies that $\tau$ and $\sigma$ agree on all variables except $x$, which gives us $\project{\tau}{V'} = \project{\sigma}{V'}$.  Thus, in order for the sum to be populated, we must have the following.
+%\begin{equation}
+%\label{thm:assignment-by-cases:sigma-in-sum}
+%(\project{\sigma}{V'}) \bparen{x \ra \eeval{\aexp}{(\project{\sigma}{V'})}} = \sigma
+%\end{equation}
+%
+%We now turn to the evaluation of (\ref{thm:assignment-by-cases:noninvertible-def}).  Equation (\ref{thm:assignment-by-cases:sigma-in-sum}) indicates that if $\sigma(x) \neq \eeval{E}{\sigma}$ then the sum evaluates to $0$, thus validating the else branch of (\ref{thm:assignment-by-cases:noninvertible-def}).
+%
+%We next show that if $\sigma(x) = \eeval{E}{\sigma}$ then the sum in (\ref{thm:assignment-by-cases:original-def}) is exactly $\delta'(\project{\sigma}{V'})$.  Expanding the definition of $\project{\delta}{V'}$, we have
+%\[\delta' = \lambda \sigma_{V'} \in \states_{V'} \lsep \sum_{\sigma' \mid (\project{\sigma'}{V'} = \sigma_{V'})} \delta(\sigma')\]
+%Thus $\delta'(\project{\sigma}{V'})$ is the following.
+%\[\sum_{\sigma' \mid (\project{\sigma'}{V'} =\project{\sigma}{V'})} \delta(\sigma')\]
+%To show that this sum is equivalent to that given in (\ref{thm:assignment-by-cases:original-def}), it suffices to show that
+%\[\{\tau \mid (\project{\tau}{V'}) \bparen{x \ra \eeval{\aexp}{(\project{\tau}{V'})}} = \sigma\}\]
+%is equivalent to
+%\[\{\sigma' \mid (\project{\sigma'}{V'} =\project{\sigma}{V'})\}\]
+%To show this, we must show
+%\[\bigl((\project{\tau}{V'}) \bparen{x \ra \eeval{\aexp}{(\project{\tau}{V'})}} = \sigma\bigr)
+%\Leftrightarrow
+%\bigl(\project{\tau}{V'} =\project{\sigma}{V'}\bigr)\]
+%
+%The forward direction is straightforward as updating $\tau$ with $x \ra \eeval{\aexp}{\project{\tau}{V'}}$ changes only $x$.  Thus the fact that the update of $\tau$ is equal to $\sigma$ implies $\project{\tau}{V'} =\project{\sigma}{V'}$.
+%
+%For the backward implication, we have that $\project{\tau}{V'} =\project{\sigma}{V'}$.  Since $\aexp$ does not involve $x$, this implies that
+%\[(\project{\tau}{V'}) \bparen{x \ra \eeval{\aexp}{(\project{\tau}{V'})}}\]
+%is equivalent to
+%\[(\project{\sigma}{V'}) \bparen{x \ra \eeval{\aexp}{(\project{\sigma}{V'})}}\]
+%We have that $\sigma(x) = \eeval{E}{\sigma}$ and thus
+%\[(\project{\sigma}{V'}) \bparen{x \ra \eeval{\aexp}{(\project{\sigma}{V'})}} = \sigma\]
+%Combining these yields the following, which is our final goal.
+%\[(\project{\tau}{V'}) \bparen{x \ra \eeval{\aexp}{(\project{\tau}{V'})}} = \sigma\]
+%\end{proof}
+
+\subsection{Plus}
+
+\deleted{
+\begin{reptheorem}{thm:pord}
+If $\pp{1} \ppord \pp{2}$ then $\ppconc{\pp{1}} \subseteq \ppconc{\pp{2}}$.  If $\getpoly{1} \neq \bot$ then we also have $\ppconc{\pp{1}} \subseteq \ppconc{\pp{2}}$ implies $\pp{1} \ppord \pp{2}$.
+\end{reptheorem}
+
+\begin{proof}
+We first note that $\ppconc{\pp{1}} \subseteq \ppconc{\pp{2}}$ is equivalent to
+\[\forall \delta.\ \delta \in \ppconc{\pp{1}} \imp \delta \in \ppconc{\pp{2}}\]
+which is, by expanding the definition of $\ppconcfun$, equivalent to showing the following for all $\delta$.
+\begin{equation}
+\label{thm:pord:rhs}
+\begin{aligned}
+ & \nzset{\delta} \subseteq \pconc{\getpoly{1}} \wedge {} \\
+  & \smin{1} \leq \setsize{\nzset{\delta}} \leq \smax{1} \wedge {} \\
+  & \mmin{1} \leq \pmass{\delta} \leq \mmax{1} \wedge \\
+  & \forall \sigma \in \nzset{\delta}.\ \pmin{1} \leq \delta(\sigma) \leq \pmax{1}\\
+\imp \\
+  & \nzset{\delta} \subseteq \pconc{\getpoly{2}} \wedge {} \\
+  & \smin{2} \leq \setsize{\nzset{\delta}} \leq \smax{2} \wedge {} \\
+  & \mmin{2} \leq \pmass{\delta} \leq \mmax{2} \wedge \\
+  & \forall \sigma \in \nzset{\delta}.\ \pmin{2} \leq \delta(\sigma) \leq \pmax{2}\\ 
+\end{aligned}
+\end{equation}
+
+We next expand the definition of $\ppord$ (and then $\pord$) to conclude that $\pp{1} \pord \pp{2}$ is equivalent to
+\begin{equation}
+\label{thm:pord:lhs}
+\begin{aligned}
+&\pconc{\getpoly{1}} \subseteq \pconc{\getpoly{2}} \\
+&{}\wedge \{\mathrm{s,p,m}\}_2^\textrm{min} \leq \{\mathrm{s,p,m}\}_1^\textrm{min} \\
+&{}\wedge \{\mathrm{s,p,m}\}_1^\textrm{max} \leq \{\mathrm{s,p,m}\}_2^\textrm{max}
+\end{aligned}
+\end{equation}
+
+That (\ref{thm:pord:lhs}) implies (\ref{thm:pord:rhs}) follows by transitivity of $\leq$ and $\subseteq$.  For example, we have $\pconc{\getpoly{1}} \subseteq \pconc{\getpoly{2}}$ from (\ref{thm:pord:lhs}).  We can assume that $\nzset{\delta} \subseteq \pconc{\getpoly{1}}$ and use transitivity of $\subseteq$ to obtain $\nzset{\delta} \subseteq \pconc{\getpoly{2}}$.  This process can be carried out for each conjunction in (\ref{thm:pord:rhs}).
+
+To show that (\ref{thm:pord:rhs}) implies (\ref{thm:pord:lhs}), we use our assumption (\ref{thm:pord:rhs}) with a $\delta$ such that $\nzset{\delta} = \pconc{\getpoly{1}}$ (such a $\delta$ can always be found).  Then (\ref{thm:pord:rhs}) gives us that $\nzset{\delta} \subseteq \pconc{\getpoly{2}}$ and thus $\pconc{\getpoly{1}} \subseteq \pconc{\getpoly{2}}$.  A similar process can be carried out for the other conjuncts.
+
+The only case that is slightly different involves the last conjuncts in the antecedent and conclusion of (\ref{thm:pord:rhs}), and this is where the condition that $\getpoly{1} \neq \bot$ is needed.  We choose $\delta$ such that $\delta(\sigma_0) = \pmin{1}$ for some $\sigma_0 \in \nzset{\delta}$ and that satisfies $\forall \sigma \in \nzset{\delta}.\ \pmin{1} \leq \delta(\sigma) \leq \pmax{1}$.  Such a $\delta$ can always be chosen because $\getpoly{1} \neq \bot$ which implies $\nzset{\delta} \neq \emptyset$.  We then apply (\ref{thm:pord:rhs}) to obtain $\forall \sigma \in \nzset{\delta}.\ \pmin{2} \leq \delta(\sigma) \leq \pmax{2}$, which we instantiate with $\sigma = \sigma_0$ to obtain $\pmin{2} \leq \delta(\sigma_0)$.  Combined with $\delta(\sigma_0) = \pmin{1}$, we then have $\pmin{2} \leq \pmin{1}$ as desired.
+\end{proof}
+}
+
+\begin{definition}
+Let $\overlap{\delta_1}{\delta_2} = \nzset{\delta_1} \cap \nzset{\delta_2}$.
+\end{definition}
+
+\begin{lemma}
+\label{lem:pp:plus:overlap}
+ If $\delta_1 \in \ppconc{\pp{1}}$ and $\delta_2 \in \ppconc{\pp{2}}$ then $\pessoverlap{\ppa}{\ppb} \leq \setsize{\overlap{\delta_1}{\delta_2}} \leq \optoverlap{\ppa}{\ppb}$.
+\end{lemma}
+
+\begin{proof}
+We first note that for any sets $A, B$, it is the case that
+$\setsize{A \cup B} = \setsize{A} + \setsize{B} - \setsize{A \cap B}$
+(often called the ``inclusion-exclusion principle'').  Rearranging the
+equation we also have $ \setsize{A \cap B} = \setsize{A} + \setsize{B}
+- \setsize{A \cup B} $.
+
+\deleted{
+Utilizing deMorgan's laws for sets, we can use this property to compute the size
+of intersections.  
+Let $U = A \cup B$.  Note that $A \subseteq U$ and
+$B \subseteq U$.  Let $\overline{A} = U - A$ and $\overline{B} = U -
+B$.  More generally, let $\overline{e} = U - e$ for some set
+expression $e$.  Then we have that $A \cap B
+= \overline{\overline{A} \cup \overline{B}} = U -
+(\overline{A} \cup \overline{B})$.  As
+$\overline{A} \cup \overline{B} \subseteq U$, we have that
+\[\setsize{A \cap B} = \setsize{U - (\overline{A} \cup \overline{B})} = \setsize{U} - \setsize{\overline{A} \cup \overline{B}}\]
+Applying the rule above for the size of unions, we then obtain
+\[\setsize{A \cap B} = \setsize{U} - (\setsize{\overline{A}} + \setsize{\overline{B}} - \setsize{\overline{A} \cap \overline{B}})\]
+Distributing the first minus sign then yields the following.
+\[\setsize{A \cap B} = \setsize{U} - \setsize{\overline{A}} - \setsize{\overline{B}} + \setsize{\overline{A} \cap \overline{B}})\]
+Note that since $U = A \cup B$ we have that
+$\overline{A} \cap \overline{B} = (U - A) \cap (U - B) = \emptyset$.
+Simplifying and expanding our definition of $\overline{A}$ and
+$\overline{B}$ then yields the following progression.
+\begin{equation}
+\label{lem:pp:plus:overlap:size-equality}
+\begin{aligned}[b]
+\setsize{A \cap B} &= \setsize{U} - \setsize{U - A} - \setsize{U - B} \\
+&= \setsize{U} - \setsize{U} + \setsize{A} - \setsize{U} + \setsize{B} \\
+&= \setsize{A} + \setsize{B} - \setsize{U}
+\end{aligned}
+\end{equation}
+}
+
+We will make use of this formula with $A = \nzset{\delta_1}$, $B
+= \nzset{\delta_2}$. %, and $U = \nzset{\delta_1} \cup \nzset{\delta_2}$.
+
+\paragraph{Lower Bound}
+
+We first show the lower bound.  Expanding the definitions of $\pessoverlap{\ppa}{\ppb}$ and $\overlap{\delta_1}{\delta_2}$, this reduces to showing the following.
+\begin{multline*}
+\max((\smin{1} - n_1) + (\smin{2} - n_2) - n_3,\ 0)\\
+{} \leq \setsize{\nzset{\delta_1} \cap \nzset{\delta_2}}
+\end{multline*}
+Clearly we have $0 \leq \setsize{\nzset{\delta_1} \cap \nzset{\delta_2}}$, so it remains to show that the following holds.
+\begin{multline*}
+(\smin{1} - n_1) + (\smin{2} - n_2) - n_3\\
+{} \leq \setsize{\nzset{\delta_1} \cap \nzset{\delta_2}}
+\end{multline*}
+
+Expanding the definitions of $n_1,n_2$ from Definition \ref{def:abs-overlap}, we obtain
+\begin{multline*}
+(\smin{1} - (\psize{\getpoly{1}} - n_3)) + (\smin{2} - (\psize{\getpoly{2}} - n_3)) - n_3\\
+{} \leq \setsize{\nzset{\delta_1} \cap \nzset{\delta_2}}
+\end{multline*}
+and rearranging yields the following.
+\begin{multline*}
+\smin{1} + \smin{2} - (\psize{\getpoly{1}} + \psize{\getpoly{2}} - n_3)\\
+{} \leq \setsize{\nzset{\delta_1} \cap \nzset{\delta_2}}
+\end{multline*}
+
+This follows from the rearranged inclusion-exclusion principle provided we can show $\smin{1} \leq \setsize{\nzset{\delta_1}}$, $\smin{2} \leq \setsize{\nzset{\delta_2}}$, and $\psize{\getpoly{1}} + \psize{\getpoly{2}} - n_3 \geq \setsize{\nzset{\delta_1} \cup \nzset{\delta_2}}$.  The first two follow directly from our assumptions that $\delta_1 \in \ppconc{\pp{1}}$ and $\delta_2 \in \ppconc{\pp{2}}$.  For the third condition, we reason as follows.
+
+We have from our assumptions that $\pconc{\getpoly{1}} \supseteq \nzset{\delta_1}$ and $\pconc{\getpoly{2}} \supseteq \nzset{\delta_2}$.  Thus, we have
+\[\pconc{\getpoly{1}} \cup \pconc{\getpoly{2}} \supseteq \nzset{\delta_1} \cup \nzset{\delta_2}\]
+and finally
+\[\setsize{\pconc{\getpoly{1}} \cup \pconc{\getpoly{2}}} \geq \setsize{\nzset{\delta_1} \cup \nzset{\delta_2}}\]
+Utilizing the inclusion-exclusion principle, we have
+\begin{multline*}
+\setsize{\pconc{\getpoly{1}}} + \setsize{\pconc{\getpoly{2}}} - \setsize{\pconc{\getpoly{1}} \cap \pconc{\getpoly{2}}}\\
+{} \geq \setsize{\nzset{\delta_1} \cup \nzset{\delta_2}}
+\end{multline*}
+Since we have $\setsize{\pconc{\getpoly{}}} = \psize{\getpoly{}}$, we can rewrite this to the following.
+\begin{multline*}
+\psize{\getpoly{1}} + \psize{\getpoly{2}} - \setsize{\pconc{\getpoly{1}} \cap \pconc{\getpoly{2}}}\\
+{} \geq \setsize{\nzset{\delta_1} \cup \nzset{\delta_2}}
+\end{multline*}
+
+It remains to show that
+$\setsize{\pconc{\getpoly{1}} \cap \pconc{\getpoly{2}}} = n_3$.  We
+have that $\pconc{\getpoly{1} \pmeet \getpoly{2}}
+= \pconc{\getpoly{1}} \cap \pconc{\getpoly{2}}$ (that is, $\pmeet$ is
+precise).  This allows us to complete the final step, concluding that
+$n_3$, which is defined as $\psize{\getpoly{1} \pmeet \getpoly{2}}$ is
+equal to $\setsize{\pconc{\getpoly{1}} \cap \pconc{\getpoly{2}}}$.
+
+\paragraph{Upper Bound}
+
+We next show that the upper bound holds.  Our goal is to show the
+following.
+\[ \optoverlap{\ppa}{\ppb} \geq \setsize{\overlap{\delta_1}{\delta_2}} \]
+Expanding our definitions yields the following formula.
+\[
+\min(\smax{1}, \smax{2}, n_3)
+{} \geq \setsize{\nzset{\delta_1} \cap \nzset{\delta_2}}
+\]
+
+We first note that the following holds.
+\[\setsize{\nzset{\delta_1} \cap \nzset{\delta_2}} \leq \setsize{\nzset{\delta_1}} \leq \smax{1}\]
+Thus $\smax{1}$ is a sound upper bound.  Similarly, we have
+\[\setsize{\nzset{\delta_1} \cap \nzset{\delta_2}} \leq \setsize{\nzset{\delta_2}} \leq \smax{2}\]
+which shows that $\smax{2}$ is a sound upper bound.  Finally, we note that our assumptions give us $\nzset{\delta_1} \subseteq \pconc{\getpoly{1}}$ and $\nzset{\delta_1} \subseteq \pconc{\getpoly{1}}$.  Thus we have the following.
+\[\nzset{\delta_1} \cap \nzset{\delta_2} \subseteq \pconc{\getpoly{1}} \cap \pconc{\getpoly{2}}\]
+We showed previously that $n_3 = \setsize{\pconc{\getpoly{1}} \cap \pconc{\getpoly{2}}}$.  Thus we have
+\[\setsize{\nzset{\delta_1} \cap \nzset{\delta_2}} \leq n_3\]
+which shows that $n_3$ is a sound upper bound.
+
+Since all of $\smax{1}, \smax{2}$, and $n_3$ are sound upper bounds, their minimum is also a sound upper bound.
+\end{proof}
+
+\begin{lemma}
+\label{lem:pp:plus:setsize}
+\begin{multline*}
+\setsize{\nzset{\delta_1 + \delta_2}} =\\
+ \setsize{\nzset{\delta_1}} + \setsize{\nzset{\delta_2}} - \setsize{\overlap{\delta_1}{\delta_2}}
+\end{multline*}
+\end{lemma}
+
+\begin{proof}
+  First we note that $\nzset{\delta_1 + \delta_2} = \{\sigma \mid
+  \delta_1(\sigma) + \delta_2(\sigma) > 0\}$.  Since the range of
+  $\delta_1$ and $\delta_2$ is $[0,1]$, we have that $\delta_1(\sigma)
+  + \delta_2(\sigma) > 0$ if and only if either $\delta_1(\sigma) > 0$
+  or $\delta_2(\sigma) > 0$.  Thus, we have $\sigma \in
+  \nzset{\delta_1 + \delta_2}$ if and only if $\sigma \in
+  \nzset{\delta_1}$ or $\sigma \in \nzset{\delta_2}$, which implies
+  $\nzset{\delta_1 + \delta_2} = \nzset{\delta_1} \cup
+  \nzset{\delta_2}$.
+
+  Next, we note that for any sets $A,B$ we have $\setsize{A \cup B} =
+  \setsize{A} + \setsize{B} - \setsize{A \cap B}$.  Utilizing this
+  statement with $A = \nzset{\delta_1}$ and $B = \nzset{\delta_2}$
+  completes the proof.
+\end{proof}
+
+\begin{replemma}{lem:pp:plus}[Soundness of Plus]
+If $\delta_1 \in \ppconc{\pp{1}}$ and $\delta_2 \in \ppconc{\pp{2}}$ then $\delta_1 + \delta_2 \in \ppconc{\pp{1} + \pp{2}}$.
+\end{replemma}
+
+\begin{proof}
+Suppose $\delta_1 \in \ppconc{\pp{1}}$ and $\delta_2 \in \ppconc{\pp{2}}$.  Then we have the following.
+\begin{gather}
+\label{thm:pp:plus:cond1a}
+\nzset{\delta_1} \subseteq \pconc{\getpoly{1}} \\
+\label{thm:pp:plus:cond2a}
+\smin{1} \leq \setsize{\nzset{\delta_1}} \leq \smax{1} \\
+\label{thm:pp:plus:cond3a}
+\mmin{1} \leq \pmass{\delta_1} \leq \mmax{1} \\
+\label{thm:pp:plus:cond4a}
+\forall \sigma \in \nzset{\delta_1}.\ \pmin{1} \leq \delta_1(\sigma) \leq \pmax{1}
+\end{gather}
+and
+\begin{gather}
+\label{thm:pp:plus:cond1b}
+\nzset{\delta_2} \subseteq \pconc{\getpoly{2}} \\
+\label{thm:pp:plus:cond2b}
+\smin{2} \leq \setsize{\nzset{\delta_2}} \leq \smax{2} \\
+\label{thm:pp:plus:cond3b}
+\mmin{2} \leq \pmass{\delta_2} \leq \mmax{2} \\
+\label{thm:pp:plus:cond4b}
+\forall \sigma \in \nzset{\delta_2}.\ \pmin{2} \leq \delta_2(\sigma) \leq \pmax{2}
+\end{gather}
+
+The definition of abstract plus has special cases when either of the
+arguments are zero, that is, if $ \iszero{\pp{1}} $ or
+$ \iszero{\pp{2}} $. Without the loss of generality, let us assume
+$ \iszero{\pp{2}} $ and thus by definition $ \pp{1} + \pp{2} = \pp{1}
+$. Since $ \ppconc{\pp{2}} = \set{\distzero} $, where $ \distzero $ is
+the distribution assigning probability of $ 0 $ to every state. Therefore $ \delta_2
+= \distzero $ and thus $ \delta_1 + \delta_2 = \delta_1 $. But we
+already have $ \delta_1 \in \ppconc{\pp{1}} $ by assumption, hence we
+are done in this case.
+
+In the case when not $ \iszero{\pp{1}} $ and not $ \iszero{\pp{2}} $
+we must show the following.
+\begin{gather}
+\label{thm:pp:plus:cond1c}
+\nzset{\delta_1 + \delta_2} \subseteq \pconc{\getpoly{1} \pjoin \getpoly{2}} \\
+\label{thm:pp:plus:cond2c1}
+\maxparen{\smin{1} + \smin{2} - \optoverlap{\ppa}{\ppb}, 0}\leq \setsize{\nzset{\delta_1 + \delta_2}}\\
+\label{thm:pp:plus:cond2c2}
+\setsize{\nzset{\delta_1 + \delta_2}} \leq \minparen{\smax{1}
++ \smax{2} - \pessoverlap{\ppa}{\ppb},  \psize{\getpoly{3}}} \\
+\label{thm:pp:plus:cond3c}
+\mmin{1} + \mmin{2}\leq \pmass{\delta_1 + \delta_2} \leq \mmax{1} + \mmax{2}
+\end{gather}
+\pxm{added the smin negativity check, doesn't really require anything
+in the proof as $ 0 \leq $ the size of any set}
+We also must show the conditions on $\pmin{}$ and $\pmax{}$ for the sum.
+
+
+Condition (\ref{thm:pp:plus:cond1c}) follows from
+(\ref{thm:pp:plus:cond1a}) and (\ref{thm:pp:plus:cond1b}) and the fact
+that $\pjoin$ over-approximates union.  The key step is noting that
+$\nzset{\delta_1 + \delta_2} = \nzset{\delta_1} \cup
+\nzset{\delta_2}$.  To show this we consider some $\sigma \in
+\nzset{\delta_1 + \delta_2}$.  We have that $(\delta_1 +
+\delta_2)(\sigma) > 0$ which, expanding the definition of $+$, yields
+$\delta_1(\sigma) + \delta_2(\sigma) > 0$.  Since the range of
+$\delta_1$ and $\delta_2$ is $[0,1]$, this implies that either
+$\delta_1(\sigma) > 0$ or $\delta_2(\sigma) > 0$ and thus $\sigma \in
+\nzset{\delta_1}$ or $\sigma \in \nzset{\delta_2}$.
+
+Conditions (\ref{thm:pp:plus:cond2c1}) and (\ref{thm:pp:plus:cond2c2})
+follow from (\ref{thm:pp:plus:cond2a}) and (\ref{thm:pp:plus:cond2b})
+and Lemmas \ref{lem:pp:plus:overlap} and \ref{lem:pp:plus:setsize}.
+We have $\smin{1} \leq \setsize{\nzset{\delta_1}}$ from (\ref{thm:pp:plus:cond2a})
+and $\smin{2} \leq \setsize{\nzset{\delta_2}}$ from (\ref{thm:pp:plus:cond2b}).
+Monotonicity of addition then gives us
+\[\smin{1} + \smin{2} \leq \setsize{\nzset{\delta_1}} + \setsize{\nzset{\delta_2}}\]
+From Lemma \ref{lem:pp:plus:overlap} we have $\setsize{\overlap{\delta_1}{\delta_2}} \leq \optoverlap{\ppa}{\ppb}$ and thus
+\[-\optoverlap{\ppa}{\ppb} \leq - \setsize{\overlap{\delta_1}{\delta_2}}\]
+Combining with the above yields
+\begin{multline*}
+\smin{1} + \smin{2} - \optoverlap{\ppa}{\ppb} \leq {}\\
+ \setsize{\nzset{\delta_1}} + \setsize{\nzset{\delta_2}} - \setsize{\overlap{\delta_1}{\delta_2}}
+\end{multline*}
+We can then rewrite the right-hand side according to Lemma \ref{lem:pp:plus:setsize} to obtain
+\[\smin{1} + \smin{2} -\optoverlap{\ppa}{\ppb} \leq \setsize{\nzset{\delta_1 + \delta_2}}\]
+which is condition (\ref{thm:pp:plus:cond2c1}).
+
+Condition (\ref{thm:pp:plus:cond2c2}) follows the same reasoning.  We have $\setsize{\nzset{\delta_1}} + \setsize{\nzset{\delta_2}} \leq \smax{1} + \smax{2}$ by (\ref{thm:pp:plus:cond2a}) and (\ref{thm:pp:plus:cond2b}).  We then apply Lemma \ref{lem:pp:plus:overlap} and \ref{lem:pp:plus:setsize} to obtain condition (\ref{thm:pp:plus:cond2c2}).
+
+For Condition (\ref{thm:pp:plus:cond3c}), note that
+\[\pmass{\delta_1 + \delta_2} = \sum_\sigma\bigl(\delta_1(\sigma) + \delta_2(\sigma)\bigr) = \sum_\sigma \delta_1(\sigma) + \sum_\sigma \delta_2(\sigma)\]
+This is then equivalent to $\pmass{\delta_1} + \pmass{\delta_2}$.
+We have shown that $\pmass{\delta_1 + \delta_2} = \pmass{\delta_1} + \pmass{\delta_2}$.
+Condition (\ref{thm:pp:plus:cond3c}) then follows from monotonicity of addition applied to (\ref{thm:pp:plus:cond3a}) and (\ref{thm:pp:plus:cond3b})
+
+We now consider the $\pmin{}$ and $\pmax{}$ conditions.  Let $\pp{3} = \pp{1} + \pp{2}$ and $\delta_3 = \delta_1 + \delta_2$.  We must show.
+\[\forall \sigma \in \nzset{\delta_3} \qsep \pmin{3} \leq \delta_3(\sigma) \leq \pmax{3}\]
+
+The values $\pmin{3}$ and $\pmax{3}$ are defined by cases and we
+consider these cases separately.  In one case, we have that $\pmin{}$
+of the sum is $\min(\pmin{1},\pmin{2})$.  This is always a sound
+choice.  To see why, suppose $\sigma \in \nzset{\delta_1 + \delta_2}$.
+Then $\sigma \in \nzset{\delta_1}$ or $\sigma \in \nzset{\delta_2}$.
+If $\sigma \in \nzset{\delta_1}$, then $(\delta_1+\delta_2)(\sigma) =
+\delta_1(\sigma) + \delta_2(\sigma)$ is at least $\pmin{1}$.
+Similarly, if $\sigma \in \nzset{\delta_2}$ then
+$(\delta_1+\delta_2)(\sigma) \geq \delta_2(\sigma)$.
+
+Similarly, the value $\pmax{1}+ \pmax{2}$ is always a sound choice for
+$\pmax{3}$.  Consider $\sigma \in \nzset{\delta_3}$.  Then $\sigma \in
+\nzset{\delta_1}$ or $\sigma \in \nzset{\delta_2}$.  If $\sigma \in
+\nzset{\delta_1}$ and $\sigma \not\in \nzset{\delta_2}$, then we have
+\[\delta_3(\sigma) = \delta_1(\sigma) + \delta_2(\sigma) = \delta_1(\sigma)\]
+By (\ref{thm:pp:plus:cond4a}) we then have $\delta_3(\sigma) \leq
+\pmax{1}$ and thus $\delta_3(\sigma) \leq \pmax{1} + \pmax{2}$ as
+desired.
+
+Similarly, if $\sigma \not\in \nzset{\delta_1}$ and $\sigma \in
+\nzset{\delta_2}$ then by (\ref{thm:pp:plus:cond4b}) we have
+\[\delta_3(\sigma) = \delta_2(\sigma) \leq \pmax{2} \leq \pmax{1} + \pmax{2}\]
+
+Finally, if $\sigma \in \nzset{\delta_1}$ and $\sigma \in
+\nzset{\delta_2}$ then by (\ref{thm:pp:plus:cond4a}) we have
+$\delta_1(\sigma) \leq \pmax{1}$.  By (\ref{thm:pp:plus:cond4b}) we
+have $\delta_2(\sigma) \leq \pmax{2}$.  Combining these we have
+$\delta_1(\sigma) + \delta_2(\sigma) \leq \pmax{1} + \pmax{2}$ which
+is equivalent to $\delta_3(\sigma) \leq \pmax{3}$ as desired.
+
+Next we consider the $\pessoverlap{\ppa}{\ppb} = \psize{\getpoly{3}}$
+case for $\pmin{3}$.  We must show that $\pmin{1} + \pmin{2}$ is a
+sound lower bound on $\delta_3(\sigma)$ for
+$\sigma \in \nzset{\delta_3}$.  We have by
+Lemma \ref{lem:pp:plus:overlap} that
+$\pessoverlap{\ppa}{\ppb} \leq \setsize{\overlap{\delta_1}{\delta_2}}$.
+Since $\pessoverlap{\ppa}{\ppb} = \psize{\getpoly{3}}$ and
+$\psize{\getpoly{3}} \geq \setsize{\overlap{\delta_1}{\delta_2}}$, we
+have that $\psize{\getpoly{3}}
+= \setsize{\overlap{\delta_1}{\delta_2}}$.  Expanding the definition
+of $\overlap{\delta_1}{\delta_2}$ yields
+\begin{equation}
+\label{thm:pp:plus:cap-eq}
+\setsize{\nzset{\delta_1} \cap \nzset{\delta_2}} = \psize{\getpoly{3}}
+\end{equation}
+
+We have from (\ref{thm:pp:plus:cond1c}) that $\nzset{\delta_1
++ \delta_2} \subseteq \pconc{\getpoly{3}}$ and from the proof of
+(\ref{thm:pp:plus:cond1c}) we have that $\nzset{\delta_1 + \delta_2}
+= \nzset{\delta_1} \cup \nzset{\delta_2}$.  Combining these yields
+\[\setsize{\nzset{\delta_1} \cup \nzset{\delta_2}} \leq \psize{\getpoly{3}}\]
+Combining this with (\ref{thm:pp:plus:cap-eq}) yields
+\[\setsize{\nzset{\delta_1} \cup \nzset{\delta_2}} \leq \setsize{\nzset{\delta_1} \cap \nzset{\delta_2}}\]
+For any sets $A, B$, we have that $\setsize{A \cup
+B} \geq \setsize{A \cap B}$ and thus the above inequality implies the
+following.
+\[\setsize{\nzset{\delta_1} \cup \nzset{\delta_2}} = \setsize{\nzset{\delta_1} \cap \nzset{\delta_2}}\]
+The fact that the size of the intersection and the size of the union
+of $\nzset{\delta_1}$ and $\nzset{\delta_2}$ is identical implies that
+$\nzset{\delta_1} = \nzset{\delta_2}$.  This implies that for all
+$\sigma$, we have $\sigma \in \nzset{\delta_1}$ if and only if
+$\sigma \in \nzset{\delta_2}$.
+
+Now consider $\sigma \in \nzset{\delta_3}$.  We have
+$\sigma \in \nzset{\delta_1}$ or $\sigma \in \nzset{\delta_2}$, as
+before, but now we can strengthen this to
+$\sigma \in \nzset{\delta_1}$ \emph{and}
+$\sigma \in \nzset{\delta_2}$.  By (\ref{thm:pp:plus:cond4a}) we have
+$\pmin{1} \leq \delta_1(\sigma)$ and by (\ref{thm:pp:plus:cond4b}) we
+have $\pmin{2} \leq \delta_2(\sigma)$.  Thus we have
+\[\pmin{1} + \pmin{2} \leq \delta_1(\sigma) + \delta_2(\sigma)\]
+which was our goal.
+
+Finally we consider the $\optoverlap{\ppa}{\ppb} = 0$ case for
+$\pmax{3}$ (the ``otherwise'' case in Definition \ref{def:pplus}).
+Consider a $\sigma \in \nzset{\delta_3}$.  We must show that
+$\delta_3(\sigma) \leq \max(\pmax{1},\pmax{2})$.  We have that either
+$\sigma \in \nzset{\delta_1}$ or $\sigma \in \nzset{\delta_2}$.  We
+cannot have both since $\optoverlap{\ppa}{\ppb} = 0$ which, by
+Lemma \ref{lem:pp:plus:overlap} implies that
+$\setsize{\overlap{\delta_1}{\delta_2}} = 0$.  If
+$\sigma \in \nzset{\delta_1}$ then by (\ref{thm:pp:plus:cond4a}) we
+have $\delta_1(\sigma) \leq \pmax{1}$.  We have
+$\sigma \not\in \nzset{\delta_2}$ and thus $\delta_2(\sigma) = 0$.
+Thus we reason that
+\[\delta_1(\sigma) + \delta_2(\sigma) = \delta_1(\sigma) \leq \pmax{1} \leq \max(\pmax{1},\pmax{2})\]
+Similarly, if $\sigma \in \nzset{\delta_2}$ then we apply (\ref{thm:pp:plus:cond4b}) to obtain
+\[\delta_1(\sigma) + \delta_2(\sigma) = \delta_2(\sigma) \leq \pmax{2} \leq \max(\pmax{1},\pmax{2})\]
+\end{proof}
+
+\subsection{Product}
+\begin{replemma}{lem:pp:product}[Soundness of Product]
+If $\delta_1 \in \ppconc{\pp{1}}$ and $\delta_2 \in \ppconc{\pp{2}}$
+then $\delta_1 \times \delta_2 \in \ppconc{\pp{1} \times \pp{2}}$.
+\end{replemma}
+
+\begin{proof} By assumption, we have the following for $ i = 1,2 $.
+
+\begin{align}
+\label{thm:pp:prod:given1} & \support{\delta_i} \subseteq \pconc{\poly_i} \\
+\label{thm:pp:prod:given2} & \smin{i} \leq \setsize{\support{\delta_i}} \leq \smax{i} \\
+\label{thm:pp:prod:given3} & \mmin{i} \leq \pmass{\delta_i} \leq \mmax{i} \\
+\label{thm:pp:prod:given4} & \forall \sigma \in \support{\delta_i} \;
+. \; \pmin{i} \leq \delta(\sigma_i) \leq \pmax{i}
+\end{align}
+
+Let $ \delta_3 = \delta_1 \dprod \delta_2 $ and $ \pp{3}
+= \pp{1} \pprod \pp{2} $. Recall the definition of $ \pp{3} $.
+\[
+\begin{array}{rcl@{\hspace{0.35cm}}|@{\hspace{0.35cm}}rcl}
+\multicolumn{6}{c}{\poly_3\ =\ \poly_1 \pprod \poly_2} \bigstrut[b] \\
+\pmin{3} &=& \pmin{1} \cdot \pmin{2} &
+\pmax{3} &=& \pmax{1} \cdot \pmax{2} \bigstrut \\
+\smin{3} &=& \smin{1} \cdot \smin{2} &
+\smax{3} &=& \smax{1} \cdot \smax{2} \bigstrut \\
+\mmin{3} &=& \mmin{1} \cdot \mmin{2} &
+\mmax{3} &=& \mmax{1} \cdot \mmax{2} \bigstrut[t]
+\end{array}
+\]
+
+We must show the following four claims.
+\begin{align}
+\label{thm:pp:prod:cond1}& \support{\delta_3} \subseteq \pconc{\poly_3} \\
+\label{thm:pp:prod:cond2}& \smin{3} \leq \setsize{\support{\delta_3}} \leq \smax{3} \\
+\label{thm:pp:prod:cond3}& \mmin{3} \leq \pmass{\delta_3} \leq \mmax{3} \\
+\label{thm:pp:prod:cond4}& \forall \sigma \in \support{\delta_3} \;
+. \; \pmin{3} \leq \delta_3(\sigma) \leq \pmax{3}
+\end{align}
+
+Also, recall the definition of concrete product.
+$$ \delta_1 \dprod \delta_2 = \lambda
+(\sigma_1, \sigma_2) \lsep \delta_1(\sigma_1) \cdot \delta_2(\sigma_2) $$
+
+Let $ V_1 = \fv{\delta_1} $ and $ V_2 = \fv{\delta_2} $.
+
+\begin{subproof}{\clref{thm:pp:prod:cond1} -- Support}
+Let $ \sigma = (\sigma_1, \sigma_2) \in \support{\delta_3} $. Thus it must be that
+$ \delta_1(\sigma_1) > 0 $ and
+$ \delta_2(\sigma_2) > 0 $, thus, by \cnumref{thm:pp:prod:given1},
+$ \sigma_1 \in \support{\delta_1} \subseteq \pconc{\poly_1}
+$ and
+$ \sigma_2 \in \support{\delta_2} \subseteq \pconc{\poly_2}
+$, therefore $ \sigma \in \pconc{\delta_3} $.
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:prod:cond2} -- Support points}
+Using \cnumref{thm:pp:prod:given2} we get the following.
+$$ \smin{1} \cdot \smin{2} \leq \setsize{\support{\delta_1}} \cdot \setsize{\support{\delta_2}} \leq \smax{1} \cdot \smax{2} $$
+
+Likewise, the size of $ \support{\delta_3} $ can be equated as follows.
+\begin{align*}
+\setsize{\support{\delta_3}} & =
+ \setsize{\set{(\sigma_1,
+ \sigma_2) \left|
+\begin{array}{l}
+\sigma_1 \in \support{\delta_1}, \\
+\sigma_2 \in \support{\delta_2}
+\end{array} \right. } } \\
+ & = \setsize{\support{\delta_1}} \cdot \setsize{\support{\delta_2}}
+\end{align*}
+
+This completes the claim as $ \smin{3} = \smin{1} \cdot \smin{2} $ and
+$ \smax{3} = \smax{1} \cdot \smax{2} $.
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:prod:cond3} -- Mass}
+\begin{align*}
+\pmass{\delta_3}
+& = \sum_{\sigma \in \support{\delta_3}} \delta(\sigma) \\
+& = \sum_{(\sigma_1, \sigma_2) \in \support{\delta_3}} \delta_1(\sigma_1) \cdot \delta_2(\sigma_2) \\
+&
+= \sum_{\sigma_1 \in \support{\delta_1}} \paren{\sum_{\sigma_2 \in \support{\delta_2}} \delta_1(\sigma_1) \cdot \delta_2(\sigma_2)} \\
+&
+= \sum_{\sigma_1 \in \support{\delta_1}} \delta_1(\sigma_1) \sum_{\sigma_2 \in \support{\delta_2}} \delta_2(\sigma_2) \\
+&
+= \sum_{\sigma_1 \in \support{\delta_1}} \delta_1(\sigma_1) \cdot \pmass{\delta_2} \\
+& = \pmass{\delta_1} \cdot \pmass{\delta_2}
+\end{align*}
+\end{subproof}
+
+Likewise, by \cnumref{thm:pp:prod:given3}, we have the following.
+$$ \mmin{1} \cdot \mmin{2} \leq \pmass{\delta_1} \cdot \pmass{\delta_2} \leq \mmax{1} \cdot \mmax{2} $$
+
+This completes the claim as $ \mmin{3} = \mmin{1} \cdot \mmin{2} $ and
+$ \mmax{3} = \mmax{1} \cdot \mmax{2} $.
+
+\begin{subproof}{\clref{thm:pp:prod:cond4} -- Probability}
+Let $ \sigma = (\sigma_1, \sigma_2) \in \support{\delta_3} $. Thus
+$ \sigma_1 \in \support{\delta_1} $ and
+$ \sigma_2 \in \support{\delta_2} $. Also,
+$ \delta_3\paren{\sigma}
+= \delta_1(\sigma_1) \cdot \delta_2(\sigma_2)
+$. By \cnumref{thm:pp:prod:given4}, we have
+$ \pmin{1} \leq \delta_1(\sigma_1) \leq \pmax{1} $ and
+$ \pmin{2} \leq \delta_2(\sigma_2) \leq \pmax{2} $. Therefore
+$$ \pmin{3}
+= \pmin{1} \cdot \pmin{2} \leq \delta_3(\sigma) \leq \pmax{1} \cdot \pmax{2}
+= \pmax{3} $$
+
+This completes the claim and the proof.
+\end{subproof}
+
+\end{proof}
+
+\subsection{Conditioning}
+
+\newcommand{\scond}[2]{#1 | #2}
+\newcommand{\scondc}[2]{#1 | \overline{#2}}
+
+\begin{definition} Given a set of states $ S $ and a boolean
+expression $ \bexp $, let $ \scond{S}{\bexp} $ be the subset of $ S $
+that satisfy the condition $ \bexp $ and $ \scondc{S}{\bexp} $ be the
+subset of $ S $ that do not satisfy the condition. Formally,
+\begin{align*}
+\scond{S}{\bexp} & \defeq \set{\sigma \in S \given \eeval{\bexp}{\sigma}
+= \atrue} \\ 
+\scondc{S}{\bexp} & \defeq \set{\sigma \in S \given \eeval{\bexp}{\sigma}
+= \afalse} 
+\end{align*}
+
+\end{definition}
+
+\begin{replemma}{lem:pp:cond}[Soundness of Conditioning] If $ \delta \in \ppconc{\pp{}} $ then $
+  \dcond{\delta}{B} \in \ppconc{\absdcond{\pp{}}{B}} $.
+\end{replemma}
+
+\newcommand{\supd}[0]{\support{\delta}}
+\newcommand{\supin}[0]{\scond{\support{\delta}}{\bexp}}
+\newcommand{\supout}[0]{\scondc{\support{\delta}}{\bexp}}
+
+\begin{proof} Let $ \delta_2 = \dcond{\delta}{B} $. Recall the
+definition of the conditional distribution:
+\begin{align*}
+\dcond{\delta}{\bexp} = \lambda \sigma \lsep \aif \eeval{\bexp}{\sigma} \athen
+\delta(\sigma) \aelse 0
+\end{align*}
+
+Let $ \pp{2} = \absdcond{\pp{}}{B} $. The construction of $ \pp{2} $
+produces the following parameters.
+\[
+\setlength{\arraycolsep}{1pt}
+\begin{array}{lcl@{\hspace{0.35cm}}|@{\hspace{0.35cm}}lcl}
+\pmin{2} &=& \pmin{} &
+\smin{2}\ &=&\ \maxparen{\smin{} - \nn, 0}\\
+\pmax{2} &=& \pmax{} \bigstrut[b] &
+\smax{2} &=&\ \minparen{\smax{}, n} \bigstrut \\
+\mmin{2} &=& \multicolumn{4}{l}{\maxparen{\pmin{2} \cdot
+    \smin{2},\ \mmin{} - \pmax{} \cdot \minparen{\smax{}, \nn}}} \bigstrut\\
+\mmax{2} &=& \multicolumn{4}{l}{\minparen{\pmax{2} \cdot
+    \smax{2},\ \mmax{} - \pmin{} \cdot \maxparen{\smin{}-n, 0}}} \bigstrut\\
+\getpoly{2} &=& \multicolumn{4}{l}{\abseeval{\bexp}{\getpoly{}}} \bigstrut[t] \\
+\end{array}
+\]
+\vspace{20mm} % !!! formatting
+
+The quantities $ n $ and $ \nn $ are defined in such a way that $ n $
+over-approximates the number of support points of $ \delta $ that
+satisfy $ \bexp $, whereas $ \nn $ over-approximates the number of support
+points of $ \delta $ that do not satisfy $ \bexp $. Also,
+$ \abseeval{\bexp}{\getpoly{}} $ is defined to contain at least 
+the points in $ C $ that satisfy $ \bexp $. Making these properties
+precise gives us the following.
+\begin{align}
+\label{thm:pp:cond:prop1} \setsize{\supin} & \leq n \\
+\label{thm:pp:cond:prop2} \setsize{\supout} & \leq \nn \\
+\label{thm:pp:cond:prop3} \scond{\pconc{\getpoly{}}}{\bexp} & \subseteq \pconc{\abseeval{\bexp}{\getpoly{}}}
+\end{align}
+
+By assumption we have the following.
+\begin{align}
+\label{thm:pp:cond:given1} & \support{\delta} \subseteq \pconc{C} \\
+\label{thm:pp:cond:given2} & \smin{} \leq \setsize{\support{\delta}} \leq \smax{} \\
+\label{thm:pp:cond:given3} & \mmin{} \leq \pmass{\delta} \leq \mmax{} \\
+\label{thm:pp:cond:given4} & \forall \sigma \in \support{\delta} \;
+. \; \pmin{} \leq \delta(\sigma) \leq \pmax{}
+\end{align}
+
+We need to show the following four claims.
+\begin{align}
+\label{thm:pp:cond:cond1}& \support{\delta_2} \subseteq \pconc{\getpoly{2}} \\
+\label{thm:pp:cond:cond2}& \smin{2} \leq \setsize{\support{\delta_2}} \leq \smax{2} \\
+\label{thm:pp:cond:cond3}& \mmin{2} \leq \pmass{\delta_2} \leq \mmax{2} \\
+\label{thm:pp:cond:cond4}& \forall \sigma \in \support{\delta_2} \;
+. \; \pmin{2} \leq \delta_2(\sigma) \leq \pmax{2}
+\end{align}
+
+\begin{subproof}{\clref{thm:pp:cond:cond1} -- Support} Let
+$ \sigma \in \support{\delta_2} $. Thus it must be that
+$ \sigma \in \support{\delta} $ and $ \eeval{\bexp}{\sigma} = \atrue
+$. By $ \cnumref{thm:pp:cond:given1} $, we have
+$ \sigma \in \pconc{\getpoly{}} $, therefore
+$ \sigma \in \pconc{\getpoly{2}} $ as
+$ \set{\sigma \in \pconc{\getpoly{}} \given \eeval{\bexp}{\sigma}
+= \atrue} \subseteq \pconc{\getpoly{2}} $ by construction of
+$ \getpoly{2} $.
+\end{subproof}
+
+\newcommand{\supdn}[0]{\support{\delta_2}}
+
+\begin{subproof}{\clref{thm:pp:cond:cond2} -- Support points} Let us write
+$ \supd $ as a union of two disjoint sets.
+$$ \supd = \supin \cup \supout $$
+
+Given the disjointness of the two, we also have the following.
+$$ \setsize{\supd} = \setsize{\supin} + \setsize{\supout} $$
+
+Now note that $ \supdn = \supin $. Thus we can write
+$ \setsize{\supdn} = \setsize{\supd} - \setsize{\supout} $. We can
+therefore estimate the size of the support of $ \delta_2 $ in the
+following manner.
+\begin{align*}
+\setsize{\supdn} & = \setsize{\supd} - \setsize{\supout} \\
+& \leq \setsize{\supd} \\
+& \leq \smax{} & \mathstep{by \cnumref{thm:pp:cond:given2}}
+\end{align*}
+
+Therefore, using \cnumref{thm:pp:cond:prop1} and the above, we have
+$ \setsize{\supdn} \leq \minparen{\smax{}, n} = \smax{2} $.
+
+Going in the other direction, we can write as follows.
+\begin{align*}
+\setsize{\supdn} & = \setsize{\supd} - \setsize{\supout} \\
+ & \geq \smin{} - \setsize{\supout}
+ & \mathstep{by \cnumref{thm:pp:cond:given2}} \\
+ & \geq \smin{} - \nn & \mathstep{by \cnumref{thm:pp:cond:prop2}}
+\end{align*}
+
+Since all sets are trivially of size at least $ 0 $, we have
+$ \setsize{\supdn} \geq \maxparen{\smin{} - \nn, 0} = \smin{2} $.
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:cond:cond4} -- Probability} Note that we will show
+the probability claim before the mass as we will use the truth of the
+probability claim in the mass arguments.
+
+Let $ \sigma \in \supdn $. By definition of $ \delta_2 $, we have
+$ \delta_2(\sigma) = \delta(\sigma) $. Thus $ \sigma \in \supd $ so
+by \cnumref{thm:pp:cond:given4} we have:
+$$ \pmin{2} = \pmin{} \leq \delta(\sigma) = \delta_2(\sigma) \leq \pmax{} = \pmax{2} $$
+\end{subproof}
+
+\begin{subproof}{\clref{thm:pp:cond:cond3} -- Mass} Let us first show the
+following bound on the size of $ \supout $.
+\begin{align}
+\label{thm:pp:cond:prop1c} \maxparen{\smin{} - n,
+0} \leq \setsize{\supout} \leq \minparen{\smax{}, \nn}
+\end{align}
+
+Since $ \setsize{\supd} = \setsize{\supin} + \setsize{\supout} $, we
+can say $ \setsize{\supout} = \setsize{\supd} - \setsize{\supin} $ and
+continue to the bound in the following manner.
+\begin{align*}
+\setsize{\supout} & = \setsize{\supd} - \setsize{\supin} \\
+& \geq \smin{} - \setsize{\supin}
+& \mathstep{by \cnumref{thm:pp:cond:given2}} \\
+& \geq \smin{} - n & \mathstep{by \cnumref{thm:pp:cond:prop1}}
+\end{align*}
+
+Therefore $ \setsize{\supout} \geq \maxparen{\smin{} - n, 0} $ as
+claimed. For the other end of the inequality, note that we have
+$ \setsize{\supout} \leq \setsize{\supd} \leq \smax{} $
+by \cnumref{thm:pp:cond:given2}. Also,
+by \cnumref{thm:pp:cond:prop2}, $ \setsize{\supout} \leq \nn $. Therefore
+$ \setsize{\supout} \leq \maxparen{\smax{}, \nn} $, completing our
+bound.
+
+Now, let us write $ \pmass{\delta} $ in two parts.
+
+\begin{align*}
+\pmass{\delta} & = \sum_{\sigma \in \support{\delta}} \delta(\sigma) \\
+               & = \sum_{\sigma \in \supin} \delta(\sigma)
+               + \sum_{\sigma \in \supout} \delta(\sigma) \\
+               & = \pmass{\delta_2} + \sum_{\sigma \in \supout} \delta(\sigma)
+\end{align*}
+
+Therefore $ \pmass{\delta_2} = \pmass{\delta}
+- \sum_{\sigma \in \supout} \delta(\sigma) $.
+
+\begin{align*}
+\pmass{\delta_2}
+& = \pmass{\delta} - \sum_{\sigma \in \supout} \delta(\sigma) \\
+& \leq \mmax{} - \sum_{\sigma \in \supout} \delta(\sigma)
+& \mathstep{by \cnumref{thm:pp:cond:given3}} \\
+& \leq \mmax{} - \sum_{\sigma \in \supout} \pmin{}
+ & \mathstep{by \cnumref{thm:pp:cond:given4}} \\
+& = \mmax{} - \setsize{\supout} \cdot \pmin{} \\
+& \leq \mmax{} - \maxparen{\smin{} - n, 0} \cdot \pmin{}
+& \mathstep{by \cnumref{thm:pp:cond:prop1c}}
+\end{align*}
+
+Also, we can bound the mass using our other already proven conditions.
+\begin{align*}
+\pmass{\delta_2} & = \sum_{\sigma \in \supdn} \delta_2(\sigma) \\
+                 & \leq \sum_{\sigma \in \supdn} \pmax{2}
+                 & \mathstep{by \cnumref{thm:pp:cond:cond4}} \\
+                 & = \setsize{\supdn} \cdot \pmax{2} \\
+                 & \leq \smax{2} \cdot \pmax{2} & \mathstep{by \cnumref{thm:pp:cond:cond2}}
+\end{align*}
+
+Combining the bounds, we have half of our probability condition.
+\begin{align*}
+\pmass{\delta_2} & \leq \mmax{2} \\
+& = \minparen{\pmax{2} \cdot \smax{2}, \mmax{} - \pmin{} \cdot \maxparen{\smin{} - n, 0 }}
+\end{align*}
+
+For the other half, we proceed similarly.
+\begin{align*}
+\pmass{\delta_2}
+& = \pmass{\delta} - \sum_{\sigma \in \supout} \delta(\sigma) \\
+& \geq \mmin{} - \sum_{\sigma \in \supout} \delta(\sigma)
+& \mathstep{by \cnumref{thm:pp:cond:given3}} \\
+& \geq \mmin{} - \sum_{\sigma \in \supout} \pmax{}
+ & \mathstep{by \cnumref{thm:pp:cond:given4}} \\
+& = \mmin{} - \setsize{\supout} \cdot \pmax{} \\
+& \geq \mmin{} - \minparen{\smax{}, \nn} \cdot \pmax{}
+& \mathstep{by \cnumref{thm:pp:cond:prop1c}}
+\end{align*}
+
+And likewise another bound using our other conditions.
+\begin{align*}
+\pmass{\delta_2} & = \sum_{\sigma \in \supdn} \delta_2(\sigma) \\
+                 & \geq \sum_{\sigma \in \supdn} \pmin{2}
+                 & \mathstep{by \cnumref{thm:pp:cond:cond4}} \\
+                 & = \setsize{\supdn} \cdot \pmin{2} \\
+                 & \geq \smin{2} \cdot \pmin{2} & \mathstep{by \cnumref{thm:pp:cond:cond2}}
+\end{align*}
+
+Combining the two bounds, we have the final element of our proof.
+\begin{align*}
+\pmass{\delta_2} & \geq \mmin{2} \\
+& = \maxparen{\pmin{2} \cdot \smin{2}, \mmin{} - \pmax{} \cdot \minparen{\smax{}, \nn}}
+\end{align*}
+\end{subproof}
+\end{proof}
+
+\subsection{Scalar product}
+\begin{replemma}{lem:pp:scalar-prod}
+If $\delta_1 \in \ppconc{\pp{1}}$ then $p \cdot \delta_1 \in \ppconc{p \cdot \pp{1}}$.
+\end{replemma}
+
+\begin{proof} By assumption we have the following.
+\begin{align*}
+%\label{thm:pp:scalar:given1} 
+& \support{\delta_1} \subseteq \pconc{\poly_1} \\
+%\label{thm:pp:scalar:given2} 
+& \smin{1} \leq \setsize{\support{\delta_1}} \leq \smax{1} \\
+%\label{thm:pp:scalar:given3} 
+& \mmin{1} \leq \pmass{\delta_1} \leq \mmax{1} \\
+%\label{thm:pp:scalar:given4} 
+& \forall \sigma \in \support{\delta_1} \;
+. \; \pmin{1} \leq \delta_1(\sigma) \leq \pmax{1}
+\end{align*}
+
+Let $ \delta_2 = p \cdot \delta_1 $ and $ \pp{2} = p \cdot \pp{1} $. Let us assume that $ p \neq 0 $. In this case we need to show the following.
+\begin{align*}
+& \support{\delta_1} = \support{\delta_2} \subseteq \pconc{\poly_2} = \pconc{\poly_1} \\
+& \smin{1}
+= \smin{2} \leq \setsize{\support{\delta_2}}
+= \setsize{\support{\delta_2}} \leq \smax{2} = \smax{1} \\
+& p \cdot \mmin{1}
+= \mmin{2} \leq \pmass{\delta_1} \leq \mmax{2} = p \cdot \mmax{1} \\
+& \forall \sigma \in \support{\delta_2} \;
+. \; \\
+& \;\;\;\;\; p \cdot \pmin{1} = \pmin{2} \leq \delta_2(\sigma) \leq \pmax{2} =
+p \cdot \pmax{1}
+\end{align*}
+
+The first two conditions are trivially satisfied given the lack of
+change in the various parameters. For the mass condition, note that
+$ \pmass{\delta_2} = \sum_{\sigma} \delta_2 (\sigma) = \sum_{\sigma}
+p \cdot \delta_1(\sigma) = p \cdot \pmass{\delta_1} $. The probability
+condition is also trivially satisfied as $ \delta_2(\sigma) =
+p \cdot \delta_1(\sigma) $.
+
+In the case that $ p = 0 $, the abstract scalar product is defined
+with $ \smin{2} = \smax{2} =
+\pmin{2} = \pmax{2} = \mmin{2} = \mmax{2} = 0 $ and $ \poly_2 =
+\emptypoly $. In this case note that $ \support{\delta_2} = \emptyset
+= \pconc{\emptypoly} $, and thus the conditions hold trivially.
+\end{proof}
+
+\subsection{Uniform}
+\begin{lemma}[Soundness of Uniform] \label{lem:pp:uniform} If $ \delta \in \ppconc{\pp{}} $
+and $ S = \suniform{x}{n_1}{n_2} $ then
+$ \pevalp{S}{\delta} \in \ppconc{\abspevalp{S}{\pp{}}} $.
+\end{lemma}
+
+\begin{proof} Recall the semantics of the statement.
+$$ \pevalp{\suniform{x}{n_1}{n_2}}{\delta} = \paren{\project{\delta}{\fv{\delta}
+- \set{x}}} \dprod \delta_2 $$
+
+The distribution $ \delta_2 $ is defined as follows.
+$$ \delta_2 = \lambda \sigma \lsep \aif n_1 \leq \sigma(x) \leq
+n_2 \athen \frac{1}{n_2 - n_1 + 1} \aelse 0 $$
+
+The abstract semantics are similar.
+\begin{align*}
+\abspevalp{\suniform{x}{n_1}{n_2}}{\pp{}} &
+= \paren{\forget{x}{\pp{}}} \pprod \pp{2}
+\end{align*}
+
+Here $ \pp{2} $ is defined with $ \pmin{2} = \pmax{2} = \frac{1}{n_2 -
+n_1 + 1} $, $ \smin{2} = \smax{2} = n_2 - n_1 + 1 $, $ \mmin{2}
+= \mmax{2} = 1 $, and $ \poly_2 = (\set{x \geq n_1, x \leq
+n_2}, \set{x}) $.
+
+By construction, we have $ \delta_2 \in \pp{2} $
+thus the lemma follows from \lref{lem:pp:forget} (Soundness of
+Forget) and \lref{lem:pp:product} (Soundness of Product).
+\end{proof}
+
+\subsection{While loops}
+
+%Before we take care of loops we need to establish some facts and make
+%some technical points about the abstract semantics. Firstly,
+%throughout the abstract interpretation we will always make sure the
+%probabilistic polyhedra follow certain invariants. 
+
+\begin{definition} First we have some preliminary definitions. Given
+some set of variables, we have the following, where each distribution
+or state in each statement is understood
+to be defined over the same set of variables.
+\begin{itemize} 
+%\item{} We say two probabilistic polyhedra are equal, or
+%$ \pp{1} \ppeq \pp{2} $ iff $ \ppconc{\pp{1}} = \ppconc{\pp{2}}
+%$. The usual equality, on the other hand, denotes that the parameters
+%defining $ \pp{1} $ and $ \pp{2} $ are equal. The usual equality
+%certainly implies $ \ppeq $, but the inverse doesn't hold.
+\item{} Two distributions are \emph{ordered}, or
+$ \delta_1 \distleq \delta_2 $ iff for every state $ \sigma $,
+$ \delta_1(\sigma) \leq \delta_2(\sigma) $.
+\item{} Two probabilistic polyhedra are \emph{ordered}, or
+$ \pp{1} \ppleq \pp{2} $ iff for every $ \delta_1 \in \ppconc{\pp{1}}
+$, there exists $ \delta_2 \in \ppconc{\pp{2}} $ with
+$ \delta_1 \leq \delta_2 $.
+%\item{} Two probabilistic polyhedra are \emph{strictly ordered}, or
+%$ \pp{1} \pple \pp{2} $ iff $ \pp{1} \ppleq \pp{2} $ and
+%$ \pp{1} \ppneq \pp{2} $.
+\item{} The \emph{zero distribution} $ \delta $ is the unique
+distribution with $ \delta(\sigma) = 0 $ for every $ \sigma $. We will
+use $ \distzero $ to refer to this distribution.
+\item{} A \emph{zero probabilistic polyhedron} $ \pp{} $, or
+$ \iszero{\pp{1}} $ is one whose
+concretization contains only the zero distribution, that is
+$ \ppconc{\pp{}} = \set{\distzero} $.
+\end{itemize}
+\end{definition}
+
+%\begin{remark}
+%If $ \pp{} $ is a probabilistic polyhedron then we will maintain the following.
+%
+%\begin{itemize}
+%\item{} \emph{Unique zero element}. If $ \smax{} = 0 $ or $ \pmax{} = 0 $ or
+%$ \mmax{} = 0 $ or $ \poly = \emptypoly $ then $ \smax{} = 0 $ and
+%$ \pmax{} = 0 $ and $ \mmax{} = 0 $ and $ \poly = \emptypoly $. We
+%will refer to this element as simply $ \ppzero $.
+%\item{} \emph{Consistent support size}. The bound on the number of
+%support points is consistent with the size of the convex polyhedron
+%bounding the support set, or formally, $ \smax{} \leq \psize{\poly} $.
+%\end{itemize}
+%
+%Note that we can easily maintain these properties, by straightforward
+%transformations that do not at all change the concretization of the
+%abstract element. That is, from any $ \pp{1} $ we can create $ \pp{2} $
+%with $ \pp{1} \ppeq \pp{2} $ where $ \pp{2} $ satisfies the
+%two conditions above.
+%
+%To satisfy the unique zero element condition, we transform any
+%$ \pp{1} $ with at least one of the zero conditions to an element
+%$ \pp{2} $ with all the zero conditions. This doesn't change the
+%concretization as either way, there is only a unique
+%$ \delta \in \ppconc{\pp{1}} = \ppconc{\pp{2}} $, the zero $ \delta $,
+%which has the property $ \delta(\sigma) = 0 $ for every $ \sigma $. We
+%will refer to this $ \delta $ as simply $ \distzero $.
+%
+%To maintain the support size consistency, we merely reduce the size of
+%$ \smax{1} $ to that of $ \psize{\poly_1} $ if it is ever larger than
+%this amount. Note that this too doesn't change the concretization as
+%we have $ \support{\delta} \subseteq \pconc{\poly_1} $, thus any
+%$ \delta \in \ppconc{\pp{1}} $ will already have
+%$ \setsize{\support{\delta}} \leq \psize{\poly_1} = \smax{2} $.
+%
+%\end{remark}
+%
+%From here on, we will assume that every probabilistic polyhedra
+%satisfies our invariants.
+
+\begin{lemma}\label{lem:pp:while:order} Let $ \pp{i} $ be consistent
+probabilistic polyhedra, that is, $ \ppconc{\pp{i}} \neq \emptyset $.
+%\begin{subtheorem}
+\label{lem:pp:while:order:pluszero} Then, $ \pp{1} + \pp{2} \ppleq \pp{1} $ iff $ \iszero{\pp{2}} $.
+%\end{subtheorem}
+%\begin{subtheorem} \label{lem:pp:while:order:plusgeq} $ \pp{1} \ppleq \pp{1} + \pp{2} $.
+%\end{subtheorem}
+%\begin{subtheorem} \label{lem:pp:while:order:plusge} $ \pp{1} \pple \pp{1} + \pp{2} $ iff $ \pp{2} = \ppzero $.
+%\end{subtheorem}
+%\begin{subtheorem} \label{lem:pp:while:order:sandwich} If $ \pp{1} \ppleq \pp{2} \ppleq \pp{1} $ then
+%$ \pp{2} \ppeq \pp{1} $.
+%\end{subtheorem}
+\end{lemma}
+
+\begin{proof}
+%\begin{subproof}{\clref{lem:pp:while:order:pluszero}}
+In the
+forward direction, we have $ \pp{1} + \pp{2} \ppleq \pp{1} $. Now, let
+us consider a $ \pp{2} $ with not $ \iszero{\pp{2}} $. Thus there is
+$ \delta_2 \in \ppconc{\pp{2}} $ with $ \pmass{\delta_2} > 0 $. Let
+$ \delta_1 \in \ppconc{\pp{1}} $ be the distribution in
+$ \ppconc{\pp{1}} $ maximizing mass, that is
+$ \pmass{\delta_1} \geq \pmass{\delta'_1} $ for every
+$ \delta'_1 \in \ppconc{\pp{1}} $. By \lref{lem:pp:plus}, $ \delta_1
++ \delta_2 \in \ppconc{\pp{1} + \pp{2}} $ and by the definition of
+$ \pp{1} + \pp{2} \ppleq \pp{1} $, there must be $ \delta_3 \in \ppconc{\pp{1}}
+$ with $ \delta_1 + \delta_2 \distleq \delta_3 $. Thus
+$ \pmass{\delta_3} \geq \pmass{\delta_1 + \delta_2} = \pmass{\delta_1}
++ \pmass{\delta_2} > \pmass{\delta_1} $. This contradicts that
+$ \delta_1 $ was mass maximizing in $ \ppconc{\pp{1}} $.
+
+In the backward direction, our definition of abstract plus makes
+$ \pp{1} + \pp{2} $ identical to $ \pp{1} $. Thus $ \pp{1} + \pp{2}
+= \pp{1} \ppleq \pp{1} $.
+%\end{subproof}
+
+%\begin{subproof}{\clref{lem:pp:while:order:pluszero}} In the forward
+%direction, let us assume $ \pp{1} + \pp{2} \ppeq \pp{1} $ but
+%$ \pp{2} \neq \ppzero $. Thus we have $ \delta_2 \in \ppconc{\pp{2}} $
+%with $ \pmass{\delta_2} > 0 $. Let $ \delta_1 $ be the element of
+%$ \ppconc{\pp{1}} = \ppconc{\pp{1} + \pp{2}} $ that maximizes mass
+%over all the distributions in the
+%concretization. By \lref{lem:pp:plus}, we have $ \delta_1
+%+ \delta_2 \in \ppconc{\pp{1} + \pp{2}} = \ppconc{\pp{1}} $ but
+%$ \pmass{\delta_1 + \delta_2} = \pmass{\delta_1} + \pmass{\delta_2}
+%> \pmass{\delta_1} $ which contradicts the fact that $ \delta_1 $ had the
+%maximal mass.
+%
+%In the backwards direction, let us assume that $ \pp{2} = \ppzero
+%$. It is immediate that $ \pp{1} + \pp{2} = \pp{1} $, given the
+%special condition in the abstract plus construction.
+%\end{subproof}
+
+%\begin{subproof}{\clref{lem:pp:while:order:plusgeq}} Let
+%$ \delta_1 \in \ppconc{\pp{1}} $ and let us take any
+%$ \delta_2 \in \ppconc{\pp{2}} $. By \lref{lem:pp:plus}, we have
+%$ \delta_1 + \delta_2 \in \ppconc{\pp{1} + \pp{2}} $. Also, $
+%(\delta_1 + \delta_2) \geq \delta_1 $ as $ (\delta_1
+%+ \delta_2)(\sigma) = \delta_1(\sigma)
+%+ \delta_2(\sigma) \geq \delta_1(\sigma) $ for every $ \sigma $. Thus $ \pp{1} \ppleq \pp{1}
+%+ \pp{2} $.
+%Let $ \pp{3}
+%= \pp{1} + \pp{2} $. We need to show the following.
+%\begin{align*}
+%\poly_1 & \pleq \poly_3 \\
+%\mmax{1} & \leq \mmax{3} \\
+%\pmax{1} & \leq \pmax{3} \\
+%\smax{1} & \leq \smax{3}
+%\end{align*}
+%
+%The first condition holds as per definition of $ \pjoin $ as $ \poly_3
+%= \poly_1 \pjoin \poly_2 $. The total mass $ \mmax{3} $ is equal to
+%$ \mmax{1} + \mmax{2} \geq \mmax{1} $, thus this condition is also satisfied.
+%
+%The max probability per point $ \pmax{3} $ as per definition of
+%abstract plus is either $ \pmax{1} $ (whenever $ \mmax{2} = 0 $),
+%$ \pmax{1} + \pmax{2} $, or $ \maxparen{\pmax{1}, \pmax{2}} $. In all
+%cases, this quantity at least as large as $ \pmax{1} $.
+%
+%Finally consider $ \smax{3} $. If $ \mmax{2} = 0 $ then $ \smax{3}
+%= \smax{1} $ and we are done. Otherwise we expand the definition of
+%$ \smax{3} $ including the overlap.
+%
+%\begin{align*}
+%\smax{3} & = \smax{1} + \smax{2} - \pessoverlap{\ppa}{\ppb} \\
+% & = \smax{1}
+% + \smax{2} - \maxparen{(\smin{1} - n_1) + (\smin{2} - n_2) - n_3,
+% 0} \\
+% & = \smax{1} + \smax{2} - \\
+% & \;\;\; \maxparen{(\smin{1}
+% - \psize{\poly_1} + n_3) + (\smin{2} - \psize{\poly_2} + n_3) - n_3,
+% 0} \\
+% & = \smax{1} + \smax{2} - \\
+% & \;\;\; \maxparen{(\smin{1}
+% - \psize{\poly_1} + n_3) + (\smin{2} - \psize{\poly_2}), 0}
+%\end{align*}
+%
+%\end{subproof}
+
+%\begin{subproof}{\clref{lem:pp:while:order:plusge}}
+%\end{subproof}
+%\begin{subproof}{\clref{lem:pp:while:order:sandwich}}
+%\end{subproof}
+\end{proof}
+
+\begin{definition} Given a statement $ S = \swhile{\bexp}{S'} $, a distribution $ \delta $
+and a probabilistic polyhedron $ \pp{} $, let us define a few
+useful items.
+
+\begin{itemize}
+\item{} $ \omega(f) \defeq \lambda \delta \lsep
+f(\pevalp{S'}{\paren{\dcond{\delta}{\bexp}}}) + \dcond{\delta}{\neg \bexp}
+$
+\item{} $ \delta_1 \defeq \delta $
+\item{} $ \delta_{i+1} \defeq \pevalp{S'}{\paren{\dcond{\delta_i}{\bexp}}} $
+\item{}
+$ \Delta_n \defeq \sum_{i=1}^{n} \paren{\dcond{\delta_i}{\neg \bexp}}
+$
+\item{} $ \distfunzero $ is the function that takes in any
+distribution and produces the zero distribution $ \distzero $, that is
+$ \distfunzero(\delta) = \distzero $.
+\end{itemize}
+Similarly we have the abstract versions of the definitions.
+\begin{itemize}
+\item{} $ \Omega(F) \defeq \lambda \pp{} \lsep
+F(\abspevalp{S'}{\paren{\absdcond{\pp{}}{\bexp}}}) + \absdcond{\pp{}}{\neg \bexp}
+$
+\item{} $ \pp{1} \defeq \pp{} $
+\item{} $ \pp{i+1} \defeq \abspevalp{S'}{\paren{\absdcond{\pp{i}}{\bexp}}} $
+\item{}
+$ \Phi_n \defeq \sum_{i=1}^{n} \paren{\absdcond{\pp{i}}{\neg \bexp}} $
+\item{} $ \ppfunzero $ is a function that takes in any
+probabilistic polyhedron and produces a zero probabilistic polyhedron, that is
+$ \iszero{\ppfunzero(\pp{})} $ for every $ \pp{} $.
+\end{itemize}
+
+\end{definition}
+
+The semantics of while loops are defined as such:
+$$ \pevalp{S}{} = \pevalp{\swhile{\bexp}{S'}}{} = \lfp(\omega) $$
+$$ \abspevalp{S}{} = \abspevalp{\swhile{\bexp}{S'}}{} = \lfp(\Omega) $$
+
+While such definitions are of theoretical interest, they are not
+particularly useful for implementations, given our lack of a widening
+operator. Thus, our security checks will always be conditioned on
+termination of the abstract interpretation, defined below.
+We show that  termination of the abstract interpretation implies termination
+of all corresponding concrete executions.  This is crucial, as our
+concrete semantics (due to Clarkson et
+al.~\cite{clarkson09quantifying}) assumes termination to avoid leaks.
+To make this termination condition explicit,
+we provide an alternate concrete
+semantics for terminating while loops and show that this
+gives results equivalent to those of the original semantics.
+
+\begin{definition} The termination of $ \pevalp{S}{\delta} $ is defined
+as follows.
+\begin{itemize}
+\item{} If $ S $ is an elementary statement (assignment, skip,
+uniform), then $ \pevalp{S}{\delta} $ terminates.
+\item{} If $ S $ is a sequence, if statement, or a probabilistic
+choice statement, then $ \pevalp{S}{\delta} $ terminates iff the
+various evaluations steps to evaluate $ S $ terminate. This depends on
+the statement type, for $ S = \sseq{S_1}{S_2} $, for example, it means
+that $ \pevalp{S_1}{\delta} $ terminates and so does
+$ \pevalp{S_2}{\paren{\pevalp{S_1}{\delta}}} $.
+\item{} If $ S = \swhile{\bexp}{S_1} $ is a while statement, then $ \pevalp{S}{\delta} $
+terminates iff there exists $ n $ with $ \delta_n = \distzero $ and the evaluation steps as per definition of $ \delta_i
+$ terminate for all $ i $ up to $ n $.
+\end{itemize}
+
+The termination of $ \abspevalp{S}{\pp{}} $ is framed similarly,
+except in the while case, we require the existence of $ n $ with
+$ \iszero{\pp{n}} $ and the termination of the abstract evaluations as
+in the definitions of $ \pp{i} $ for all $ i $ up to $ n $.
+\end{definition}
+
+The $ \Delta_i $ and $ \Phi_i $ capture exactly the concrete and
+abstract values when termination is assumed.
+\begin{align*}
+\omega^1(\distfunzero)(\delta) & = \dcond{\delta}{\neg \bexp} \\
+ & = \Delta_1
+\end{align*}
+\begin{align*}
+\omega^2(\distfunzero)(\delta)
+& = \dcond{\paren{\pevalp{S'}{\paren{\dcond{\delta}{\bexp}}}}}{\neg \bexp}
++ \dcond{\delta}{\neg \bexp} \\
+& = \dcond{\delta_2}{\neg \bexp} + \dcond{\delta_1}{\neg \bexp} \\
+& = \Delta_2
+\end{align*}
+\begin{align*}
+\omega^i(\distfunzero)(\delta)
+& = \omega^{i-1}(\distfunzero)(\pevalp{S'}{\dcond{\delta}{\bexp}})
++ \dcond{\delta}{\neg \bexp} \\
+& = \Delta_{i-1} + \dcond{\delta}{\neg \bexp} \\
+& = \Delta_i
+\end{align*}
+
+Likewise $ \Omega^i(\ppfunzero)(\pp{}) = \Phi_i $.
+
+\begin{definition} Terminating semantics of while loops are as follows.
+$$ \pevalp{\swhile{\bexp}{S_1}}{\delta} = \Delta_n $$
+Where $ n $ is the least index with $ \delta_n = \distzero $. Likewise for the abstract case.
+$$ \abspevalp{\swhile{\bexp}{S_1}}{\pp{}} = \Phi_n $$
+Where $ n $ is the least index with $ \iszero{\pp{n}} $.
+\end{definition}
+
+\begin{lemma} \label{lem:pp:while:infinite} If $ \pevalp{\swhile{\bexp}{S_1}} \delta $ is
+terminating, then $ \Delta_n = \paren{\lfp(\omega)}(\delta) $, noting
+that $ \lfp(\omega) $ is the original semantics of a while loop.
+\end{lemma}
+\begin{proof} As noted in \cite{monniaux00prob}, the evaluation of
+a while loop on a distribution is equal to an infinite sum:
+
+$$ \pevalp{S}{\delta} = \sum_{i = 1}^{\infty} \dcond{\delta_i}{\neg \bexp} $$
+
+By the termination assumption we have an $ n $ with $ \delta_n
+= \distzero $. Now, since $ \delta_{i+1}
+= \pevalp{S'}{\dcond{\delta_i}{\bexp}} $ hence the mass of
+$ \delta_{i+1} $ cannot exceed the mass of $ \delta_i $, it is the
+case that if $ \delta_n = \distzero $, then $ \delta_i = \distzero $
+for every $ i \geq n $. Thus the infinite sum above can be shortened.
+
+\begin{align*}
+\pevalp{S}{\delta} & = \sum_{i =
+1}^{\infty} \dcond{\delta_i}{\neg \bexp} \\
+ & = \sum_{i=1}^{n} \dcond{\delta_i}{\neg \bexp} + \distzero \\
+ & = \Delta_n
+\end{align*}
+
+\end{proof}
+
+\begin{remark}[Nature of Termination] \label{lem:pp:while:terminate} If
+$ \abspevalp{S}{\pp{}} $ terminates, then so must the evaluation of
+all of its components as defined by the semantics. This is immediate
+from the definition of termination.
+\end{remark}
+
+%The design of the termination definition lets us do away with
+%potential issues stemming from short-circuiting the interpretation in
+%programs that contain irrelevant infinite loops as the example below.
+%$$ \spif{1}{skip}{\swhile{1 < 2}{\sassign{x}{x+1}}} $$
+%
+%Such a program is deemed non-terminating. The sound treatment of while loops is demonstrated within the main
+%soundness theorem in the next section.
+%\sbmcomment{This doesn't make sense to me.  It seems like the program above would be terminating, since the distribution reaching the while loop is already zero (it gets scaled by 0 due to the pif).}
+
+\subsection{Soundness of Abstraction}
+\begin{reptheorem}{thm:pp:soundness}
+For all $\pp{}, \delta$, if $ \delta \in \ppconc{\pp{}} $ and
+$ \abspevalp{S}{\pp{}} $ terminates, then $ \pevalp{S}{\delta} $ terminates and $ \pevalp{S}{\delta} \in \ppconc{\abspevalp{S}{\pp{}}} $.
+\end{reptheorem}
+
+\begin{proof} Let us show this by structural induction on $ S $. As base cases we have the following.
+
+\begin{itemize}
+\item{} $ S = \sskip $. In this case we have $ \pevalp{S}{\delta}
+= \delta $ and $ \abspevalp{S}{\pp{}} = \pp{} $. Termination is not an
+issue and the claim holds by assumption.
+\item{} $ S = \sassign{x}{E} $. Here non-termination is also not a
+possibility given non-recursive definition of assignment. Also, by
+ \lref{lem:pp:assign} (Soundness of Assignment) we have
+$ \pevalp{S}{\delta} \in \ppconc{\abspevalp{S}{\pp{}}} $.
+\item{} $ S = \suniform{x}{n_1}{n_2} $. Again, there is no termination
+ issues and the claim follows from \lref{lem:pp:uniform} (Soundness of Uniform).
+\end{itemize} 
+
+Let us thus assume the claim for sub-statements of $ S $ and show it
+for $ S $ itself. Note that the inductive assumption is general for
+all $ \delta $, $ \pp{} $ with $ \delta \in \ppconc{\pp{}}
+$. $ S $
+has several cases.
+
+\begin{itemize}
+\item{} $ S = \sseq{S_1}{S_2} $. By the termination remark, we know
+$ \abspevalp{S_1}{\pp{}} $ terminates and thus by induction
+$ \pevalp{S_1}{\delta} $ terminates and is in
+$ \ppconc{\abspevalp{S_1}{\pp{}}} $. We then apply induction once more
+with $S_2$ to find
+that $ \pevalp{S_2}{\paren{\pevalp{S_1}{\delta}}} = \pevalp{S}{\delta}
+$ terminates and is in
+$ \ppconc{\abspevalp{S_2}{\paren{\abspevalp{S_1}{\pp{}}}}}
+= \ppconc{\abspevalp{S}{\pp{}}} $.
+\item{} $ S = \sif{\bexp}{S_1}{S_2} $. By the termination remark, we
+know that $ \abspevalp{S_1}{\paren{\absdcond{\pp{}}{\bexp}}} $ and
+$ \abspevalp{S_2}{\paren{\absdcond{\pp{}}{\neg \bexp}}} $
+terminate. By \lref{lem:pp:cond} (Soundness of Conditional) we have
+$ \dcond{\delta}{\bexp} \in \ppconc{\absdcond{\pp{}}{\bexp}} $ and
+$ \dcond{\delta}{\neg \bexp} \in \ppconc{\absdcond{\pp{}}{\neg \bexp}}
+$. We thus apply induction to both sub-statements to conclude that
+$ \pevalp{S_1}{\paren{\dcond{\delta}{\bexp}}} $ and
+$ \pevalp{S_2}{\paren{\dcond{\delta}{\neg \bexp}}} $ both terminate
+and are in $ \ppconc{\abspevalp{S_1}{\paren{\absdcond{\pp{}}{\bexp}}}}
+$ and $ \ppconc{\abspevalp{S_2}{\paren{\absdcond{\pp{}}{\neg \bexp}}}}
+$ respectively. Finally we apply \lref{lem:pp:plus} (Soundness of
+Plus) to conclude $ \pevalp{S}{\delta}
+= \pevalp{S_1}{\paren{\dcond{\delta}{\bexp}}}
++ \pevalp{S_2}{\paren{\dcond{\delta}{\neg \bexp}}} \in \ppconc{\abspevalp{S_1}{\paren{\absdcond{\pp{}}{\bexp}}}
++ \abspevalp{S_2}{\paren{\absdcond{\pp{}}{\neg \bexp}}}}
+= \ppconc{\abspevalp{S}{\pp{}}} $.
+
+\item{} $ S = \spif{p}{S_1}{S_2} $. This case is identical to the
+previous except we use \lref{lem:pp:scalar-prod} (Soundness of Scalar
+Product) in place of \lref{lem:pp:cond} (Soundness of Conditional). 
+
+\item{} $ S = \swhile{\bexp}{S_1} $.
+\end{itemize}
+For this last case we must first show a claim. For every $ \delta' $, $
+\pp{}' $ with $ \delta' \in \ppconc{\pp{}'} $, and every $ i $ we have
+the following.
+\begin{align}
+\label{lem:pp:while:claim1a} \delta'_i \in \ppconc{\pp{i}'} \\
+\label{lem:pp:while:claim1b} \Delta'_i \in \ppconc{\Phi'_i}
+\end{align}
+Let us show this claim by induction on $ i $. As the base case we have
+$ \delta'_1 = \delta' $ and $ \Delta'_1 = \dcond{\delta'_1}{\neg \bexp}
+= \dcond{\delta'}{\neg \bexp} $. Also $ \pp{1}' = \pp{}' $ and $ \Phi'_1
+= \absdcond{\pp{1}'}{\neg \bexp} = \absdcond{\pp{}'}{\neg \bexp} $. By
+assumption we had $ \delta' \in \ppconc{\pp{}'} $ so the first part of
+our claim holds trivially. For the other we apply \lref{lem:pp:cond}
+(Soundness of Conditional) to conclude $ \Delta'_1 \in \ppconc{\Phi'_1}
+$.
+
+Let us assume the claim holds for all $ i < n $ and show that it holds
+for $ n $. 
+
+We have, by definition, $ \delta'_n
+= \pevalp{S_1}{\paren{\dcond{\delta'_{n-1}}{\bexp}}} $ and $ \pp{n}'
+= \abspevalp{S_1}{\paren{\absdcond{\pp{n-1}'}{\bexp}}} $. By the
+(inner) induction assumption, we have
+$ \delta'_{n-1} \in \ppconc{\pp{n-1}'} $ so by \lref{lem:pp:cond} we
+have
+$ \dcond{\delta'_{n-1}}{\bexp} \in \ppconc{\absdcond{\pp{n-1}'}{\bexp}}
+$. Since $ \abspevalp{S}{\pp{}} $ terminates, then so must
+$ \abspevalp{S_1}{\absdcond{\pp{n-1}'}{\bexp}} $ by the termination
+remark. Thus, by the (outer) induction hypothesis, we know that
+$ \pevalp{S_1}{\paren{\dcond{\delta'_{n-1}}{\bexp}}}
+= \delta'_n \in \ppconc{\abspevalp{S_1}{\paren{\absdcond{\pp{n-1}'}{\bexp}}}}
+= \ppconc{\pp{n}'} $.
+
+For the second part of the claim, we have $ \Delta'_n = \Delta'_{n-1}
++ \dcond{\delta'_n}{\neg \bexp} $ and $ \Phi'_n = \Phi'_{n-1}
++ \absdcond{\pp{n}'}{\neg \bexp} $. By (inner) induction we know
+$ \Delta'_{n-1} \in \ppconc{\Phi'_{n-1}} $. By the first part of the claim above
+we know $ \delta'_n \in \ppconc{\pp{n}'} $ so by \lref{lem:pp:cond}
+(Soundness of Conditional) we have
+$ \dcond{\delta'_n}{\neg \bexp} \in \ppconc{\absdcond{\pp{n}'}{\neg \bexp}}
+$. Now we apply \lref{lem:pp:plus} (Soundness of Plus) to conclude
+$ \Delta'_n = \Delta'_{n-1}
++ \dcond{\delta'_n}{\neg \bexp} \in \ppconc{\Phi'_{n-1}
++ \absdcond{\pp{n}'}{\neg \bexp}} = \ppconc{\Phi'_{n}} $, finishing the
+claim.
+
+Now, since $ \abspevalp{S}{\pp{}'} $ terminates, it must be that
+$ \abspevalp{S}{\pp{}'} = \Phi'_n $ for some $ n $, according to the terminating
+semantics. Furthermore we have the following, also by definition of termination.
+\begin{align}
+\label{lem:pp:while:claim2a} \iszero{\absdcond{\pp{n}'}{\neg \bexp}}
+\end{align}
+
+This is the case since $ \iszero{\pp{n}'} $ and the fact that the
+conditioning operation preserves $ \iszero{\cdot} $.
+
+%That is, no more change to $ \Phi_n $ occurs beyond $ n $. Note again
+%that this $ \pp{}' $ is general \pxm{more generality issues, continues
+%below}. Since $ \Omega^{n}(\ppfunzero) $ is a fixed point of $ \Omega
+%$, we have $ \Omega^{n+1}(\ppfunzero) = \Omega^{n}(\ppfunzero) $ so
+%$ \Phi'_{n+1} = \Omega^{n+1}(\ppfunzero)(\pp{}')
+%= \Omega^{n}(\ppfunzero)(\pp{}') = \Phi'_{n} $. But $ \Phi'_{n+1}
+%= \Phi'_{n} + \absdcond{\pp{n+1}'}{\neg \bexp} $, so $ \Phi'_{n}
+%+ \absdcond{\pp{n+1}'}{\neg \bexp} = \Phi'_{n} $. Also, since
+%$ \Delta'_{n} \in \ppconc{\Phi'_n} $, $ \Phi'_n $ is consistent. Likewise since
+%$ \delta'_{n+1} \in \ppconc{\pp{n+1}'} $, and \lref{lem:pp:cond}
+%(Soundness of Conditional), it must be that
+%$ \absdcond{\pp{n+1}'}{\neg \bexp} $ is consistent. Therefore,
+%by \lref{lem:pp:while:order:pluszero},
+%$ \iszero{\absdcond{\pp{n+1}'}{\neg \bexp}} $.
+
+%By \lref{lem:pp:while:order:plusgeq} we have
+%$ \Phi_{n} \ppleq \Phi_{n+1} = \Phi_{n}
+%+ \absdcond{\pp{n+1}}{\neg \bexp} $ but since $ \Phi_n
+%= \abspevalp{S}{\pp{}} $ and $ \Phi_i \leq \abspevalp{S}{\pp{}} $ for
+%every $ i $, so $ n + 1 $ in particular, it must be that $ \Phi_{n+1}
+%= \Phi_{n} + \absdcond{\pp{n+1}}{\neg \bexp} \ppleq \Phi_{n} $. Thus
+%by \lref{lem:pp:while:order:pluszero} it must be that
+%$ \absdcond{\pp{n+1}}{\neg \bexp} = \ppzero $.
+
+%Now, by \cnumref{lem:pp:while:claim1a}, we
+%have $ \omega^{n+1}(\distfunzero)(\delta) \in \ppconc{\Omega^{n+1}(\ppfunzero)(\pp{})}
+%$. Using \cnumref{lem:pp:while:claim2a} we conclude that
+%$ \dcond{\delta_{n+1}}{\neg \bexp} = \distzero $.
+
+%Let us thus show that $ \omega^{n+1}(\distfunzero)
+%= \omega^{n}(\distfunzero) $. Let $ \delta' $ be any distrubtion. Let
+%$ \pp{}' $ be any probabilistic polyhedron with
+%$ \delta' \in \ppconc{\pp{}'} $. Thus
+%$ \delta'_{n+1} \in \ppconc{\pp{n+1}'} $
+%by \cnumref{lem:pp:while:claim1a}. But $ \iszero{\pp{n+1}'} $
+%by \cnumref{lem:pp:while:claim2a}. Therefore $ \delta'_{n+1}
+%= \distzero $ and thus $ \dcond{\delta'_{n+1}}{\neg \bexp} = \distzero
+%$.  Now, $ \omega^{n+1}(\distfunzero)(\delta') = \Delta'_{n}
+%+ \dcond{\delta'_{n+1}}{\neg \bexp}
+%= \omega^{n}(\distfunzero)(\delta') + \distzero
+%= \omega^{n}(\distfunzero)(\delta') $. Therefore we conclude
+%$ \omega^{n+1}(\distfunzero) = \omega^{n}(\distfunzero) $, that is,
+%$ \omega^{n}(\distfunzero) $ is a fixed point of $ \omega $ as needed.
+%
+%Finally let $ m \leq n $ with
+%$ \omega^{m}(\distfunzero) $ a fixed point of $ \omega $. Thus
+%$ \omega^{m+1}(\distfunzero) = \omega^{m}(\distfunzero) $ and further
+%$ \omega^{m+i}(\distfunzero) = \omega^{m}(\distfunzero) $. Thus it
+%must be that $ \omega^{n}(\distfunzero) = \omega^{m}(\distfunzero)
+%$. As noted in \cite{kozen81semantics}, if $ \omega^{n}(\distfunzero)
+%$ is a fixed point of $ \omega $, it is the least fixed point,
+%therefore $ \pevalp{S}{} = \omega^n $ as required. \pxm{is that enough
+%of a citation?.} So $ \pevalp{S}{\delta} = \Delta_n $ and
+%given \cnumref{lem:pp:while:claim1b}, we are done.
+
+Therefore by \cnumref{lem:pp:while:claim1a} we can conclude that
+$ \delta_{n} = \distzero $ as $ \pconc{\pp{n}} = \set{\distzero}
+$. Therefore $ \pevalp{S}{\delta} $ terminates and
+by \lref{lem:pp:while:infinite} we have $ \pevalp{S}{\delta}
+= \Delta_n $. The issue of whether $ n $ is the least index with
+$ \delta_n = \distzero $ is irrelevant as if it were not, the larger
+sum includes only additional $ \distzero $
+terms. By \cnumref{lem:pp:while:claim1b}, we have
+$ \Delta_n \in \ppconc{\Phi_n} $ and we are done as $ \Phi_n
+= \abspevalp{S}{\pp{}} $ according to the terminating semantics.
+\end{proof}
+
+\subsection{Normalization}
+\begin{replemma}{lem:pp:norm}
+If $\delta_1 \in \ppconc{\pp{1}}$ then $\normal{\delta_1} \in \ppconc{\normal{\pp{1}}}$.
+\end{replemma}
+
+\begin{proof} By assumption we have the following.
+\begin{align*}
+%\label{thm:pp:scalar:given1} 
+& \support{\delta_1} \subseteq \pconc{\poly_1} \\
+%\label{thm:pp:scalar:given2} 
+& \smin{1} \leq \setsize{\support{\delta_1}} \leq \smax{1} \\
+%\label{thm:pp:scalar:given3} 
+& \mmin{1} \leq \pmass{\delta_1} \leq \mmax{1} \\
+%\label{thm:pp:scalar:given4} 
+& \forall \sigma \in \support{\delta_1} \;
+. \; \pmin{1} \leq \delta_1(\sigma) \leq \pmax{1}
+\end{align*}
+
+If $ \pmass{\delta_1} = 0 $ then $ \normal{\delta_1} $ is
+undefined. Since $ \mmin{1} \leq \pmass{\delta_1} $, it must be that
+$ \mmin{1} = 0 $ as well, and thus $ \normal{\pp{1}} $ is likewise undefined.
+
+Let us now assume $ \pmass{\delta_1} > 0 $. Let $ \delta_2 = \normal{\delta_1} $ and $ \pp{2} = \normal{\pp{1}}
+$. We have two sub-cases,
+either $ \mmin{1} = 0 $ or $ \mmin{1} > 0 $. In the first sub case,
+$ \pp{2} $ is defined as follows.
+
+\[
+\begin{array}{lcl@{\hspace{0.35cm}}|@{\hspace{0.35cm}}lcl}
+\pmin{2} &=& \pmin{1} / \mmax{1} &
+\smin{2} &=& \smin{1} \\
+\pmax{2} &=& 1 &
+\smax{2} &=& \smax{1} \\
+\mmin{2} &=& \mmax{2} = 1 & \getpoly{2} &=& \getpoly{1} \\
+\end{array}
+\]
+
+Since $ \support{\delta_2} = \support{\delta_1} $, it must be that
+$ \support{\delta_2} \subseteq \pconc{\poly_2} $ as $ \poly_2
+= \poly_1 $. Likewise, the number of support point is is unchanged in
+both the concrete operation and the abstract one, hence the number of
+support points condition for soundness are satisfied as well. Also,
+the probability per point in any distribution does not exceed $ 1 $
+hence the $ \pmax{2} $ condition is satisfied. As for $ \pmin{2} $,
+note that if $ \sigma \in \support{\delta_2} = \support{\delta_1} $,
+we have $ \delta_2(\sigma) = \delta_1(\sigma)
+/ \pmass{\delta_1} \geq \pmin{1} / \pmass{\delta_1} \geq \pmin{1}
+/ \mmax{1} $, by assumption. Finally, $ \pmass{\delta_2} = 1 $ hence
+the $ \mmin{2} $ and $ \mmax{2} $ conditions are satisfied.
+
+In the other case, we have $ \pmin{1} > 0 $. Here $ \pp{2} $ is
+defined as follows.
+\[
+\begin{array}{lcl@{\hspace{0.35cm}}|@{\hspace{0.35cm}}lcl}
+\pmin{2} &=& \pmin{1} / \mmax{1} &
+\smin{2} &=& \smin{1}\\
+\pmax{2} &=& \pmax{1} / \mmin{1} &
+\smax{2} &=&\smax{1} \\
+\mmin{2} &=& \mmax{2} = 1 & \getpoly{2} &=& \getpoly{1} \\
+\end{array}
+\]
+
+The support, support points, total mass, and $ \pmin{2} $ conditions are satisfied for the same
+reason as in the previous case. For $ \pmax{2} $, let
+$ \sigma \in \support{\delta_2} = \support{\delta_1} $ and we have
+the following.
+\begin{align*}
+\delta_2(\sigma)
+ & = \delta_1(\sigma) / \pmass{\delta_1} \\
+ & \leq \pmax{1} / \pmass{\delta_1} \\
+ & \leq \pmax{1} / \mmin{1}
+\end{align*}
+\end{proof}
+
+\subsection{Security}
+
+Before we prove the security theorem, let us show that the definition
+of abstract conditioning on a state is sound.
+
+\begin{lemma} \label{lem:pp:scond}
+If $ \delta \in \ppconc{\pp{}} $ and $ \sigma_V \in \states_{V} $
+with $ V \subseteq \fv{\delta} $ then
+$ \dcond{\delta}{\sigma_V} \in \ppconc{\absdcond{\pp{}}{\sigma_V}} $
+\end{lemma}
+
+\begin{proof} Recall the definition of $ \absdcond{\pp{}}{\sigma_V} $.
+
+$$ \absdcond{\pp{}}{\sigma_V} = \absdcond{\pp{}}{\bexp} $$
+
+With $ \bexp = \bigwedge_{x \in V} \paren{x = \sigma_V(x)} $. Let us
+show that $ \dcond{\delta}{\sigma_V} = \dcond{\delta}{\bexp} $, the
+rest will follow from \lref{lem:pp:cond}.
+
+The definition of $ \dcond{\delta}{\sigma_V} $ is as follows.
+$$ \dcond{\delta}{\sigma}
+= \lambda \sigma \lsep \aif \project{\sigma}{V} = \sigma_V
+\athen \delta(\sigma) \aelse 0 $$
+
+Meanwhile, $ \dcond{\delta}{\bexp} $ is defined as follows.
+$$ \dcond{\delta}{\bexp}
+= \lambda \sigma \lsep \aif \eval{\bexp}{\sigma}
+= \atrue \athen \delta(\sigma) \aelse 0 $$
+
+The correspondence is immediate as $ \eval{\bexp}{\sigma} = \atrue $
+if and only if $ \project{\sigma}{V} = \sigma_V $ as per construction
+of $ \bexp $.
+\end{proof}
+
+\begin{reptheorem}{thm:pp:secure}
+  Let $\delta$ be an attacker's initial belief.  If
+  $\delta \in \ppconc{\pp{}}$ and $\abspolicy{S}{\pp{}}{t}$, then $ S
+  $ is threshold secure for threshold $t$ when evaluated with initial
+  belief $\delta$.
+\end{reptheorem}
+
+\begin{proof}Let us consider the contrapositive. That is, assuming
+  $ \delta \in \ppconc{\pp{}} $, if $ S $ is not threshold secure for
+  $ t $ and initial belief $ \delta $, then it is not the case that
+  $ \abspolicy{S}{\pp{}}{t} $.
+
+Let $ \delta_2 = \eval{S}{\delta} $ and $ \delta_3
+= \project{\delta_2}{L} $. Since $ S $ is not secure, we have
+$ \sigma_L \in \support{\delta_3} $ and $ \sigma'_H \in \states_H $
+with $
+(\normal{\project{\paren{\dcond{\delta_2}{\sigma_L}}}{H}})(\sigma'_H)
+> t $. This implies that
+$ \project{\paren{\dcond{\delta_2}{\sigma_L}}}{H} \neq \distzero $ and
+therefore $ \dcond{\delta_2}{\sigma_L} \neq \distzero $ as projection
+preserves mass.
+
+If $ \abspevalp{S}{\pp{}} $ is not terminating, then we are done as
+termination is a condition for $ \abspolicy{S}{\pp{}}{t} $. So let us
+assume $ \abspevalp{S}{\pp{}} $ is terminating. Let $ \pp{2}
+= \abspevalp{S}{\pp{}} $. By \tref{thm:pp:soundness}, we have
+$ \delta_2 \in \ppconc{\pp{2}} $. By \lref{lem:pp:scond},
+$ \dcond{\delta_2}{\sigma_L} \in \ppconc{\absdcond{\pp{2}}{\sigma_L}}
+$. Therefore not $ \iszero{\absdcond{\pp{}}{\sigma_L}} $ as
+$ \dcond{\delta_2}{\sigma_L} \neq \distzero $. Continuing,
+by \lref{lem:pp:project},
+$ \project{ \paren{\dcond{\delta_2}{\sigma_L}}}{H} \in \ppconc{\project{\paren{\absdcond{\pp{2}}{\sigma_L}}}{H}}
+$ and finally, by \lref{lem:pp:norm}, we have
+$ \normal{\project{\paren{\dcond{\delta_2}{\sigma_L}}}{H}} \in \ppconc{\normal{\project{\paren{\absdcond{\pp{2}}{\sigma_L}}}{H}}}
+$. Let $ \delta_4
+= \normal{\project{\paren{\dcond{\delta_2}{\sigma_L}}}{H}} $ and
+$ \pp{4} = \normal{\project{\paren{\absdcond{\pp{2}}{\sigma_L}}}{H}}
+$. Since $ \sigma'_H \in \support{\delta_4} $, we have
+$ \delta_4(\sigma'_H) \leq \pmax{4} $. Since $ \delta_4(\sigma'_H) > t
+$, we have $ t < \pmax{4} $.
+
+Also, let $ \pp{3} = \project{\pp{2}}{L} $. By \lref{lem:pp:project},
+we have $ \delta_3 \in \ppconc{\pp{3}} $ so
+$ \sigma_L \in \pconc{\poly_3} $. We already had that not
+$ \iszero{\absdcond{\pp{}}{\sigma_L}} $ above. Thus $ \sigma_L $ is indeed the
+witness to the failure of $ \abspolicy{S}{\pp{1}}{t} $.
+\end{proof}
+
+\vspace*{.1in}
+\section{Soundness proofs for $ \ppowers $} \label{appendix:proof2}
+
+\subsection{Useful Lemmas}
+
+We begin with some lemmas that give properties of the concretization function for powersets of probabilistic polyhedra and addition on sets.
+\begin{lemma}
+\label{lem:ppp-conc:partition}
+If $\pps{} = \pps{1} \cup \pps{2}$ then
+$\ppsconc{\pps{}} = \ppsconc{\pps{1}} + \ppsconc{\pps{2}}$.
+\end{lemma}
+\begin{proof}
+From the definition of $\ppsconc{\Delta}$ we have
+\[\ppsconc{\pps{}} = \sum_{\pp{} \in \pps{}} \ppconc{\pp{}}\]
+Applying $\pps{} = \pps{1} \cup \pps{2}$ and associativity of $+$ allows us to conclude
+\[\ppsconc{\pps{}} = \sum_{\pp{1} \in \pps{1}} \ppconc{\pp{1}} + \sum_{\pp{1} \in \pps{2}} \ppconc{\pp{2}}\]
+Again applying the definition of $\ppsconc{\ldots}$, we have
+\[\ppsconc{\pps{}} = \ppsconc{\pps{1}} + \ppsconc{\pp{2}}\]
+\end{proof}
+
+\begin{lemma}
+\label{lem:set-plus:subset}
+If $D_1 \subseteq D_1'$ and $D_2 \subseteq D_2'$ then $D_1 + D_2 \subseteq D_1' + D_2'$.
+\end{lemma}
+\begin{proof}
+According to the definition of addition for sets, we have
+\[D_1 + D_2 = \{\delta_1 + \delta_2 \mid \delta_1 \in D_1 \wedge \delta_2 \in D_2\}\]
+Consider some $\delta \in D_1 + D_2$.  We have $\delta = \delta_1 + \delta_2$ with
+$\delta_1 \in D_1$ and $\delta_2 \in D_2$.  Since $D_1 \subseteq D_1'$, we have $\delta_1 \in D_1'$.
+Similarly, since $D_2 \subseteq D_2'$, we have $\delta_2 \in D_2'$.
+Since
+\[D_1' + D_2' = \{\delta'_1 + \delta'_2 \mid \delta'_1 \in D_1' \wedge \delta'_2 \in D_2'\}\]
+we have $\delta = \delta_1 + \delta_2 \in D_1' + D_2'$.
+\end{proof}
+
+\subsection{Bounding Operation}
+
+\begin{replemma}{lem:ppp:bound}[Soundness of Bounding Operation]
+$\ppsconc{\pps{}} \subseteq \ppsconc{
+    \simplify{\pps{}}{n}} $.
+\end{replemma}
+
+\begin{proof}
+According to Definition \ref{def:ppp-simp}, there are two cases for 
+$\simplify{\pps{}}{n}$.  If $\setsize{\pps{}} \leq n$ then we
+have $\simplify{\pps{}}{n} = \pps{}$ and thus
+$\ppsconc{\pps{}} = \ppsconc{\simplify{\pps{}}{n}}$.
+
+If $\setsize{\pps{}} > n$, we reason by induction on $\setsize{\pps{}}$.
+Since $n \geq 1$, we have that $\setsize{\pps{}} \geq 2$ and thus we
+ can partition $\pps{}$ into $\pps{1} \cup \{\pp{1},\pp{2}\}$.  Applying
+Definition \ref{def:ppp-simp} we then have
+$\simplify{\pps{}}{n} = \simplify{\pps{1} \cup \{\pp{1} + \pp{2}\}}{n}$.
+The inductively-passed set has size one less than the original, allowing us to apply
+the inductive hypothesis to conclude the following.
+\[\ppsconc{\pps{1} \cup \set{\pp{1} + \pp{2}}} \subseteq \ppsconc{
+    \simplify{\pps{1} \cup \{\pp{1} + \pp{2}\}}{n}}\]
+Our conclusion will follow provided we can show
+\[
+\ppsconc{\pps{}} \subseteq \ppsconc{\pps{1} \cup \{\pp{1} + \pp{2}\}}
+\]
+\lref{lem:ppp-conc:partition} allows us to rewrite this to
+\begin{equation}
+\label{lem:ppp:bound:goal}
+\ppsconc{\pps{}} \subseteq \ppsconc{\pps{1}} + \ppsconc{\{\pp{1} + \pp{2}\}}
+\end{equation}
+We have $\pps{} = \pps{1} \cup \{\pp{1}, \pp{2}\}$ and thus by \lref{lem:ppp-conc:partition}
+we have
+\[\ppsconc{\pps{}} = \ppsconc{\pps{1}} + \ppsconc{\{\pp{1}, \pp{2}\}}\]
+By \lref{lem:set-plus:subset}, we will have (\ref{lem:ppp:bound:goal}) provided we can show
+\[\ppsconc{\pps{1}} \subseteq \ppsconc{\pps{1}}\]
+which is immediate, and
+\[\ppsconc{\{\pp{1},\pp{2}\}} \subseteq \ppsconc{\set{\pp{1} + \pp{2}}}\]
+The latter is proven by applying the definitions of
+$\ppsconc{\{\pp{1},\pp{2}\}}$ and $\ppsconc{\set{\pp{1}+\pp{2}}}$, resulting in a goal of
+\[\ppconc{\pp{1}} + \ppconc{\pp{2}} \subseteq \ppconc{\pp{1} + \pp{2}}\]
+which follows directly from \lref{lem:pp:plus}.
+\end{proof}
+
+\subsection{Distributive Operations}
+The soundness proofs for the majority of the operations on elements of $\ppowers$ are sound
+for exactly the same reason: the operations distribute over $+$, allowing us to reduce soundness
+for the powerset case to soundness for the case of a single probabilistic polyhedron.  We
+start with the Lemma that is used to structure such a proof.
+
+\newcommand{\fflat}{f^{\flat}}
+\begin{lemma}
+\label{lem:distributes-plus}
+Consider $f : \ppolys \rightarrow \ppolys$, $F : \ppowers \rightarrow \ppowers$, and $\fflat : \dists \rightarrow \dists$.  Suppose the following all hold for all $\delta_i, \pp{i}$.
+\begin{enumerate}
+\setlength{\itemsep}{0.5em}
+\item
+\label{fflat-dist}
+$\fflat(\delta_1 + \ldots + \delta_n) = \fflat(\delta_1) + \ldots + \fflat(\delta_n)$
+\item
+\label{F-dist}
+$F(\{\pp{1}, \ldots, \pp{n}\}) = \{f(\pp{1}), \ldots, f(\pp{n})\}$
+\item
+\label{f-sound}
+$\delta \in \ppconc{\pp{}} \imp \fflat(\delta) \in \ppconc{f(\pp{})}$
+\end{enumerate}
+Then $\delta \in \ppsconc{\pps{}}$ implies $\fflat(\delta) \in \ppsconc{F(\pps{})}$.
+\end{lemma}
+
+\begin{proof}
+Suppose $\delta \in \ppsconc{\pps{}}$ and $\pps{} = \{\pp{1},\ldots,\pp{n}\}$.  We have the following by definition of $\ppsconc{\pps{}}$.
+\[\ppsconc{\pps{}} = \ppconc{\pp{1}} + \ldots + \ppconc{\pp{n}}\]
+Applying the definition of addition on sets, we obtain
+\[\ppconc{\pp{1}} + \ldots + \ppconc{\pp{n}} = \{\delta_1 + \ldots + \delta_n \mid \delta_i \in \ppconc{\pp{i}}\}\]
+Thus, we have that $\delta = \delta_1 + \ldots + \delta_n$ where $\delta_i \in \ppconc{\pp{i}}$.
+By premise \ref{f-sound} we then have $\fflat(\delta_i) \in \ppconc{f(\pp{i})}$ for all $i$.
+
+We now consider $\ppsconc{F(\pps{})}$.  By premise \ref{F-dist} we
+have that this is $\ppsconc{\{f(\pp{1}), \ldots, f(\pp{n})\}}$.
+Applying the definition of $\ppsconcfun$, this is equal to
+$\ppconc{f(\pp{1})} + \ldots + \ppconc{f(\pp{n})}$.
+
+Expanding the definition of $+$ for sets, we have that
+\[\ppsconc{F(\pps{})} = \{\delta_1 + \ldots + \delta_n \mid \delta_i \in \ppconc{f(\pp{i})}\}\]
+Since $\fflat(\delta_i) \in \ppconc{f(\pp{i})}$ for all $i$ we have $\sum_i(\fflat(\delta_i)) \in \ppsconc{F(\pps{})}$ and thus, by premise \ref{fflat-dist} we have $\fflat(\sum_i\delta_i) \in \ppsconc{F(\pps{})}$ and thus $\fflat(\delta) \in \ppsconc{F(\pps{})}$ as desired.
+\end{proof}
+
+\begin{lemma}[Soundness of Forget]
+\label{lem:ppp:forget}
+If $\delta \in \ppsconc{\pps{}}$ then $\forget{y}{\delta} \in \ppsconc{\forget{y}{\pps{}}}$.
+\end{lemma}
+\begin{proof}
+We will apply \lref{lem:distributes-plus} with $\fflat = \lambda \delta.\ \project{\delta}{(\fv{\delta} - \{y\})}$, $f = \lambda \pp{}.\ \forget{y}{\pp{}}$, and $F = \lambda \pps{}.\ \forget{y}{\pps{}}$.
+\lref{lem:pp:forget} gives us premise \ref{f-sound}.  The definition of $\forget{y}{\pps{}}$ satisfies premise \ref{F-dist}.  Let $V = \fv{\delta} - \{y\}$.  It remains to show premise \ref{fflat-dist}, which states
+\[\project{(\delta_1 + \ldots + \delta_n)}{V} = \project{\delta_1}{V} + \ldots + \project{\delta_n}{V}\]
+We show this for the binary case, from which the $n$-ary version above follows.
+\[\project{(\delta_1 + \delta_2)}{V} = \project{\delta_1}{V} + \project{\delta_2}{V}\]
+Expanding the definition of projection, we then obtain the following goal.
+\begin{multline*}
+\lambda \sigma_V \in \states_V \lsep \sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_V)} (\delta_1+\delta_2)(\sigma') =\\
+\lambda \sigma_V \in \states_V \lsep \sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_V)} \delta_1(\sigma')\\
++ \lambda \sigma_V \in \states_V \lsep \sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_V)} \delta_2(\sigma')
+\end{multline*}
+We can now apply the definition of $+$ for distributions to the right-hand side to obtain a goal of
+\begin{multline*}
+\lambda \sigma_V \in \states_V \lsep \sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_V)} (\delta_1+\delta_2)(\sigma') =\\
+\lambda \sigma_V \in \states_V \lsep \biggl(\sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_V)} \delta_1(\sigma')
++ \sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_V)} \delta_2(\sigma')\biggr)
+\end{multline*}
+These functions are equal if they give equal results for all inputs.  Thus, we must show the following for all $\sigma_V$.
+\begin{multline*}
+\sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_V)} (\delta_1+\delta_2)(\sigma') =\\
+\biggl(\sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_V)} \delta_1(\sigma')
++ \sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_V)} \delta_2(\sigma')\biggr)
+\end{multline*}
+Finally, applying the definition of $+$ for distributions to the left-hand side of the equality yields
+\begin{multline*}
+\sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_V)} \Bigl(\delta_1(\sigma')+\delta_2(\sigma')\Bigr) =\\
+\biggl(\sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_V)} \delta_1(\sigma')
++ \sum_{\sigma' \mid (\project{\sigma'}{V} = \sigma_V)} \delta_2(\sigma')\biggr)
+\end{multline*}
+This follows by associativity and commutativity of $+$.
+\end{proof}
+
+\begin{lemma}[Soundness of Projection]
+\label{lem:ppp:project}
+If $\delta \in \ppsconc{\pps{}}$ and $ V \subseteq \fv{\delta} $ then
+$\project{\delta}{V} \in \ppsconc{\project{\pps{}}{V}} $.
+\end{lemma}
+\begin{proof} Inductive application of \lref{lem:ppp:forget} (Soundness
+of Forget) as was the case in the base domain.
+\end{proof}
+
+\begin{lemma}[Soundness of Assignment] \label{lem:ppp:assign}
+If $ \delta \in \ppsconc{\pps{}} $ then $
+\delta\bparen{x \ra E} \in \ppsconc{\pps{} \bparen{x \ra E}} $.
+\end{lemma}
+\begin{proof}
+  As in \lref{lem:ppp:forget}, we apply \lref{lem:distributes-plus}.
+  We have premises \ref{f-sound} (by \lref{lem:pp:assign}) and
+  \ref{F-dist} (by definition) and must show premise \ref{fflat-dist}.
+This means showing that
+\[(\delta_1+\delta_2)\bparen{x \ra E} = \delta_1\bparen{x \ra E} + \delta_2\bparen{x \ra E}\]
+Expanding the definition of assignment, we must show that the following
+$$ \lambda \sigma \lsep \sum_{\tau \; | \; \tau
+  \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma} (\delta_1+\delta_2) (\tau) $$
+is equal to
+$$ \Biggl(\lambda \sigma \lsep \sum_{\tau \; | \; \tau
+  \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma} \delta_1 (\tau)\Biggr) +
+\Biggl(\lambda \sigma \lsep  \sum_{\tau \; | \; \tau
+ \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma} \delta_1 (\tau)\Biggr)$$
+Again applying the definition of $+$ for distributions and using extensional equality for functions yields the following goal, which follows by associativity and commutativity of $+$.
+\begin{multline*}
+\forall \sigma.\ \Biggl(\sum_{\tau \; | \; \tau
+  \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma} \Bigl(\delta_1(\tau)+\delta_2(\tau)\Bigr) = \\
+\sum_{\tau \; | \; \tau
+  \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma} \delta_1 (\tau) +
+\sum_{\tau \; | \; \tau
+ \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma} \delta_1 (\tau)\biggr)
+\end{multline*}
+\end{proof}
+
+\begin{lemma}[Soundness of Scalar Product] \label{lem:ppp:scalar-prod}
+If $ \delta \in \ppsconc{\pps{}} $ then $
+  p \cdot \delta \in \ppsconc{p \cdot \pps{}} $.
+\end{lemma}
+\begin{proof}
+This proof follows the same format as the others in this section.  We apply \lref{lem:pp:assign}
+with the definition of scalar product for powersets and \lref{lem:pp:scalar-prod}.  We must show
+\[p \cdot (\delta_1 + \delta_2) = p \cdot \delta_1 + p \cdot \delta_2\]
+Expanding according to the definition of scalar product and $+$ for distributions, we obtain the following as a goal.
+\[\lambda \sigma \lsep p \cdot (\delta_1(\sigma) + \delta_2(\sigma)) = \lambda \sigma \lsep p \cdot \delta_1(\sigma) + p \cdot \delta_2(\sigma)\]
+The result follows by distributivity of $\cdot$ over $+$.
+\end{proof}
+
+\begin{lemma}[Soundness of Conditioning] \label{lem:ppp:cond}
+If $ \delta \in \ppsconc{\pps{}} $ then $
+  \dcond{\delta}{B} \in \ppsconc{\absdcond{\pps{}}{B}} $.
+\end{lemma}
+\begin{proof}
+Again we apply \lref{lem:pp:assign}, this time using \lref{lem:pp:cond}
+to satisfy premise \ref{f-sound}.  We let
+$\fflat = \lambda \delta.\ \dcond{\delta}{B}$,
+$f = \lambda \pp{}.\ \absdcond{\pp{}}{B}$, and
+$F = \lambda \pps{}.\ \absdcond{\pps{}}{B}$.
+We must show
+\[\dcond{(\delta_1 + \delta_2)}{B} = \dcond{\delta_1}{B} + \dcond{\delta_2}{B}\]
+Applying the definition of conditioning and addition for distributions, we have
+to show the following for all $\sigma$.
+\begin{multline*}
+\aif \eeval{\bexp}{\sigma} \athen
+(\delta_1+\delta_2)(\sigma) \aelse 0 =\\
+\bigl(\aif \eeval{\bexp}{\sigma} \athen
+\delta_1(\sigma) \aelse 0\bigr) + {}\\
+\bigl(\aif \eeval{\bexp}{\sigma} \athen
+\delta_2(\sigma) \aelse 0\bigr)
+\end{multline*}
+We proceed via case analysis.  If $\eeval{\bexp}{\sigma} = \afalse$ then we
+have $0 = 0 + 0$, which is a tautology.  If $\eeval{\bexp}{\sigma} = \atrue$,
+we have to show
+\[(\delta_1+\delta_2)(\sigma) = \delta_1(\sigma) + \delta_2(\sigma)\]
+which follows directly from the definition of $+$ on distributions.
+\end{proof}
+
+\subsection{Other Powerset Lemmas}
+
+We now show the lemmas for operations in the powerset domain that do not immediately
+follow from distributivity over plus of the operations in the base domain.
+
+\begin{lemma}[Soundness of Product] \label{lem:ppp:prod}
+  If $ \delta \in \ppsconc{\pps{}} $ and $ \delta' \in
+  \ppsconc{\pp{}'} $ and $\fv{\pps{}} \cap \fv{\pp{}'} = \emptyset$ then $
+  \delta \times \delta' \in \ppsconc{\pps{} \times \pp{}'} $.
+\end{lemma}
+\begin{proof}
+Let $\pps{} = \{\pp{1},\ldots,\pp{n}\}$.  We first expand definitions
+in our goal, obtaining
+\[\delta \times \delta' \in \ppconc{\pp{1} \times \pp{}'} + \ldots + \ppconc{\pp{n} \times \pp{}'}\]
+Applying the definition of addition for sets, we obtain a goal of
+\[\delta \times \delta' \in \Bigl\{\sum_i \delta_i \mid \delta_i \in \ppconc{\pp{i} \times \pp{}'} \Bigr\}\]
+This holds provided we can find $\delta_i \in \ppconc{\pp{i} \times \pp{}'}$ such that $\delta \times \delta' = \sum_i \delta_i$.
+We have from $\delta \in \ppsconc{\pps{}}$ that $\delta = \sum_j \delta_j$ for some $\delta_j \in \ppconc{\pp{j}}$.  We then have from \lref{lem:pp:product} and $\delta' \in \ppsconc{\pp{}'}$ and
+$\fv{\pps{}} \cap \fv{\pp{}'} = \emptyset$ that
+$\delta_j \times \delta' \in \ppconc{\pp{j} \times \pp{}'}$ for all $j$.
+We now show that the $\delta_i$ we were searching for are these $\delta_j \times \delta'$.
+To do so, we must show that $\delta \times \delta' = \sum_j(\delta_j \times \delta')$.
+We have $\delta = \sum_j \delta_j$ and thus the result follows by distributivity of $\times$
+over $+$, which we show now.
+
+\paragraph{Goal: $\times$ distributes over $+$}
+We want to show the following when $\dom{\delta_1} = \dom{\delta_2}$ and $\dom{\delta_1} \cap \dom{\delta'} = \emptyset$.
+\[(\delta_1 + \delta_2) \times \delta' = \delta_1 \times \delta' + \delta_2 \times \delta'\]
+Expanding the definition of $+$ and of $\times$, we obtain
+\begin{multline*}
+\lambda(\sigma, \sigma') \lsep \bigl(\delta_1(\sigma) + \delta_2(\sigma)\bigr) \cdot \delta'(\sigma') =\\
+\lambda(\sigma, \sigma') \lsep \bigl(\delta_1(\sigma) \cdot \delta'(\sigma') +
+\delta_2(\sigma) \cdot \delta'(\sigma')\bigr)
+\end{multline*}
+This holds due to distributivity of $\cdot$ over $+$.
+\end{proof}
+
+\begin{lemma}[Soundness of Addition]
+\label{lem:ppp:plus}
+ If $ \delta_1 \in \ppsconc{\pps{1}} $ and $ \delta_2
+  \in \ppsconc{\pps{2}} $ then $ \delta_1 + \delta_2 \in
+  \ppsconc{\pps{1} + \pps{2}} $.
+\end{lemma}
+\begin{proof} First let us take care of the special cases that occur
+  when $ \iszero{\pps{1}} $ or $ \iszero{\pps{2}} $. Without the loss
+  of generality let us say $ \iszero{\pps{2}} $. The sum is defined to
+  be identical to $ \pps{1} $. Since $ \iszero{\pps{2}} $, it must be
+  that $ \ppsconc{\pps{2}} $ contains only the zero distribution
+  $ \distzero $, therefore $ \delta_2 = \distzero $. Therefore
+  $ \delta_1 + \delta_2 = \delta_1 $ and by assumption,
+  $ \delta_1 \in \ppsconc{\pps{1}} = \ppsconc{\pps{1} + \pps{2}} $.
+
+In the case where $\pps{1}$ and $\pps{2}$ are both non-zero, we have
+$\pps{1} + \pps{2} = \simplify{\pps{1} \cup \pps{2}}{n}$.
+Suppose $\delta_1 \in \ppsconc{\pps{1}}$ and $\delta_2 \in \ppsconc{\pps{2}}$.
+By \lref{lem:ppp-conc:partition} we have
+$\ppsconc{\pps{1}} + \ppsconc{\pps{2}} = \ppsconc{\pps{1} \cup \pps{2}}$.
+The set $\ppsconc{\pps{1}} + \ppsconc{\pps{2}}$ is
+$\{\delta_1' + \delta_2' \mid \delta_1' \in \ppsconc{\pps{1}} \wedge \delta_2' \in \ppsconc{\pps{2}} \}$.
+Our distributions $\delta_1$ and $\delta_2$ satisfy these conditions and thus
+are in $\ppsconc{\pps{1} \cup \pps{2}}$.  It remains to show that
+$\ppsconc{\pps{1} \cup \pps{2}} \subseteq \ppsconc{\simplify{\pps{1} \cup \pps{2}}{n}}$,
+but this is exactly \lref{lem:ppp:bound}.
+\end{proof}
+
+\subsection{Main Soundness Theorem for Powerset Domain}
+
+The main soundness theorem is an identical restatement of the main
+soundness theorem in the base domain and the proof is likewise
+identical, save for replacement of the relevant base domain definitions
+and lemmas with the powerset ones. The only corresponding lemma which
+has not yet been proven follows below.
+
+\begin{lemma}\label{lem:ppp:while:order} Let $ \pps{i} $ be consistent
+probabilistic polyhedron sets, that is, $ \ppsconc{\pps{i}} \neq \emptyset $.
+\label{lem:pps:while:order:pluszero} Then, $ \pps{1} + \pps{2} \ppleq \pps{1} $ iff $ \iszero{\pps{2}} $.
+\end{lemma}
+
+\begin{proof} The proof is identical to the \lref{lem:pp:while:order},
+replacing the base domain lemmas and definitions with the powerset ones.
+\end{proof}
+
+\begin{reptheorem}{thm:ppp:soundness}[Soundness of Abstraction]
+For all $\delta, S, \pps{}$, if $\delta \in \ppsconc{\pps{}}$ and $
+\abspevalp{S}{\pps{}} $ terminates, then $ \pevalp{S}{\delta} $ terminates and
+$\pevalp{S}{\delta} \in \ppsconc{\abspevalp{S}{\pps{}}}$.
+\end{reptheorem}
+
+\begin{proof} The proof is identical to the main soundness proof for
+the base domain (\tref{thm:pp:soundness}), replacing definitions and
+lemmas about the base domain abstraction with the corresponding
+definitions and lemmas about the powerset domain.
+\end{proof}
+
+\begin{lemma}[Soundness of Normalization]
+\label{lem:ppp:norm}
+If $ \delta \in \ppsconc{\pps{}} $ then $
+  \normal{\delta} \in \ppsconc{\normal{\pps{}}} $.
+\end{lemma}
+\begin{proof}
+\newcommand{\munder}{\underline{m}}
+\newcommand{\mover}{\overline{m}}
+Whenever $ \pmass{\delta} = 0 $, the normalization in the concrete
+sense is undefined, likewise it is undefined in the abstract sense. So
+let us assume $ \pmass{\delta} > 0 $.
+
+Let $ \munder = \sum_i \mmin{i} $ and $ \mover = \sum_i \mmax{i} $. By
+assumption we have $ \delta = \sum_i \delta_i $ with
+\begin{align}
+\label{thm:ppp:normal:given} \delta_i \in \ppconc{\pp{i}}
+\end{align}
+
+Thus we have $ \pmass{\delta} = \sum_i \pmass{\delta_i} $ and we
+conclude $ \munder
+= \sum_i \mmin{i} \leq \pmass{\delta} \leq \sum_i \mmax{i} = \mover $
+via \cnumref{thm:ppp:normal:given}.
+\begin{align} \label{thm:ppp:normal:claim1a} \munder \leq \pmass{\delta} \leq \mover \end{align}
+
+Let $ \delta' = \normal{\delta} = \frac{1}{\pmass{\delta}} \delta
+= \sum_i \frac{1}{\pmass{\delta}} \delta_i $, due to linearity of
+scalar product. Let us thus show that
+$ \frac{1}{\pmass{\delta}} \delta_i \in \ppconc{\normal{\pp{i}}(\munder, \mover)}
+= \ppconc{\normal{\pps{}}} $ which would conclude the proof. Let us
+write $ \pp{i'} = \normal{\pp{i}}(\munder, \mover) $ and $ \delta_{i'}
+= \frac{1}{\pmass{\delta}} \delta_i $. We must thus show the
+following.
+\begin{align}
+\label{thm:ppp:normal:cond1} & \support{\delta_{i'}} \subseteq \pconc{\getpoly{i'}} \\
+\label{thm:ppp:normal:cond2} & \smin{i'} \leq \setsize{\support{\delta_{i'}}} \leq \smax{i'} \\
+\label{thm:ppp:normal:cond3} & \mmin{i'} \leq \pmass{\delta_{i'}} \leq \mmax{i'} \\
+\label{thm:ppp:normal:cond4} & \forall \sigma \in \support{\delta_{i'}} \qsep \pmin{i'} \leq \delta_{i'}(\sigma) \leq \pmax{i'}
+\end{align}
+
+Claim \cnumref{thm:ppp:normal:cond1} holds trivially as
+$ \support{\delta_{i'}} = \support{\delta_i}$, $ \getpoly{i'}
+= \getpoly{i} $,
+and \cnumref{thm:ppp:normal:given}. Claim \cnumref{thm:ppp:normal:cond2}
+holds due to the same reasoning.
+
+For \cnumref{thm:ppp:normal:cond3}, in the case where $ \munder > 0 $, we reason, via \cnumref{thm:ppp:normal:claim1a}, as follows.
+
+$$ \mmin{i} \leq \pmass{\delta_i} \leq \mmax{i} $$
+$$ \frac{\mmin{i}}{\mover} \leq \frac{1}{\pmass{\delta}} \pmass{\delta_i} \leq \frac{\mmax{i}}{\munder} $$
+$$ \frac{\mmin{i}}{\mover} \leq \pmass{\frac{1}{\pmass{\delta}} \delta_i} \leq \frac{\mmax{i}}{\munder} $$
+$$ \mmin{i'}
+= \frac{\mmin{i}}{\mover} \leq \pmass{\delta_{i'}} \leq \frac{\mmax{i}}{\munder}
+= \mmax{i'}$$
+
+If $ \munder = 0 $, the definition of normalization makes $ \mmax{i'}
+= 1 $, which is also sound as all distributions have mass no more than
+$ 1 $.
+
+The \cnumref{thm:ppp:normal:cond4} claim is shown using reasoning
+identical to the mass claim above.
+\end{proof}
+
+\begin{replemma}{lem:ppp:prob-bound}[Soundness of Simple Maximal Bound Estimate]
+%$ \maxprobof{\pps{}}{\sigma} \leq
+%  \maxprobof{\paren{\Sigma_i \pp{i}}}{\sigma} $
+If $ \delta \in \ppsconc{\set{\pp{i}}} $ and $ \pp{} = \sum_i \pp{i}
+$ then $ \max_{\sigma} \delta(\sigma) \leq \pmax{} $.
+\end{replemma}
+\begin{proof} By assumption we have $ \delta = \sum_i \delta_i $ with
+$ \delta_i \in \ppconc{\pp{i}} $ thus by \lref{lem:pp:plus} (Soundness
+of Plus), we have $ \delta \in \ppconc{\sum_i \pp{i}} = \ppconc{\pp{}}
+$, thus for every $ \sigma \in \support{\delta} $, $ \delta(\sigma) \leq
+\pmax{} $, hence $ \max_{\sigma} \delta(\sigma) \leq \pmax{} $.
+\end{proof}
+
+\pxm{the below has been reworked to use the ``poly partitioning'' method}
+
+The above lemma shows soundness of the very simple method of
+estimating the maximum probability but in the implementation we use
+the method based on poly partitioning and the following lemma.
+
+\begin{replemma}{lem:ppp:pp} $ \ppsmax{\pps{}} \defeq \max_{\sigma \in
+R}\ppsprob{\pps{}}{\sigma} = \max_{\sigma}\ppsprob{\pps{}}{\sigma} $
+where $ \parta $ is a poly partition of $ \pps{} $ and $ R $ is a
+representative set of $ \parta $.
+\end{replemma}
+
+\begin{proof} Let $ \parta $ be the poly partition of $ \pps{}
+= \set{\getpoly{i}} $ as in the statement of the lemma. Let us first
+show a claim: if $ \sigma, \sigma' \in L \in \parta $ then
+\begin{equation} \label{lem:ppp:lp:claim1}
+A \defeq \set{\getpoly{} \in \pps{} \given \sigma \in \pconc{\getpoly{}}}
+= \set{\getpoly{} \in \pps{} \given \sigma' \in \pconc{\getpoly{}}} \defeq B
+\end{equation}
+
+Let $ \getpoly{} \in A $. Thus $ \sigma \in \pconc{\getpoly{}} $ so
+by \dref{def:ppp:pp} (2), we have $ \sigma \in \pconc{L'} $ for some
+$ L' \in \parta $. By (1) it must be that $ L = L' $ and by (3), we have
+$\pconc{L} = \pconc{L'} \subseteq \pconc{\getpoly{}} $. Therefore
+$ \sigma' \in \pconc{\getpoly{}} $ and thus $ \getpoly{} \in B $,
+showing $ A \subseteq B $. The other direction is identical,
+concluding $ A = B $ as claimed. \qed{}.
+
+Now we can get back to the main lemma. Let $ \sigma^* $ be the state
+with $ \ppsprob{\pps{}}{\sigma^*}
+= \max_{\sigma} \ppsprob{\pps{}}{\sigma} $. Thus
+$ \sigma^* \in \pconc{L} $ for some $ L \in \parta $, by \dref{def:ppp:pp}
+(2). Let $ \sigma_L $ be any representative of $ L $, that is
+$ \sigma_L \in \pconc{L} $.
+\vspace{15mm} % !!! formatting
+\begin{align*}
+\ppsprob{\pps{}}{\sigma^*} & = \sum_{i} \ppprob{\pp{i}}{\sigma^*} \\
+                 &
+                 = \sum_{i \given \sigma^* \in \pconc{\getpoly{i}}} \pmax{i} \\
+                 &
+                 = \sum_{i \given \sigma_L \in \pconc{\getpoly{i}}} \pmax{i}
+                 & \mathstep{by \cnumref{lem:ppp:lp:claim1}} \\
+                 & = \sum_{i} \ppprob{\pp{i}}{\sigma_L} \\
+                 & = \ppsprob{\pps{}}{\sigma_L}
+\end{align*}
+
+Now we see that  $ \max_{\sigma}\ppsprob{\pps{}}{\sigma}
+= \ppsprob{\pps{}}{\sigma^*} = \ppsprob{\pps{}}{\sigma_L} = \ppsmax{\pps{}} $ as claimed.
+\end{proof}
+
+Before we prove the security theorem, let us show that the definition
+of abstract conditioning on a state is sound.
+
+\begin{lemma} \label{lem:ppp:scond}
+If $ \delta \in \ppconc{\pps{}} $ and $ \sigma_V \in \states_{V} $
+with $ V \subseteq \fv{\delta} $ then
+$ \dcond{\delta}{\sigma_V} \in \ppsconc{\absdcond{\pps{}}{\sigma_V}} $
+\end{lemma}
+
+\begin{proof} Recall the definition of $ \absdcond{\pps{}}{\sigma_V} $.
+
+$$ \absdcond{\pps{}}{\sigma_V} = \absdcond{\pps{}}{\bexp} $$
+
+With $ \bexp = \bigwedge_{x \in V} \paren{x = \sigma_V(x)} $. Let us
+show that $ \dcond{\delta}{\sigma_V} = \dcond{\delta}{\bexp} $, the
+rest will follow from \lref{lem:ppp:cond}.
+
+The definition of $ \dcond{\delta}{\sigma_V} $ is as follows.
+$$ \dcond{\delta}{\sigma}
+= \lambda \sigma \lsep \aif \project{\sigma}{V} = \sigma_V
+\athen \delta(\sigma) \aelse 0 $$
+
+Meanwhile, $ \dcond{\delta}{\bexp} $ is defined as follows.
+$$ \dcond{\delta}{\bexp}
+= \lambda \sigma \lsep \aif \eval{\bexp}{\sigma}
+= \atrue \athen \delta(\sigma) \aelse 0 $$
+
+The correspondence is immediate as $ \eval{\bexp}{\sigma} = \atrue $
+if and only if $ \project{\sigma}{V} = \sigma_V $ as per construction
+of $ \bexp $.
+\end{proof}
+
+\begin{reptheorem}{thm:ppp:secure}[Soundness for Threshold Security]
+  Let $\delta$ be an attacker's initial belief.  If $\delta \in
+  \ppsconc{\pps{}}$ and $\abspolicy{S}{\pps{}}{t}$, then $ S $ is threshold secure
+  for threshold $t$ when evaluated with initial belief $\delta$.
+\end{reptheorem}
+
+\begin{proof} Let us consider the contrapositive. That is, assuming
+  $ \delta \in \ppsconc{\pps{}} $, if $ S $ is not threshold secure for
+  $ t $ and initial belief $ \delta $, then it is not the case that
+  $ \abspolicy{S}{\pps{}}{t} $.
+
+Let $ \delta_2 = \eval{S}{\delta} $ and $ \delta_3
+= \project{\delta_2}{L} $. Since $ S $ is not secure, we have
+$ \sigma_L \in \support{\delta_3} $ and
+$ \sigma'_H \in \states_H $ with $
+(\normal{\project{\paren{\dcond{\delta_2}{\sigma_L}}}{H}})(\sigma'_H) >
+t $. This implies that
+$ \project{\paren{\dcond{\delta_2}{\sigma_L}}}{H} \neq \distzero $ and
+therefore $ \dcond{\delta_2}{\sigma_L} \neq \distzero $ as projection
+preserves mass.
+
+If $ \pevalp{S}{\pps{}} $ is not terminating, then we are done as
+termination is a condition for $ \abspolicy{S}{\pps{}}{t} $. So let us
+assume $ \abspevalp{S}{\pps{}} $ is terminating. Let $ \pps{2}
+= \abspevalp{S}{\pps{}} $. By \tref{thm:ppp:soundness}, we have
+$ \delta_2 \in \ppsconc{\pps{2}} $. By \lref{lem:ppp:scond},
+$ \dcond{\delta_2}{\sigma_L} \in \ppsconc{\absdcond{\pps{2}}{\sigma_L}}
+$. Therefore not $ \iszero{\absdcond{\pps{2}}{\sigma_L}}
+$. Continuing, by \lref{lem:ppp:project},
+$ \project{ \paren{\dcond{\delta_2}{\sigma_L}}}{H} \in \ppsconc{\project{\paren{\absdcond{\pps{2}}{\sigma_L}}}{H}}
+$ and finally, by \lref{lem:ppp:norm}, we have
+$ \delta_4 \defeq \normal{\project{\paren{\dcond{\delta_2}{\sigma_L}}}{H}} \in \ppsconc{\normal{\project{\paren{\absdcond{\pps{2}}{\sigma_L}}}{H}}}
+$. Let $ \pps{4}
+= \normal{\project{\paren{\absdcond{\pps{2}}{\sigma_L}}}{H}} $.
+
+By \rref{rem:ppp:prob}, we have
+$ \delta_4(\sigma'_H) \leq \max_{\sigma}\ppsprob{\pps{4}}{\sigma} $
+and by \lref{lem:ppp:pp} we have
+$ \max_{\sigma}\ppsprob{\pps{4}}{\sigma} = \ppsmax{\pps{4}} $.  But
+$ \delta_4(\sigma'_H) > t $ so $ \ppsmax{\pps{4}} > t $, a potential
+failure of $\abspolicy{S}{\pps{}}{t} $.
+
+To finish the proof we need to make sure that $ \sigma_L $ was indeed
+a valid witness to the failure of $ \abspolicy{S}{\pp{1}}{t} $. Let
+$ \pps{3} = \set{\pp{i}''} = \project{\pps{2}}{L}
+$. By \lref{lem:ppp:project}, we have $ \delta_3 \in \ppsconc{\pps{3}}
+$ so $ \delta_3 = \sum_i \delta'_i $ with
+$ \delta'_i \in \ppconc{\pp{i}''} $. Since
+$ \sigma_L \in \support{\delta_3} $ it must be that
+$ \delta_3(\sigma_L) > 0 $ and thus $ \delta'_i(\sigma_L) > 0 $ for at
+least one $ i $. Thus
+$ \sigma_L \in \support{\delta'_i} \subseteq \pconc{\poly''_i} $ for
+at least one $ i $ and therefore
+$ \sigma_L \in \psconc{\set{\poly''_i}} $. Also, we have already
+shown that not $ \iszero{\absdcond{\pps{2}}{\sigma_L}} $, thus
+$ \sigma_L $ is indeed the witness as needed.
+\end{proof}
+%\end{DIFnomarkup}
+

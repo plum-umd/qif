@@ -1,0 +1,149 @@
+\begin{figure}[t]
+\centering
+\begin{tabular}{c}
+\includegraphics[width=9cm]{figures/plot_bday.pdf} \\
+(a) birthday query (\eref{ex:bday}) \\
+\includegraphics[width=9cm]{figures/plot_bday_large.pdf} \\
+(b) birthday query (\eref{ex:bday}), larger state space \\
+\includegraphics[width=9cm]{figures/plot_bday_seq.pdf} \\
+(c) special year query (\eref{ex:specyear}) \\
+\end{tabular}
+\caption{Query evaluation comparison}
+\label{fig:plots_bday}
+\end{figure}
+
+\iffull
+\begin{table*}[t]
+\scriptsize
+\centering
+\input{table-results}
+\caption{Query evaluation benchmarks}
+\label{fig:bench_table}
+\end{table*}
+\fi
+
+\iffull
+\begin{figure}[t]
+\scriptsize
+\centering
+\includegraphics[width=8.5cm]{figures/plot_latte.pdf} \\
+\caption{LattE benchmarks}
+\label{fig:bench_latte}
+\end{figure}
+\fi
+
+\section{Implementation and experiments}
+\label{sec:impl}
+
+We implemented an interpreter for the language based on the
+probabilistic polyhedra powerset domain. The manipulations of
+polyhedra are done using the PPL \cite{parma}. Size calculations are
+done using the LattE \cite{latte}. LattE is also
+used for the integer linear programming problem involved in the
+abstract forget operation. The interpreter itself is written in OCaml.
+We conducted several experiments on a Mac Pro with two 2.26 GHz
+quad-core Xeon processors using 16 GB of RAM and running OS X v10.6.7.
+While many of the abstract operations distribute over the set of
+probabilistic polyhedra and thus could be parallelized, our
+implementation is currently single-threaded.
+
+\fref{fig:plots_bday}(a) illustrates the result of running the query
+given in Example~\ref{ex:bday} (Section~\ref{sec:overview}) using our
+implementation and one using Probabilistic
+Scheme~\cite{radul07probscheme}, which is capable of sound probability
+estimation after partial enumeration.  Each $\times$ plots
+prob-scheme's maximum probability value (the y axis)---that is, the
+probability it assigns to the most likely secret state---when given a
+varying amount of time for sampling (the x axis).  We can see the
+precision improves steadily until it reaches the exact value of 1/259
+at around 17 seconds. Each $+$ plots our implementation's maximum
+probability value when given an increasing number of probabilistic
+polyhedra; with a polyhedral bound of 2 (or more), we obtain the exact
+value in less than 3 seconds. The timing measurements are taken to be
+the medians of 12 runs. The advantage of our approach is more evident
+in \fref{fig:plots_bday}(b) where we use the same program but allow
+$\var{byear}$ to span 1910 to 2010 rather than 1956 to 1992. In this
+case prob-scheme makes little progress even after a minute, and
+eventually runs out of memory.  Our approach, however, is unaffected
+by this larger state space and produces the exact maximum belief in
+around 3 seconds when using only 2 probabilistic polyhedra.
+
+\ifacita
+
+\fref{fig:plots_bday}(c) shows the result of assessing the special
+query (Example~\ref{ex:specyear}) with initial belief matching that
+following the first birthday query.  Each point is the number of
+polyhedra allowed.  The result shows that more complex queries, ones
+with many disjunctions, slow our approach and reduce the precision of
+the maximum probability. The example requires 36 polyhedra for exact
+calculations though as little as 3 produce probabilities near
+exact. Note that the precision does not increase monotonically with
+the number of polyhedra---in some cases more polyhedra leads to a less
+precise result.  We conjecture that the occasional worsening of the
+precision with increase in the number of allowable polyhedra is due to
+an overly simple means of deciding which polyhedra to merge when
+performing abstract simplification, a conjecture we plan to
+investigate.
+
+\else
+\fref{fig:plots_bday}(c) shows the result of our implementation
+assessing the special query (Example~\ref{ex:specyear}) with initial
+belief matching that following the first birthday query.  Each plotted
+point is the number of polyhedra allowed.  The result demonstrates
+that more complex queries, specifically ones with many disjunctions in
+their conditionals, not only slow our approach, but also reduce the
+precision of the maximum probability value. The example requires 36
+polyhedra for exact calculations though as little as 3 produce
+probabilities near exact. Note that the precision does not increase
+monotonically with the number of polyhedra---in some cases more
+polyhedra leads to a less precise result.  We conjecture
+that the occasional worsening of the precision with increase in the
+number of allowable polyhedra is due to an overly simple means of
+deciding which polyhedra to merge when performing abstract
+simplification; we plan to investigate this issue in future work.
+\fi
+
+\iffull
+
+Table~\ref{fig:bench_table} tabulates details for the example programs
+along three other queries we developed based on advertising scenarios;
+these queries are described in the Appendix~\ref{appendix:queries}. In
+each box is the wall clock time for processing (median of 12 runs),
+the running time's semi-interquartile range (SIQR), the number of
+outliers, which are defined to be the points $ 3\times\text{SIQR} $
+below the first quartile or above the third, and the max belief
+computed (smaller being more accurate).  Obvious trends are that
+running time goes up and max belief goes down as the number of
+polyhedra increase, by and large.  There are exceptions to running
+time trend, and most are close to the SIQR and so possibly not
+statistically significant. The most striking exception is the running
+time for poly-size 9 of the ``pizza'' query.  This extreme outlier is
+due to a single invocation of LattE on the largest set of constraints
+among all the benchmarks performed in the table. We have no good
+explanation of how this complex polyhedron arose. \pxm{the previous
+  was incorrect, we do know why the outlier exists, fixed.} The only
+exceptions to monotonic decrease in max belief are the ``special
+queries'', as already discussed.  \mwh{I observe that these are the
+  only queries that employ probabilistic choice; any possibility this
+  is correlated with the behavior?} \pxm{This might indirectly be the
+  cause as it is the only example in which the postbelief is not a
+  normalized restriction of the prebelief but I'm not sure how to
+  better argue this Mike's hypothesis.}
+
+Investigating the running time results further, we discovered that for
+nearly all benchmarks, 95\% or more of the running time is spent in
+the LattE counting tool.  The LattE tool exhibits super-exponential
+running time in terms of the number of constraints (see
+\fref{fig:bench_latte}) over the polyhedra that occur when evaluating
+the various queries in Table~\ref{fig:bench_table}. As such, overall
+running time is susceptible to the complexity of the polyhedra
+involved, even when they are few in number. The merging operation,
+while used to keep the number of probabilistic polyhedra below the
+required bound, also tends to produce more complex polyhedra. These
+observations suggest a great deal of performance improvement can be
+gained by simplifying the polyhedra if they become too complex.
+
+\fi
+
+% LocalWords:  bday specyear bigmac
+

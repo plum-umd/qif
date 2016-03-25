@@ -1,0 +1,16 @@
+Title: Knowledge-oriented Secure Multiparty Computation
+Authors: Stephen Magill, Piotr Mardziel, Michael Hicks, Jon Katz
+
+Secure multiparty computation (SMC) is a scheme that allows two or
+more principals to compute a function over secret values without
+having to reveal those values, e.g., to a third party.  While these
+secret values are not directly revealed, each party learns something
+about the secrets based on the public result.  There is a risk that
+such a result will reveal too much over time, particularly if
+principals participate un many SMCs.  To reduce the risk of unintended
+information release, we sketch a method to track the information that
+is implied about the secret inputs from the output of an SMC, and how
+to safely avoid paricipating in SMCs that would reveal too much
+information to the other participants.  We expect that our approach
+can be used to expand the scenarios in which SMC could be used
+fruitfully.

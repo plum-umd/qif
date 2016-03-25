@@ -1,0 +1,211 @@
+\newif \ifdraft \draftfalse
+\newif \iffull \fulltrue
+\newif \ifacita \acitafalse
+
+\documentclass[10pt,conference,compsocconf]{IEEEtran}
+%\usepackage{times}
+\usepackage[hyphens]{url}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{bigstrut}
+%\usepackage{alg}
+\usepackage[override]{cmtt}
+\usepackage[nointegrals]{wasysym}
+\usepackage{graphicx}
+\usepackage{balance}
+
+\ifacita
+\setlength{\textfloatsep}{1em}
+\else
+\fi
+
+%DIF PREAMBLE EXTENSION ADDED BY LATEXDIFF
+%DIF UNDERLINE PREAMBLE
+\RequirePackage[normalem]{ulem}
+\RequirePackage{color}\definecolor{RED}{rgb}{1,0,0}\definecolor{BLUE}{rgb}{0,0,1}
+\providecommand{\DIFadd}[1]{{\protect\color{blue}\uwave{#1}}}
+\providecommand{\DIFdel}[1]{{\protect\color{red}\sout{#1}}}
+%DIF SAFE PREAMBLE
+\providecommand{\DIFaddbegin}{}
+\providecommand{\DIFaddend}{}
+\providecommand{\DIFdelbegin}{}
+\providecommand{\DIFdelend}{}
+%DIF FLOATSAFE PREAMBLE
+\providecommand{\DIFaddFL}[1]{\DIFadd{#1}}
+\providecommand{\DIFdelFL}[1]{\DIFdel{#1}}
+\providecommand{\DIFaddbeginFL}{}
+\providecommand{\DIFaddendFL}{}
+\providecommand{\DIFdelbeginFL}{}
+\providecommand{\DIFdelendFL}{}
+%\newenvironment{DIFnomarkup}{}{}
+%DIF END PREAMBLE EXTENSION ADDED BY LATEXDIFF
+
+%\begin{DIFnomarkup}
+\input{defs}
+%\end{DIFnomarkup}
+
+\iffull
+\IEEEoverridecommandlockouts
+\title{Dynamic Enforcement of Knowledge-based Security
+  Policies{\Large $ ^\dagger$}\thanks{$\dagger$ University of Maryland, Department of Computer
+    Science Technical Report CS-TR-4978.  This paper is an extended
+    version of the paper
+    of the same title appearing in the proceedings of the 24th IEEE
+    Computer Security Foundations Symposium.  This version contains
+    additional discussion (Appendices~\ref{appendix:concrete}
+    and~\ref{appendix:flawed}, Section~\ref{sec:poly-eval}), and bits
+    throughout), new and revised 
+    performance experiments (Section~\ref{sec:impl} and 
+    Appendix~\ref{appendix:queries}), and proofs of
+    theorems (Appendices~\ref{appendix:proof1}
+    and~\ref{appendix:proof2}).}}
+\else
+\title{Dynamic Enforcement of Knowledge-based Security Policies}
+\fi
+\author{\IEEEauthorblockN{Piotr Mardziel, Stephen Magill, Michael Hicks}
+\IEEEauthorblockA{University of Maryland, College Park}
+\and
+\IEEEauthorblockN{Mudhakar Srivatsa}
+\IEEEauthorblockA{IBM T.J. Watson Research Laboratory}}
+
+\newcommand{\myparagraph}[1]{\textbf{#1}.}
+\ifdraft
+\newcommand{\todo}[1]{\textbf{#1}}
+\definecolor{purple}{rgb}{0.8,0,0.8}
+\newcommand{\sbmcomment}[1]{\textcolor{purple}{SBM -- #1}}
+\newcommand{\mwh}[1]{\textcolor{blue}{MWH -- #1}}
+\newcommand{\pxm}[1]{\textcolor{red}{PM -- #1}}
+\newcommand{\ms}[1]{\textcolor{yellow}{MS -- #1}}
+\else
+\newcommand{\todo}[1]{}
+\newcommand{\sbmcomment}[1]{}
+\newcommand{\mwh}[1]{}
+\newcommand{\pxm}[1]{}
+\newcommand{\ms}[1]{}
+\fi
+
+\begin{document}
+
+\pagestyle{plain}
+
+
+\maketitle
+\date{}
+
+\begin{abstract}
+% Following Simon PJ (Kent Beck, actually) abstract structure:
+% 1. State the problem 
+% 2. Say why it’s an interesting problem 
+% 3. Say what your solution achieves 
+% 4. Say what follows from your solution
+  This paper explores the idea of \emph{knowledge-based security
+    policies}, which are used to decide whether to answer queries over
+  secret data based on an estimation of the querier's (possibly
+  increased) knowledge given the results.  Limiting knowledge is the
+  goal of existing information release policies that employ mechanisms
+  such as noising, anonymization, and redaction.  Knowledge-based
+  policies are more general: they increase flexibility by not fixing
+  the means to restrict information flow.  We enforce a
+  knowledge-based policy by explicitly tracking a model of a querier's
+  belief about secret data, represented as a probability distribution,
+  and denying any query that could increase knowledge above a given
+  threshold.  We implement query analysis and belief tracking via
+  abstract interpretation using a novel 
+  \emph{probabilistic polyhedral} domain, whose design permits trading off
+  precision with performance while ensuring estimates of a querier's
+  knowledge are sound.  Experiments with our implementation show that
+  several useful queries can be handled efficiently, and performance
+  scales far better than would more standard implementations of
+  probabilistic computation based on sampling.
+\end{abstract}
+
+\iffull
+\else
+\ifacita
+\else
+\begin{IEEEkeywords}
+privacy, abstract interpretation, probabilistic polyhedron,
+knowledge-based security
+\end{IEEEkeywords}
+\fi \fi
+
+\input{intro}
+\input{sec-overview}
+\input{sec-beliefs}
+\input{sec-security}
+\input{sec-abstract}
+\input{sec-implement}
+\input{sec-related}
+
+\section{Conclusion}
+\label{sec:conc}
+
+This paper has explored the idea of \emph{knowledge-based security
+  policies}: given a query over some secret data, that query should
+only be answered if doing so will not increase the querier's knowledge
+above a fixed threshold.  We enforce knowledge-based policies by
+explicitly tracking a model of a querier's belief about secret data,
+represented as a probability distribution, and we deny any query that
+could increase knowledge above the threshold.  Our denial criterion
+is independent of the actual secret, so denial does not leak
+information.  We implement query analysis and belief tracking via
+abstract interpretation using 
+\ifacita
+\emph{probabilistic polyhedral} domains.
+\else
+novel domains of \emph{probabilistic
+  polyhedra} and \emph{powersets of probabilistic polyhedra}.
+\fi
+Compared to typical approaches to implementing belief revision, our
+implementation using this domain is more efficient and scales better.
+
+\ifacita
+\vspace*{.05in}
+\begin{small}
+\paragraph*{Acknowledgments}
+This research was sponsored by the U.S. Army Research Laboratory and
+the U.K. Ministry of Defence and was accomplished under Agreement
+Number W911NF-06-3-0001. The views and conclusions contained in this
+document are those of the author(s) and should not be interpreted as
+representing the official policies, either expressed or implied, of
+the U.S. Army Research Laboratory, the U.S. Government, the
+U.K. Ministry of Defence or the U.K. Government. The U.S. and
+U.K. Governments are authorized to reproduce and distribute reprints
+for Government purposes notwithstanding any copyright notation hereon.
+\end{small}
+
+\else
+\vspace*{.1in}
+\begin{small}
+\paragraph*{Acknowledgments} The authors are
+grateful to Jeff Foster, Nataliya Guts, the anonymous referees, and
+especially Boris K\"opf for their helpful comments on
+drafts of this paper.  
+
+This research was sponsored by the U.S. Army
+Research Laboratory and the U.K. Ministry of Defence and was
+accomplished under Agreement Number W911NF-06-3-0001. The views and
+conclusions contained in this document are those of the author(s) and
+should not be interpreted as representing the official policies,
+either expressed or implied, of the U.S. Army Research Laboratory, the
+U.S. Government, the U.K. Ministry of Defence or the
+U.K. Government. The U.S. and U.K. Governments are authorised to
+reproduce and distribute reprints for Government purposes
+notwithstanding any copyright notation hereon.  Support was also
+provided by National Science Foundation grants 0905419 and
+0910530.
+\end{small}
+\fi
+
+\bibliographystyle{IEEEtran}
+\balance
+\bibliography{paper}
+
+\iffull
+\input{sec-appendix}
+\fi
+
+\end{document}
+

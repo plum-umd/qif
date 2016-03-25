@@ -1,0 +1,121 @@
+One problem with this: one party could set his model of the opponent's
+belief to essentially always send "reject" as the answer to the
+opponent while getting an actual answer on his side.  What is the
+incentive structure here?  Need to think about SMC examples---is there
+something to be gained by the opponent *not* getting "reject" ?
+
+----------------------------------------------------------------------
+
+I'll continue to use Q(x, y) to denote the joint query Q on actual
+inputs x and y of parties X and Y, respectively.
+
+Let B_X denote the entire belief computation process done by X in the
+usual case where Y sends its input in the clear. So B_X takes as
+input:
+- X's actual input x
+- X's belief D_x about Y's knowledge of x
+- a parameter \epsilon
+- Y's input y
+B_X does the following: it first determines whether, for any possible
+value x', input y would narrow down the answer too much (with "too
+much" depending on \epsilon); if so, the output of B_X is "reject".
+Otherwise, the output of B_X is Q(x, y), i.e., the query evaluated
+on the actual input x and query y.
+
+[I omit for now the updating of the belief; however, this can be taken
+care of as well. I want to make sure we both understand the "single
+shot" case first.
+
+So in your standard usage of belief tracking we have a two-step protocol:
+1) Y sends y to X.
+2) X sends back B_X(x, D_x, \epsilon, y) to Y
+
+I stress that Y learns exactly B_X(x, D_x, \epsilon, y), which is ok
+because of the belief tracking being done. The drawback of the above,
+and the issue our work is trying to solve, is the fact that X learns
+y.
+
+**************************************************
+
+We can similarly consider the exact same process from the point of
+view of Y. Now we will let B_Y denote the belief computation done by
+Y. So B_Y takes as input:
+- Y's actual input y
+- Y's belief D_y about X's knowledge of y
+- a parameter \epsilon'
+- X's value x
+And from the point of view of Y we have the following two-step protocol:
+1) X sends x to Y.
+2) Y sends back B_Y(y, D_y, \epsilon', x) to X
+
+I stress that X learns exactly B_Y(y, D_y, \epsilon', x). The drawback
+of the above, and the issue our work is trying to solve, is the fact
+that Y learns x.
+
+**************************************************
+
+Now consider doing all the above inside of a secure computation
+protocol. The input of X is x, D_x, and \epsilon, and the input of Y
+is y, D_y, and \epsilon'. The result is that X learns B_Y(y, D_y,
+\epsilon', x) and nothing else, while Y learns B_X(x, D_x, \epsilon,
+y) and nothing else. In particular:
+- X learns nothing about B_X(x, D_x, \epsilon, y), including whether
+or not it was "reject".
+- Y learns nothing about B_Y(y, D_y, \epsilon', x), including whether
+or not it was "reject"
+- It is possible that, e.g., B_X(x, D_x, \epsilon, y) returns "reject"
+while B_Y(y, D_y, \epsilon', x) does not, or vice versa.
+
+  *** ==> express that X backs an encrypted version of his
+      representation of Y's belief, and Y gets oppositely
+
+So Y learns exactly what it would learn in the first case (where Y
+acts as the querier and X acts as the responder), while X learns
+exactly what it would learn in the second case  (where X acts as the
+querier and Y as the responder). Thus, whatever guarantees are being
+providing in the first two cases, the same guarantees are being
+provided here as well.
+
+----
+
+
+====
+I think the updating of the belief is the critical issue here. I see how the SMC-based scheme
+described can be used for the multiparty belief-based policy evaluation (and query execution)
+without revealing the various parties' secrets but in order to continue in the future, a party \> needs to know the belief others have about his/her secret after the query is executed.
+
+Are there crypto means of letting a party hold the revised belief and trust it's accuracy, without
+being able to actually inspect it (which would usually reveal a lot about the other parties'
+secrets), but still letting it be used in future SMC invocations? Is this what you had in mind
+with the comment or was there some other approach in mind?
+
+Yes.
+
+The basic idea is to share the updated belief of each party between
+the two parties, so that neither party on their own learns anything
+about the updated belief, yet the updated belief can be used in future
+computations.
+
+Actually, I think it is ok for B to know A's revised belief (and vice
+versa). In that case, we can simply output A's revised belief to B.
+
+The above assumes parties are honest-but-curious, namely that they
+will not try to modify the belief (resp., their share of the belief).
+Additional cryptographic tools can be used if we don't want to make
+this assumption.
+
+The basic idea is pretty simple. Say the parties want to
+distributively share a value k such that neither party learns k,
+neither party can change k, but the parties can use k in some
+subsequent SMC. Then what they do is just choose a random r, have A
+store r and B store r \xor k. In some subsequent SMC, the parties can
+each provide r and r \xor k as inputs, and these values can be xor'd
+(and then used) within the SMC itself. If the parties are concerned
+about tampering, they can also compute a message authentication code
+(MAC) over the other party's value, and then check correctness of the
+MAC (within the SMC) before the value is used.
+
+I think I am convinced that this can work as long as there is a hidden representation of X's model of Y's belief of his secret, and therefore that can be used in future computations and no party needs to learn whether the other party's computation is rejected (or what the answer is).
+
+One clear advantage of this approach is that, I think, it scales to the N-party case quite nicely: each party merely needs to worry about what he thinks the others know about his secret, and not what they know about each others' secrets.  And, the model X has for Y's belief about X's secret can be shared just between X and Y, which allows X to freely compute with other parties.  OTOH, doing this would make it impossible to model collusion as the combined beliefs of all remote parties, without fixing all those parties in advance and involving them in computations they would otherwise not be required for.
+====

@@ -1,0 +1,573 @@
+%\appendices
+\appendix
+
+%\vspace*{.1in}
+%\section{Concrete probabilistic semantics}
+%\label{appendix:concrete}
+%
+%Here we briefly explain the concrete probabilistic semantics given in
+%Figure~\ref{fig-sem-nondet2-core}.  More details can be found in
+%Clarkson et al.~\cite{clarkson09quantifying}.
+%
+%The semantics of $\sskip$ is straightforward: it is the identity on
+%distributions.  The semantics of sequences $\sseq{\stmt_1}{\stmt_2}$
+%is also straightforward: the distribution that results from executing
+%$\stmt_1$ with $\delta$ is given as input to $\stmt_2$ to produce
+%the result.
+%
+%The semantics of assignment is $\delta \bparen{x \ra \aexp}$, which is
+%defined as follows: 
+%$$ \delta \bparen{x \ra \aexp} \defeq \lambda \sigma \lsep \sum_{\tau \; | \; \tau
+%  \bparen{x \ra \eeval{\aexp}{\tau}} = \sigma} \delta (\tau) $$ In
+%words, the result of substituting an expression $\aexp$ for $x$ is a
+%distribution where state $\sigma$ is given a probability that is the
+%sum of the probabilities of all states $\tau$ that are equal to
+%$\sigma$ when $x$ is mapped to the distribution on $\aexp$ in $\tau$.
+%For implementation purposes, it will be useful to consider separately the
+%case where assignment is invertible.
+%
+%When $x \ra \aexp$ is an invertible transformation, the formula for
+%assignment can be simplified to the following, where $x \ra \aexp'$ is
+%the inverse of $x \ra \aexp$.
+%\[
+%\delta \bparen{x \ra \aexp} \defeq \lambda \sigma \lsep \delta (\sigma\bparen{x \ra \eeval{\aexp'}{\sigma}})
+%\]
+%
+%When $x \ra \aexp$ is not invertible, the original definition is
+%equivalent to a projection followed by an assignment.  Let $V'
+%= \fv{\delta} - \{x\}$ and let $\delta' = \project{\delta}{V'}$.
+%Then we have the following for a non-invertible assignment.
+%\[\delta \bparen{x \ra \aexp} \defeq \lambda \sigma \lsep \aif \sigma(x) = \eeval{E}{\sigma}\athen
+%\delta'(\project{\sigma}{V'}) \aelse 0 \]
+%We prove this definition by cases is
+%equivalent to the original definition in the companion technical report~\cite{TR}.
+%
+%The semantics for conditionals makes use of two operators on
+%distributions which we now define.  First, given distributions
+%$\delta_1$ and $\delta_2$ we define the \emph{distribution sum} as
+%follows:
+%$$ \delta_1 + \delta_2 \defeq \lambda \sigma \lsep \delta_1(\sigma) +
+%\delta_2(\sigma) $$ In words, the probability mass for a given state
+%$\sigma$ of the summed distribution is just the sum of the masses from
+%the input distributions for $\sigma$.  Second, given a distribution
+%$\delta$ and a boolean expression $\bexp$, we define the
+%\emph{distribution conditioned on $\bexp$} to be
+%$$ \dcond{\delta}{\bexp} \defeq \lambda \sigma \lsep \aif \eeval{\bexp}{\sigma} \athen
+%\delta(\sigma) \aelse 0 $$
+%In short, the resulting distribution retains only the probability mass
+%from $\delta$ for states $\sigma$ in which $\bexp$
+%holds.
+%
+%With these two operators, the semantics of conditionals can be stated
+%simply: the resulting distribution is the sum of the distributions of
+%the two branches, where the first branch's distribution is conditioned
+%on $\bexp$ being true, while the second branch's distribution is
+%conditioned on $\bexp$ being false.
+%
+%The semantics for probabilistic conditionals like that of conditionals
+%but makes use of \emph{distribution scaling}, which is defined as
+%follows: given $\delta$ and some scalar $p$ in $[0,1]$, we have
+%$$ p \cdot \delta \defeq \lambda \sigma \lsep p \cdot \delta(\sigma) $$
+%In short, the probability ascribed to each state is just the
+%probability ascribed to that state by $\delta$ but multiplied by $p$.
+%For probabilistic conditionals, we sum the distributions of the two
+%branches, scaling them according to the odds $q$ and $1 - q$.
+%
+%The semantics of a single iteration of a while loop is
+%essentially that of $\sif{B}{S}{\sskip}$ and the semantics of the
+%entire loop is the fixed point of a function that composes the
+%distributions produced by each iteration.  That such a fixed point exists
+%is proved by Clarkson et al.~\cite{clarkson09quantifying}.
+%
+%Finally, the semantics of $\suniform{x}{n_1}{n_2}$, introduced in
+%Section~\ref{sec:absinterp} is given as
+%$$
+%\begin{array}{rcl}
+%\pevalp{\suniform{x}{n_1}{n_2}}{\delta} & = &
+%\paren{\project{\delta}{V - \set{x}}} \times \delta'
+%\end{array}
+%$$
+%Where $ V $ is the set of variables of $ \delta $, and $ \delta' $ is
+%defined as follows.
+%$$ \delta ' = \lambda \sigma \lsep \aif n_1 \leq \sigma(x) \leq n_2 \athen
+%\frac{1}{n_2-n_1+1} \aelse 0 $$
+%
+\vspace*{.1in}
+\section{Example queries} \label{appendix:queries}
+
+%\input{temp}
+
+We provide here the queries and prebeliefs we used for the experiments
+in Section~\ref{sec:impl}. The queries are described as functions
+from some set of inputs to some set of outputs. The exact syntax is as
+follows.
+$$
+\begin{array}{l}
+\squerydefk \; queryname \; in_1 \cdots in_n \ra out_1 \cdots out_m \; : \\
+\;\; querybody \\
+\end{array}
+$$
+
+Query definitions that follow sometimes include
+pre-processing statements of the form:
+$$ \psdefine{x}{exp} $$
+Such statements result in any occurrence of a variable $ x $ being
+replaced by the expression $exp$. This is used for convenience to
+refer to common expressions without actually requiring the analysis to
+track additional variables/dimensions.
+
+To specify a query invocation we use the following syntax.
+$$
+\begin{array}{l}
+\squeryk \; queryname \; : \\
+\;\; in_1 \; := \; val_1; \\
+\;\; \cdots \\
+\;\; in_n \; := \; val_n
+\end{array}
+$$
+Each experiment must also specify the values of the secrets being
+queried, and the querier's prebelief.  Each specification is a merely
+a program that sets the values of these variables.  For the actual
+secret values this program begins with the declaration $ \ssecretk$;
+the resulting state of executing program is taken to be the secret
+state.  The program to set the prebelief begins $ \sbeliefk$ and has
+the same format; note that this program will use $\spifk$ or
+$\suniform{x}{n_1}{n_2}$ to give secrets different possible values
+with different probabilities.  
+
+We now give the content of the queries used in the experiments.
+
+\subsection{Birthday}
+For the small stateset size birthday experiments we used the
+following secret and prebelief.
+$$ \ssecretk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{s\text{\_}bday}{270}\; ;\\
+  \sassign{s\text{\_}byear}{1980}\\
+\end{array}
+}\end{displaymath}
+$$ \sbeliefk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \suniform{s\text{\_}bday}{0}{364}\; ;\\
+  \suniform{s\text{\_}byear}{1956}{1992}\\
+\end{array}
+}\end{displaymath}
+
+The two queries used were as follows.
+
+$$ \squerydefk \; bday \; : \;c\text{\_}day \; \ra \; out$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sifk \; \ebinop{\wedge}{\ebinop{\geq}{s\text{\_}bday}{c\text{\_}day}}{\ebinop{>}{\ebinop{+}{c\text{\_}day}{7}}{s\text{\_}bday}} \; \sthenk\\
+  \;\;\;\sassign{out}{1}\\
+  \selsek\\
+  \;\;\;\sassign{out}{0}\\
+\end{array}
+}\end{displaymath}
+
+$$ \squerydefk \; spec \; : \;c\text{\_}year \; \ra \; out$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \psdefine{age}{\ebinop{-}{c\text{\_}year}{s\text{\_}byear}}\\
+  \sifk \; \lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lreln{=}{age}{10}}{\lreln{=}{age}{20}}}{\lreln{=}{age}{30}}}{\lreln{=}{age}{40}}\\\;}{\lreln{=}{age}{50}}}{\lreln{=}{age}{60}}}{\lreln{=}{age}{70}}}{\lreln{=}{age}{80}}\\\;}{\lreln{=}{age}{90}}}{\lreln{=}{age}{100}}\; \sthenk\\
+  \;\;\;\sassign{out}{1}\\
+  \selsek\\
+  \;\;\;\sassign{out}{0}\; ;\\
+  \spifk\; 1/10 \; \sthenk\\
+  \;\;\;\sassign{out}{1}\\
+\end{array}
+}
+\end{displaymath}
+
+The statistics described in comparison to the enumeration approach
+(Section~\ref{sec:enum}) include the time spent processing this
+initial setup as well as time processing one birthday
+query. Figure~\ref{fig:bench_domains_bday_large} benchmarks two bday
+queries followed by a spec year query.
+
+\begin{itemize}
+\item{} A single bday query alone.
+$$ \squeryk \; bday \; : $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{c\text{\_}day}{260}\\
+\end{array}
+}\end{displaymath}
+
+\item{} Two bday queries followed by a spec query.
+$$ \squeryk \; bday \; : $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{c\text{\_}day}{260}\\
+\end{array}
+}\end{displaymath}
+$$ \squeryk \; bday \; : $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{c\text{\_}day}{261}\\
+\end{array}
+}\end{displaymath}
+$$ \squeryk \; spec \; : $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{c\text{\_}year}{2011}\\
+\end{array}
+}\end{displaymath}
+
+\end{itemize}
+
+\subsection{Birthday (large)}
+
+For the larger statespace birthday example we used the following
+secret and prebelief generators.
+$$ \ssecretk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{s\text{\_}bday}{270}\; ;\\
+  \sassign{s\text{\_}byear}{1980}\\
+\end{array}
+}\end{displaymath}
+$$ \sbeliefk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \suniform{s\text{\_}bday}{0}{364}\; ;\\
+  \suniform{s\text{\_}byear}{1910}{2010}\\
+\end{array}
+}\end{displaymath} The queries used were identical to the ones for the
+smaller statespace birthday example. For our benchmarks we analyzed
+the vulnerability of the pair of secrets $ s\text{\_}bday,
+s\text{\_}byear $.
+
+\subsection{Pizza}
+
+The pizza example is slightly more complicated, especially in the
+construction of the prebelief.  This example models a targeted
+Facebook advertisement for a local pizza shop.  There are four
+relevant secret values.  The level of school currently being attended
+by the Facebook user is given by \verb|s_in_school_type|, which is an
+integer ranging from 0 (not in school) to 6 (Ph.D. program).  Birth
+year is as before and \verb|s_address_lat| and \verb|s_address_long|
+give the latitude and longitude of the user's home address
+(represented as decimal degrees scaled by a factor of $10^6$ and
+converted to an integer).
+
+The initial belief models the fact that each subsequent level of
+education is less likely and also captures the correlation between
+current educational level and age.  For example, a user is given an
+approximately 0.05 chance of currently being an undergraduate in
+college, and college attendees are assumed to be born no later than
+1985 (whereas elementary school students may be born as late as 2002).
+
+$$ \ssecretk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{s\text{\_}in\text{\_}school\text{\_}type}{4}\; ;\\
+  \sassign{s\text{\_}birth\text{\_}year}{1983}\; ;\\
+  \sassign{s\text{\_}address\text{\_}lat}{39003178}\; ;\\
+  \sassign{s\text{\_}address\text{\_}long}{-76958199}\\
+\end{array}
+}
+\end{displaymath}
+$$ \sbeliefk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \spifk\; 4/24 \; \sthenk\\
+  \;\;\;\suniform{s\text{\_}in\text{\_}school\text{\_}type}{1}{1}\; ;\\
+  \;\;\;\suniform{s\text{\_}birth\text{\_}year}{1998}{2002}\\
+  \selsek\\
+  \;\;\;\spifk\; 3/19 \; \sthenk\\
+  \;\;\;\;\;\;\suniform{s\text{\_}in\text{\_}school\text{\_}type}{2}{2}\; ;\\
+  \;\;\;\;\;\;\suniform{s\text{\_}birth\text{\_}year}{1990}{1998}\\
+  \;\;\;\selsek\\
+  \;\;\;\;\;\;\spifk\; 2/15 \; \sthenk\\
+  \;\;\;\;\;\;\;\;\;\suniform{s\text{\_}in\text{\_}school\text{\_}type}{3}{3}\; ;\\
+  \;\;\;\;\;\;\;\;\;\suniform{s\text{\_}birth\text{\_}year}{1985}{1992}\\
+  \;\;\;\;\;\;\selsek\\
+  \;\;\;\;\;\;\;\;\;\spifk\; 1/12 \; \sthenk\\
+  \;\;\;\;\;\;\;\;\;\;\;\;\suniform{s\text{\_}in\text{\_}school\text{\_}type}{4}{4}\; ;\\
+  \;\;\;\;\;\;\;\;\;\;\;\;\suniform{s\text{\_}birth\text{\_}year}{1980}{1985}\\
+  \;\;\;\;\;\;\;\;\;\selsek\\
+  \;\;\;\;\;\;\;\;\;\;\;\;\suniform{s\text{\_}in\text{\_}school\text{\_}type}{0}{0}\; ;\\
+  \;\;\;\;\;\;\;\;\;\;\;\;\suniform{s\text{\_}birth\text{\_}year}{1900}{1985}\; ;\\
+  \suniform{s\text{\_}address\text{\_}lat}{38867884}{39103178}\; ;\\
+  \suniform{s\text{\_}address\text{\_}long}{-77058199}{-76825926}\\
+\end{array}
+}
+\end{displaymath}
+
+The query itself targets the pizza advertisement at users who are
+either in college or aged 18 to 28, while living close to the pizza
+shop (within a square region that is 2.5 miles on each side and
+centered on the pizza shop).  If this condition is satisfied, then the
+query returns 1, indicating that the ad should be displayed.  The full
+text of the query is given below.
+
+$$ \squerydefk \; pizza \; : \; \; \ra \; out$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \psdefine{age}{\ebinop{-}{2010}{s\text{\_}birth\text{\_}year}}\\
+  \psdefine{lr\text{\_}lat}{38967884}\\
+  \psdefine{ul\text{\_}lat}{39003178}\\
+  \psdefine{lr\text{\_}long}{-76958199}\\
+  \psdefine{ul\text{\_}long}{-76925926}\\
+  \sifk \; \lreln{\geq}{s\text{\_}in\text{\_}school\text{\_}type}{4} \; \sthenk\\
+  \;\;\;\sassign{in\text{\_}school}{1}\\
+  \selsek\\
+  \;\;\;\sassign{in\text{\_}school}{0}\; ;\\
+  \sifk \; \lbinop{\wedge}{\lreln{\geq}{age}{18}}{\lreln{\leq}{age}{28}} \; \sthenk\\
+  \;\;\;\sassign{age\text{\_}criteria}{1}\\
+  \selsek\\
+  \;\;\;\sassign{age\text{\_}criteria}{0}\; ;\\
+  \sifk \; \lbinop{\wedge}{\lbinop{\wedge}{\lbinop{\wedge}{\lreln{\leq}{s\text{\_}address\text{\_}lat}{ul\text{\_}lat}\\\;\;}{\lreln{\geq}{s\text{\_}address\text{\_}lat}{lr\text{\_}lat}\\\;\;}}{\lreln{\geq}{s\text{\_}address\text{\_}long}{lr\text{\_}long}\\\;\;}}{\lreln{\leq}{s\text{\_}address\text{\_}long}{ul\text{\_}long}}\\\sthenk\\
+  \;\;\;\sassign{in\text{\_}box}{1}\\
+  \selsek\\
+  \;\;\;\sassign{in\text{\_}box}{0}\; ;\\
+  \sifk \; \lbinop{\wedge}{\lbinop{\vee}{(\lreln{=}{in\text{\_}school}{1}}{\lreln{=}{age\text{\_}criteria}{1}})\\\;\;}{\lreln{=}{in\text{\_}box}{1}} \; \sthenk\\
+  \;\;\;\sassign{out}{1}\\
+  \selsek\\
+  \;\;\;\sassign{out}{0}\\
+\end{array}
+}
+\end{displaymath}
+
+\subsection{Photo}
+
+The photo query is a direct encoding of a case study that Facebook
+includes on their advertising information
+page~\cite{wedding-case-study}.  The advertisement was for CM
+Photographics, and targets offers for wedding photography packages at
+women between the ages of 24 and 30 who list in their profiles that
+they are engaged.  The secret state consists of birth year, as before,
+gender (0 indicates male, 1 indicates female), and ``relationship
+status,'' which can take on a value from 0 to 9.  Each of these
+relationship status values indicates one of the status choices
+permitted by the Facebook software.  The example below involves only
+four of these values, which are given below.
+\begin{description}
+\item[0] No answer
+\item[1] Single
+\item[2] In a relationship
+\item[3] Engaged
+\end{description}
+The secret state and prebelief are as follows.
+$$ \ssecretk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{s\text{\_}birth\text{\_}year}{1983}\; ;\\
+  \sassign{s\text{\_}gender}{0}\; ;\\
+  \sassign{s\text{\_}relationship\text{\_}status}{0}\\
+\end{array}
+}
+\end{displaymath}
+$$ \sbeliefk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \suniform{s\text{\_}birth\text{\_}year}{1900}{2010}\; ;\\
+  \suniform{s\text{\_}gender}{0}{1}\; ;\\
+  \suniform{s\text{\_}relationship\text{\_}status}{0}{3}\\
+\end{array}
+}
+\end{displaymath}
+
+The query itself is the following.
+$$ \squerydefk \; cm\text{\_}advert \; : \; \; \ra \; out$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \psdefine{age}{\ebinop{-}{2010}{s\text{\_}birth\text{\_}year}}\\
+  \sifk \; \lbinop{\wedge}{\lreln{\geq}{age}{24}}{\lreln{\leq}{age}{30}} \; \sthenk\\
+  \;\;\;\sassign{age\text{\_}sat}{1}\\
+  \selsek\\
+  \;\;\;\sassign{age\text{\_}sat}{0}\; ;\\
+  \sifk \; \lbinop{\wedge}{\lbinop{\wedge}{\lreln{=}{s\text{\_}gender}{1}\\\;}{\lreln{=}{s\text{\_}relationship\text{\_}status}{3}\\\;}}{\lreln{=}{age\text{\_}sat}{1}} \; \sthenk\\
+  \;\;\;\sassign{out}{1}\\
+  \selsek\\
+  \;\;\;\sassign{out}{0}\\
+\end{array}
+}
+\end{displaymath}
+
+\vspace{5mm} % !!! formatting
+
+\subsection{Travel}
+
+This example is another Facebook advertising case
+study~\cite{visitbritain-case-study}.  It is based on an ad campaign
+run by Britain's national tourism agency, VisitBritain.  The campaign
+targeted English-speaking Facebook users currently residing in
+countries with strong ties to the United Kingdom.  They further
+filtered by showing the advertisement only to college graduates who
+were at least 21 years of age.
+
+We modeled this using four secret values: country, birth year, highest
+completed education level, and primary language.  As with other
+categorical data, we represent language and country using an
+enumeration.  We ranked countries by number of Facebook users as
+reported by socialbakers.com.  This resulted in the US being country
+number 1 and the UK being country 3.  To populate the list of
+countries with ``strong connections'' to the UK, we took a list of
+former British colonies.  For the language attribute, we consider a
+50-element enumeration where 0 indicates ``no answer'' and 1 indicates
+``English'' (other values appear in the prebelief but are not used in
+the query).
+
+$$ \ssecretk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{country}{1}\; ;\\
+  \sassign{birth\text{\_}year}{1983}\; ;\\
+  \sassign{completed\text{\_}school\text{\_}type}{4}\; ;\\
+  \sassign{language}{5}\\
+\end{array}
+}
+\end{displaymath}
+
+$$ \sbeliefk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \suniform{country}{1}{200}\; ;\\
+  \suniform{birth\text{\_}year}{1900}{2011}\; ;\\
+  \suniform{language}{1}{50}\; ;\\
+  \suniform{completed\text{\_}school\text{\_}type}{0}{5}\\
+\end{array}
+}
+\end{displaymath}
+
+$$ \squerydefk \; travel \; : \; \; \ra \; out$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \psdefine{age}{\ebinop{-}{2010}{birth\text{\_}year}}\\
+  \sifk \; \lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lreln{=}{country}{1}}{\lreln{=}{country}{3}\\\;\;}}{\lreln{=}{country}{8}}}{\lreln{=}{country}{10}\\\;\;}}{\lreln{=}{country}{18}} \; \sthenk\\
+  \;\;\;\sassign{main\text{\_}country}{1}\\
+  \selsek\\
+  \;\;\;\sassign{main\text{\_}country}{0}\; ;\\
+  \sifk \; \lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lbinop{\vee}{\lreln{=}{country}{169}}{\lreln{=}{country}{197}\\\;\;}}{\lreln{=}{country}{194}}}{\lreln{=}{country}{170}\\\;\;}}{\lreln{=}{country}{206}}}{\lreln{=}{country}{183}\\\;\;}}{\lreln{=}{country}{188}} \; \sthenk\\
+  \;\;\;\sassign{island}{1}\\
+  \selsek\\
+  \;\;\;\sassign{island}{0}\; ;\\
+  \sifk \; \lbinop{\wedge}{\lbinop{\wedge}{\lbinop{\wedge}{\lreln{=}{language}{1}\\\;\;}{\lbinop{\vee}{(\lreln{=}{main\text{\_}country}{1}}{\lreln{=}{island}{1})\\\;\;}}}{\lreln{\geq}{age}{21}\\\;\;}}{\lreln{\geq}{completed\text{\_}school\text{\_}type}{4}} \; \sthenk\\
+  \;\;\;\sassign{out}{1}\\
+  \selsek\\
+  \;\;\;\sassign{out}{0}\\
+\end{array}
+}
+\end{displaymath}
+
+\section{Relational Queries} \label{sec-appendix-relational}
+
+The two queries below, $ is\text{\_}target\text{\_}close $ and $
+who\text{\_}is\text{\_}closer $ introduce relations between variables
+after revision, even though the example initial belief had no such
+relations. The initial belief stipulates the location of 2 objects is
+somewhere within a rectangular region. The $
+is\text{\_}target\text{\_}close $ query determines if a given location
+is within $ dist $ of the first object, measured using Manhattan
+distance. This query introduces relations between only 2 variables
+(latitude and longitude) which can be exactly represented using
+octagons but cannot using intervals.
+
+The $ who\text{\_}is\text{\_}closer $ query performs a similar
+computation, but instead determines which of the two objects in the
+initial belief is closer to the new target location. The post belief
+can be handled by use of polyhedra, but not octagons, as it introduces
+relationships between more than 2 variables (latitudes and longitudes
+of 2 different objects).
+
+% ../prob --pmock --bench tasks/task_1348957585_259022/timing.csv
+% --precision 4 --domain poly --simplify halfs --seed 0
+% ../examples/bench/closer.pol
+% the above breaks latte
+
+$$ \sbeliefk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \suniform{loc\text{\_}lat1}{29267245}{36332852}\; ;\\
+  \suniform{loc\text{\_}long1}{41483216}{46405563}\; ;\\
+  \suniform{loc\text{\_}lat2}{29267245}{36332852}\; ;\\
+  \suniform{loc\text{\_}long2}{41483216}{46405563}\\
+\end{array}
+}
+\end{displaymath}
+
+$$ \squerydefk \; is\text{\_}target\text{\_}close \;
+: \;target\text{\_}location\text{\_}lat\;target\text{\_}location\text{\_}long\;dist \; \ra \;
+is\text{\_}close$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{is\text{\_}close}{0}\; ;\\
+  \sassign{dist\text{\_}lat}{\ebinop{-}{loc\text{\_}lat1}{target\text{\_}location\text{\_}lat}}\;
+  ;\\
+  \sassign{dist\text{\_}long}{\ebinop{-}{loc\text{\_}long1}{target\text{\_}location\text{\_}long}}\;
+  ;\\
+  \sifk \; \lreln{<}{dist\text{\_}lat}{0} \; \sthenk\\
+  \;\;\;\sassign{dist\text{\_}lat}{\ebinop{\times}{-1}{dist\text{\_}lat}}\;
+  ;\\
+  \sifk \; \lreln{<}{dist\text{\_}long}{0} \; \sthenk\\
+  \;\;\;\sassign{dist\text{\_}long}{\ebinop{\times}{-1}{dist\text{\_}long}}\;
+  ;\\
+  \sifk \; \lreln{\leq}{\ebinop{+}{dist\text{\_}lat}{dist\text{\_}long}}{dist} \; \sthenk\\
+  \;\;\;\sassign{is\text{\_}close}{1}\\
+\end{array}
+}
+\end{displaymath}
+
+$$ \squerydefk \; who\text{\_}is\text{\_}closer \;
+: \;target\text{\_}location\text{\_}lat\;target\text{\_}location\text{\_}long \; \ra \;
+who\text{\_}closer$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{diff\text{\_}lat1}{\ebinop{-}{loc\text{\_}lat1}{target\text{\_}location\text{\_}lat}}\;
+  ;\\
+  \sassign{diff\text{\_}long1}{\ebinop{-}{loc\text{\_}long1}{target\text{\_}location\text{\_}long}}\;
+  ;\\
+  \sassign{diff\text{\_}lat2}{\ebinop{-}{loc\text{\_}lat2}{target\text{\_}location\text{\_}lat}}\;
+  ;\\
+  \sassign{diff\text{\_}long2}{\ebinop{-}{loc\text{\_}long2}{target\text{\_}location\text{\_}long}}\;
+  ;\\
+  \sifk \; \lreln{<}{diff\text{\_}lat1}{0} \; \sthenk\\
+  \;\;\;\sassign{diff\text{\_}lat1}{\ebinop{\times}{-1}{diff\text{\_}lat1}}\;
+  ;\\
+  \sifk \; \lreln{<}{diff\text{\_}long1}{0} \; \sthenk\\
+  \;\;\;\sassign{diff\text{\_}long1}{\ebinop{\times}{-1}{diff\text{\_}long1}}\;
+  ;\\
+  \sifk \; \lreln{<}{diff\text{\_}lat2}{0} \; \sthenk\\
+  \;\;\;\sassign{diff\text{\_}lat2}{\ebinop{\times}{-1}{diff\text{\_}lat2}}\;
+  ;\\
+  \sifk \; \lreln{<}{diff\text{\_}long2}{0} \; \sthenk\\
+  \;\;\;\sassign{diff\text{\_}long2}{\ebinop{\times}{-1}{diff\text{\_}long2}}\;
+  ;\\
+  \sassign{dist1}{\ebinop{+}{diff\text{\_}long1}{diff\text{\_}lat1}}\;
+  ;\\
+  \sassign{dist2}{\ebinop{+}{diff\text{\_}long2}{diff\text{\_}lat2}}\;
+  ;\\
+  \sifk \; \lreln{\leq}{dist1}{dist2} \; \sthenk\\
+  \;\;\;\sassign{who\text{\_}closer}{0}\\
+  \selsek\\
+  \;\;\;\sassign{who\text{\_}closer}{1}\\
+\end{array}
+}
+\end{displaymath}
+
+
+\section{Benchmark Results}
+
+Table~\ref{fig:bench_table} tabulates performance results for all of
+the benchmark programs, for each possible base domain
+(intervals, octagons, and polyhedra labeled $ \Box $, $ \Diamond $,
+and $ \pentagon $ respectively).  Each column is the maximum size
+of the permitted powerset, whereas each grouping of rows contains,
+respectively, the wall clock time in seconds (median of 20 runs), the
+running time's semi-interquartile range (SIQR) with the number of
+outliers in parentheses (which are defined to be the points $
+3\times\text{SIQR} $ below the first quartile or above the third), and
+the max belief computed (smaller being more accurate).
+
+\pagebreak
+\begin{table*}[h!]
+\centering
+{\tiny \input{table-results}}
+\addtocounter{table}{-1}
+\caption{Query evaluation benchmarks}
+\label{fig:bench_table}
+\end{table*}

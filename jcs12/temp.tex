@@ -1,0 +1,52 @@
+rendering latex
+$$ \ssecretk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sassign{country}{1}\; ;\\
+  \sassign{birth\text{\_}year}{1983}\; ;\\
+  \sassign{completed\text{\_}school\text{\_}type}{4}\; ;\\
+  \sassign{language}{5}\\
+\end{array}
+}
+\end{displaymath}
+$$ \sbeliefk: $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \suniform{country}{1}{200}\; ;\\
+  \suniform{birth\text{\_}year}{1900}{2011}\; ;\\
+  \suniform{language}{1}{50}\; ;\\
+  \suniform{completed\text{\_}school\text{\_}type}{0}{5}\\
+\end{array}
+}
+\end{displaymath}
+
+$$ \squerydefk \; travel \; : \; \; \ra \; output$$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sifk \; country \; = \; 1 \; \vee \; country \; = \; 3 \; \vee \; country \; = \; 8 \; \vee \; country \; = \; 10 \; \vee \; country \; = \; 18 \; \sthenk\\
+  \;\;\;\sassign{main\text{\_}country}{1}\\
+  \selsek\\
+  \;\;\;\sassign{main\text{\_}country}{0}\; ;\\
+  \sifk \; country \; = \; 169 \; \vee \; country \; = \; 197 \; \vee \; country \; = \; 194 \; \vee \; country \; = \; 170 \; \vee \; country \; = \; 206 \; \vee \; country \; = \; 183 \; \vee \; country \; = \; 188 \; \sthenk\\
+  \;\;\;\sassign{island}{1}\\
+  \selsek\\
+  \;\;\;\sassign{island}{0}\; ;\\
+  \sassign{age}{\ebinop{-}{2010}{birth\text{\_}year}}\; ;\\
+  \sifk \; language \; = \; 1 \; \wedge \; main\text{\_}country \; = \; 1 \; \vee \; island \; = \; 1 \; \wedge \; age \; \geq \; 21 \; \wedge \; completed\text{\_}school\text{\_}type \; \geq \; 4 \; \sthenk\\
+  \;\;\;\sassign{output}{1}\\
+  \selsek\\
+  \;\;\;\sassign{output}{0}\\
+\end{array}
+}
+\end{displaymath}
+
+
+$$ \squeryk \; travel \; : $$
+\begin{displaymath}{\small
+\begin{array}{l}
+  \sskip\\
+\end{array}
+}
+\end{displaymath}
+
+no errors

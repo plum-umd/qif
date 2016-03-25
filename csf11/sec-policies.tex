@@ -1,0 +1,27 @@
+\todo{Description of dynamic security check.  How we implement it.
+  Proof that it does not reveal information.}
+
+Security policies based on belief are very suitable at bounding the
+probabilities of certain bad outcomes occurring; if a rational
+adversary believes your credit card number is what your actual real
+number is with a probability $ p $, then, being rational, have an
+expected probability $ p $ of guessing the correct number.
+
+\todo{more about this, alleviating the problem of determining policy parameters}
+
+\paragraph{Relative entropy}
+
+\paragraph{Min-entropy}
+
+\paragraph{Soundness}
+
+Knowledge-based policies need not consider the exact belief to be
+sound. Policies based on relative entropy or min-entropy both admit
+means of sound knowledge estimation. A method that overestimates the
+probability of any hypothesis, and can maintain this even after belief
+revision, will be sound -- a policy decision will be rejected if the
+policy would have rejected on the exact belief.
+
+\todo{demonstrate this point}
+
+\paragraph{Entropy}

@@ -1,0 +1,2 @@
+policy_on	_samples	_average max_belief_float	_median max_belief_float	_siqr max_belief_float	_q_lower max_belief_float	_q_upper max_belief_float	_min max_belief_float	_max max_belief_float
+P_1-P_2	100	0.02764298	0.0270425	0.00357675	0.0230155	0.030169	0.020549	0.054475

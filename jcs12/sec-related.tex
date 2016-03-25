@@ -1,0 +1,682 @@
+\section{Discussion}
+\label{sec:future-work}
+
+This section considers the some of the tradeoffs, challenges, design
+alternatives, and possibilities for future work on knowledge-based
+security policies and probabilistic polyhedra.
+
+\subsection{Knowledge-based policies}
+
+Employing knowledge-based policies successfully requires maintaining a
+reasonable estimate of queriers' beliefs.  Two difficulties that arise
+in doing so are (1) establishing the initial belief, and (2)
+accounting for collusion among queriers.  Here we discuss
+these two issues, and suggest further applications of knowledge-based
+policies.
+
+\paragraph*{Initial belief.}
+
+For $P_1$ to enforce a knowledge-based policy on queries by $P_2$
+requires that $P_1$ estimate $P_2$'s belief about the possible
+valuations of $P_1$'s secret data.  When $P_2$ has no particular
+knowledge of $P_1$'s secrets, statistical demographic data can be
+used; e.g., the US Census and other public sources could be used for
+personal information. When $P_2$ might have inside knowledge, $P_1$
+must expend more effort to account for it.  For example, in a military
+setting, estimating a coalition partner's estimate of one's resources
+could be derived from shared information, and from the likelihood of
+$P_2$ having acquired illicit information.  
+Our benchmarks largely considered personal, private information, e.g.,
+gender, age, level of education, etc.  This information can be drawn
+from public sources (e.g., Facebook
+demographics~\cite{facebook-demographics}).  However, the
+distributions we experimented with were oversimplifications of the
+actual, reported distributions: they were largely simple, uniform
+distributions.  At present, the syntax of our query language
+itself only allows specification of a single distribution. 
+% Our
+% abstraction has the benefit, however, of an approximate
+% representation, which can be taken advantage of to easy the burden
+% initial belief specification. A representation that attributes maximal
+% probability of $ 1 $ to every state is technically sound (though
+% not very useful). 
+Of course, we could permit users to more directly specify
+distributions of interest in a separate syntax.  A more interesting
+alternative is to define the initial distribution using a
+probabilistic program employing conditioning based on observations,
+using the same mechanisms already developed to determining whether to
+answer queries.  This is done in languages like IBAL~\cite{pfeffer07ibal} and
+Fun~\cite{borgstrom11measure} and could be adapted to our setting.
+
+% Machine learning techniques could be useful for our purposes
+% here. Large bodies of work in ML deals with constructing models of
+% probability distributions from samples, purported to come from said
+% distributions. Recent work \cite{gordon13model} explores how to
+% perform model learning using probabilistic language techniques. An
+% interesting capability of this work is ability to specify models as
+% programs, perform learning of the model given samples, and ascertain
+% the model's imprecision via uncertainty in its parameters. Though the
+% representations of distributions used there are different than the
+% ones we use here, the same techniques could be applied here to learn
+% an initial belief as a model from publicly visible samples.
+
+If the initial belief estimate is (very) inaccurate, then $P_1$ risks
+releasing information to $P_2$ contrary to his intended policy.  To
+``hedge his bets'' against this possibility, he might choose to
+maintain a set of possible beliefs $\Delta$, rather than a single
+belief $\delta$, and only release if the threshold was satisfied for
+every $\delta \in \Delta$.  We return to this idea in
+Section~\ref{sec:diffpriv}. In some sense we already do maintain
+multiple beliefs, as our implementation models/abstracts powersets of
+probabilistic polyhedra, rather than single polyhedra, for performance
+reasons.  We leave to future work the exploration of the practical
+implementation of this idea.
+
+\paragraph*{Collusion.}
+
+Assuming that $P$ maintains separate beliefs and thresholds for
+distinct queriers $Q_1$ and $Q_2$, the possibility of collusion
+arises.  Following our motivating example in the Introduction, $P$'s
+privacy would be thwarted if he shared only his birth day with $Q_1$
+and only his birth year with $Q_2$ but then $Q_1$ and $Q_2$ shared
+their information. This problem is not unique to our work; the same
+problem would arise if $P$ used an access control policy to protect
+birth day and birth year in the same way --- the policy will be
+thwarted if $Q_1$ and $Q_2$ pool their information.
+
+A simple approach to preventing this would be to model adversary
+knowledge globally, effectively assuming that all queriers share their
+query results; doing so would prevent either $Q_1$'s or $Q_2$'s query
+(whichever was last). This approach is akin to having a global privacy
+budget in differential privacy (see Section~\ref{sec:diffpriv}) or a
+single, global access control policy and would obviously harm utility.
+Moreover, the confidence of an agent can actually decrease as a result
+of observing query outputs. This can occur when the agent is initially
+confident in something that is not true, or as a result of improbable
+outputs of probabilistic queries (like Example~\ref{ex:specyear}),
+even when the agent is not mistakenly confident. Due to this
+non-monotonicity in knowledge, if agents purported to be colluding are
+in fact not colluding then a global belief might under-approximate a
+non-colluding agent's true level of knowledge. \pxm{Second part of
+  this para has changed.}
+
+One possible compromise would be to consider both the potential of
+collusion and non-collusion by tracking a global belief \emph{and} a
+set of individual beliefs. When considering a query, a rejection would
+be issued if either belief fails the policy check.
+
+It is important to note that despite the possibility of a decreased
+certainty due to queries, rational adversaries, interested in
+maximizing their chances of guessing the secret value, will take all
+outputs into account, even unlikely outcomes of probabilistic
+queries. Though they might be detrimental to certainty, in
+expectation, all queries increase chances of guessing the secret
+correctly. This point is discussed further in the section on Accuracy,
+Uncertainty, and Misinformation of
+\cite{clarkson09quantifying}. \pxm{para changed}
+
+\paragraph*{Further applications}
+
+We have used the goal of decentralizing social networking applications
+as a motivator for our technique.  But knowledge-based policies have
+other applications as well.  Here are four examples.  
+
+The first application is \emph{secure multiparty computation}
+(SMC)~\cite{Yao86}.  Such computations allow a set of mutually
+distrusting parties to compute a function~$f$ of their private inputs
+while revealing nothing about their inputs beyond what is implied by
+the result.  Depending on~$f$, however, the result itself may reveal
+more information than parties are comfortable with.  Knowledge-based
+policies can generalized to this setting: each party $X$ can assess
+whether the other parties $Y_i$ could have secret values such that
+$f$'s result would exceed a knowledge threshold about $X$'s secret.
+We have explored two methods for implementing the generalized
+knowledge threshold check; details are elsewhere~\cite{mardziel12smc}.
+
+Another application is to protecting user browsing history.  With the
+advent of ``do not track'' guidelines that forbid storing cookies to
+track users' browsing habits across sites~\cite{dnt}, service
+providers have turned to \emph{fingerprinting}, which aims to identify
+a user based on available browser
+characteristics~\cite{boda11fingerprint}.  We can protect these
+attributes with knowledge-based policies, and enforce them by
+analyzing the javascript code on browsed pages.  The flexibility of
+knowledge-based policies is useful: with access control we would have
+to choose, in advance, which attributes to reveal, but with
+knowledge-based policies we can set a threshold on the entire tuple of
+the most sensitive attributes and a web page can have access to
+whatever (legal) subset of information it likes, for a better user
+experience.
+
+A third application is to protect sensing capabilities.  In
+particular, we can treat sensor readings as samples from a random
+process parameterized by confidential characteristics of the sensor.
+Each reading provides information about these parameters, in addition
+to information from the reading itself.  For example, suppose we want
+to share mobility traces for traffic planning, but want to protect
+individuals' privacy.  We can view each trace as a series of samples
+from a random process that determines the individual's location based
+on periodic factors, like previous location, time of day, day of week,
+etc.~\cite{shokri11quantifying}.  We can define the sampling function in our simple
+language, involving probabilistic choices over the hidden parameters.
+Belief tracking can be used to narrow down the set of possible
+parameters to the model that could have produced the observed traces;
+if the observer's certainty about these parameters exceeds the
+threshold, then the trace elements are not revealed.  Note that trace
+obfuscation techniques are easily accounted for---they can simply be
+composed with the sampling function and reasoned about together.
+
+Finally, we observe that we can simply track the \emph{amount} of
+released information due to an interaction as a degenerate case of
+enforcing knowledge-based policies.  In particular, we can set the
+pre-belief over some sensitive information to be the uniform
+distribution, and set the threshold to be 1.  In this case, we will
+always answer any query, and at any time we can compute the entropy of
+the current belief estimate to calculate the (maximum) number of bits
+leaked.  This information may be used to evaluate the susceptibility
+to attack by gauging the confidence an attacker might have in their
+belief about secret information.  It can be used to gauge what aspects
+of secret information were of interest to the attacker, giving hints
+to as their motive, or maybe even differentiating an honest querier
+from a malicious one.  Tracking information in this manner is less
+expensive than enforcing threshold policies directly, since not all
+possible outputs need to be considered, and carries no risk of a
+mis-estimate of the pre-belief: the number of reported leaked bits
+will be conservatively high.
+
+\subsection{Improving the Performance of Probabilistic Polyhedra}
+
+While the performance of probabilistic polyhedra compares favorably to
+alternative approaches, it can nevertheless be improved; this will be
+important for applying it to the deployment scenarios listed above.  Here we
+present several ideas for improving the implementation that we hope to
+explore in future work.
+
+\paragraph*{Handling nominal values.}  
+
+Our probabilistic domains are based on polyhedra, octagons, and
+intervals, which are best for analyzing programs with \emph{numeric}
+variables, that contain linear conditionals. Most of the variables in
+the benchmark programs were of the numeric variety. However, some were
+\emph{nominal}, e.g., the variable encoding a user's language in the
+travel query, and these are unordered.  Some variables are nominal but
+partially ordered, like education level in the pizza query.  While we
+can encode nominal values as integers, they may be better handled via
+other means, perhaps even via na\"ive enumeration. Handling of large
+quantities of nominal values could be performed symbolically using
+some of the tools used by other probabilistic languages:
+\cite{claret12bayesian}, graphical models \cite{milch05blog}, or
+factor graphs \cite{borgstrom11measure, pfeffer07ibal}. Ideally
+abstract domains like used in our system and ones better suited for
+nominal values, could be integrated (i.e. via reduced product
+\cite{cousot79systematic}) to effectively process programs that
+contain both types of variables.
+
+\paragraph*{Region splitting.}
+
+As the performance experiments in the previous section show, intervals
+can be far more efficient than polyhedra.  While a single interval may
+be more imprecise than a single polyhedron, an interesting idea is
+consider \emph{splitting} a polyhedron into many intervals, aiming for
+the best of both worlds.  The simplest means of implementing this idea
+is to modify the handling of the $ \suniformname $ statement for the
+powerset domains to result not in one, but several intervals. Though a
+single interval is sufficient to exactly represent distributions
+produced by $ \suniformname $, it would be insufficient if, later, the
+program introduces relations not representable by intervals. 
+
+The challenge is to find the right tradeoff---increasing the number of
+intervals will slowly degrade performance and may hurt precision if we
+use an unfortunate merging order at join points, as seen in
+Figure~\ref{fig:random_box}.  Heuristically picking the right merge
+order is a known challenge in abstract interpretation-based analyses.
+
+\paragraph*{Querier belief tracking.} 
+
+Recall a vital property of our knowledge-based policy enforcement is
+\emph{simulatability}: the adversary has (or is allowed to have) all
+the information necessary to decide the policy that governs its
+access, without interacting with the data owner. As such, the
+computation of policy enforcement could, in theory, by done by the
+querier.  Naturally, they should not be trusted in this regard
+completely.  One general direction is to imagine the querier
+performing the entire computation, and providing proof of the outcome,
+via something like proof-carrying
+code~\cite{necula97pcc}. Alternatively, the querier could provide
+hints to the data owner to improve the speed of his computation.  For
+example, the querier could determine the optimal choices for merge
+order, and send a digest of these choices.
+
+\section{Related work} \label{sec:related}
+We consider four areas of work related to ours: systems aimed at
+protecting access to users' private data; methods for quantifying
+information flow from general-purpose programs; methods for
+privacy-preserving computation, most notably \emph{differential
+  privacy}; and finally approaches to performing general-purpose
+probabilistic computation.
+
+\subsection{Privacy enhancing network services}
+Several recent proposals have considered alternative service
+architectures for better ensuring the privacy of individual
+participants.  These systems tend to enforce access control policies.
+%
+For example, PrPl~\cite{prpl} is a decentralized social networking
+infrastructure aimed to permit participants to participate in social
+networking without losing ownership of their data.  The system uses
+\emph{Personal-Cloud Butler} services to store data and enforce access
+control policies.  Persona~\cite{persona} uses a centralized
+Facebook-style service, but users can store personal data on
+distributed storage servers that use attribute-based encryption.
+Access to data is granted to those parties who have the necessary
+attribute keys.  XBook~\cite{xbook} mediates social network data
+accesses by third-party application extensions.  Privad~\cite{privad}
+is a privacy-preserving advertising platform that, like our running
+examples, runs the ad selection algorithm over the user's data on the
+user's platform.  Privad \emph{presumes} that outputs of ad selection
+reveal little about the inputs.
+
+Knowledge-based security policies generalize access control policies:
+if we maintain a belief estimate for each principal $P$, then the
+equivalent of granting $P$ access to data $d$ is to just set $P$'s
+knowledge threshold for $d$ to 1; for principals $R$ who should not
+have access, the threshold for $d$ is 0.  Knowledge-based policies
+afford greater flexibility by allowing \emph{partial} access, i.e.,
+when a threshold less than 1.  Moreover, as mentioned in the
+introduction, we can set a policy on multiple data items, and thus
+grant more access to one item than another (e.g., birth day and/or
+year) as long as knowledge of the aggregate is controlled.
+
+\subsection{Quantified information flow}
+Others have considered how an adversary's knowledge of private data
+might be informed by a program's output.  Clark, Hunt, and
+Malacaria~\cite{clark2005QIF} define a static analysis that bounds the
+secret information a straight-line program can leak in terms of
+equivalence relations between the inputs and outputs.  Backes et
+al.~\cite{backes09automatic} automate the synthesis of such
+equivalence relations and quantify leakage by computing the exact size
+of equivalence classes.  K\"opf and
+Rybalchenko~\cite{kopf:rybalchenko} extend this approach, improving
+its scalability by using sampling to identify equivalence classes and
+using under- and over-approximation to obtain bounds on their size.
+% \sbmcomment{Here we imply that the size of these blocks are important,
+% but then Boris said that it is only the number of blocks that is of interest.
+% Could we clarify this?} \mwh{They worry about class sizes to compute
+% shannon entropy.  It's mentioned here because we care about sizes
+% too.  I think we can just leave it given clarifications I make below.}
+Mu and Clark~\cite{Mu:2009:inverval-qif} present a similar analysis
+that uses over-approximation only.  In all cases, the inferred
+equivalence classes can be used to compute entropy-based metrics of
+information leakage.
+
+We differ from this work in two main ways.  First, we implement a
+different security criterion.  The most closely related metric is
+\emph{conditional vulnerability} $V$ as proposed by
+Smith~\cite{smith09foundations}, which can be defined using our
+notation as follows:%\footnote{Smith actually proposes \emph{min
+%    entropy}, which is $-\mathit{log}\;V$.}
+\begin{definition}
+\label{def:vul-threshold}
+Let $\delta' = \eval{S}{\delta}$, where $\delta$ is the model of the
+querier's initial belief.
+%, and let $\overline{\delta_X} \defeq
+%\normal{\project{\delta}{X}}$.
+
+Then query $S$ is \emph{vulnerability threshold secure} iff for
+%$$V = \sum_{\sigma_L \in
+%  \nzset{\delta'_L}}\; \overline{\delta'_L}(\sigma_L) \cdot \max_{\sigma_H \in \states_H}\;
+%  \overline{(\dcond{\delta'}{\sigma_L})_H}(\sigma_H)$$
+$$V = \sum_{\sigma_L \in \support{\project{\delta'}{L}}}\;
+  (\project{\delta'}{L})(\sigma_L) \cdot \max_{\sigma_H \in \states_H}\;
+  (\project{\drevise{\delta'}{\sigma_L}}{H})(\sigma_H)$$
+  we have $V \leq t$ for some threshold $t$.
+\end{definition}
+% $Pr[H=h] = (\project{\delta}{H})(h)$
+% $Pr[H=h|L=l] = (\project{\dcond{\pevalp{S}{\delta}}{(L=l)}}{H})(h)$
+% $Pr[L=l] = \dcond{\pevalp{S}{\delta}}{(L=l)}$
+The above definition is an \emph{expectation} over all possible
+outputs $\sigma_L$, so unlikely outputs have less influence.  Our
+notion of threshold security (Definition~\ref{def:threshold}), in
+contrast, is equivalent to a bound on the following quantity:
+$$V^* = \max_{\sigma_L \in \support{\project{\delta'}{L}}}\;
+\max_{\sigma_H \in \states_H}\;
+(\project{\drevise{\delta'}{\sigma_L}}{H})(\sigma_H)$$
+
+This notion of security is strictly stronger as it considers each
+output individually: if \emph{any} output, however unlikely, would
+increase knowledge beyond the threshold, the query would be rejected.
+For example, recall the query from Example~\ref{ex:bday} where the
+secret data $\var{bday}$ is (assumed by the querier to be) uniformly
+distributed; call this query $S_1$.  According to
+Definition~\ref{def:vul-threshold}, the minimum acceptable threshold
+for which the query would be considered safe is $ V = \frac{7}{365} *
+\frac{1}{7} + \frac{358}{365} * \frac{1}{358} = 2/365 \approx 0.005$,
+whereas according to Definition~\ref{def:threshold}, the minimum
+threshold is $ V^* = 1/7 \approx 0.143$.
+
+The idea of strengthening of an entropy measure by eliminating the
+expectation has been briefly considered by K{\"o}pf and Basin
+\cite{koepfbasin07}. In their work this measure is proposed as a
+stronger alternative, a choice ultimately dependent on the
+application. In our case, however, the worst-case measure is
+absolutely necessary in order to prevent the leakage of information
+when rejecting a query.
+
+The other distinguishing feature of our approach is that we keep an on-line model of
+adversary knowledge according to prior, actual query results. Once a
+query is answered, the alternative possible outputs of this query no
+longer matter. To see the benefit of this
+query-by-query approach, consider performing query $S_1$ followed by a
+query $S_2$ which uses the same code as $S_1$ (from Example~\ref{ex:bday}) but has
+$\var{today} = 265$.  With our system and $\var{bday} = 270$ the
+answer to $S_1$ is $\sfalse$ and with the revised belief the query
+$S_2$ will be accepted as below threshold $t_d = 0.2$.  If instead we
+had to model this pair of queries statically they would be rejected
+because (under the assumption of uniformity) the pair of outputs
+$\strue$,$\strue$ is possible and implies $\var{bday} \in \{ 265, 266
+\}$ which would require $t_d \geq 0.5$.  Our approach also inherits
+from the belief-based approach the ability to model a querier who is
+misinformed or incorrect, which can arise following the result of a
+probabilistic query or because of a change to the secret data between
+queries~\cite{clarkson09quantifying}.
+% Probabilistic queries are not
+% handled by the previously-described existing work that statically
+% computes conditional min-entropy.  
+We note these advantages come at the cost
+of maintaining on-line belief models.
+
+Our proposed abstract domains are useful beyond the application of
+belief-based threshold security; e.g., they could be used to model
+uncertainty off-line (as in the above work) rather than beliefs
+on-line, with the advantage that they are not limited to uniform
+distributions (as required
+by~\cite{backes09automatic,kopf:rybalchenko}).
+
+McCamant and Ernst's \flowcheck{} tool~\cite{McCamantE2008} measures
+the information released by a particular execution.  However, it
+measures information release in terms of \emph{channel capacity},
+rather than remaining uncertainty which is more appropriate for our
+setting.  For example, \flowcheck{} would report a query that tries to
+guess a user's birthday leaks one bit regardless of whether the guess
+was successful, whereas the belief-based model (and the other models
+mentioned above) would consider a failing guess to convey very little
+information (much less than a bit), and a successful guess conveying
+quite a lot (much more than a bit).  
+
+\subsection{Differential privacy}
+\label{sec:diffpriv}
+
+A recent thread of research has aimed to enforce the privacy of
+database queries.  Most notably, Dwork and colleagues have proposed
+\emph{differential privacy}~\cite{diffpriv}: a differentially private
+query $Q$ over a database of individuals' records is a randomized
+function that produces roughly the same answer whether a particular
+individual's data is in the database or not.  An appealing feature of
+this definition is that the querier's knowledge is not considered
+directly; rather, we are merely assured that $Q$'s answer will not
+differ by much whether a particular individual is in the database or
+not. On the other hand, differentially private databases require that
+individuals trust the database curator, a situation we would prefer to
+avoid, as motivated in the introduction.
+
+We can compare differential privacy to our notion of threshold
+security by recasting the differential privacy definition into the
+form of an \emph{adversarial privacy} definition, which was formulated
+by Rastogi and Suciu to compare their own privacy definition on
+databases to differential privacy~\cite{rastogi09relationship}.
+Rastogi and Suciu's definition is in terms of the presence or
+absence of a record in a database, whereas our notion is defined on
+secret states over variables in $H$.  To bridge this gap suppose that,
+without loss of generality, variables $x \in H$ range over $\{ 0, 1
+\}$, and we say a variable $x$ is ``in a state'' $\sigma$ when
+$\sigma(x) = 1$. (We can always encode an integer $i$ as a sequence of
+bits.)  Define $\delta(\{x_1,...,x_n\})$ to be the probability of all
+states $\sigma$ such that $\sigma(x_i) = 1$ for all $1 \leq i \leq n$;
+i.e.,
+$$\delta(\{x_1,...,x_n\}) \defeq 
+\sum_{\sigma \mid
+  \sigma(x_1) = 1 \wedge ... \wedge \sigma(x_n) = 1} \delta(\sigma) 
+$$
+Then we can state adversarial privacy as follows.
+
+\begin{definition}[Adversarial Privacy]
+\label{def:adv-privacy}
+Given a query statement $\stmt$, let $O \subseteq \states_{L\cup H}$
+be the set of all possible output states of $\stmt$ (over some set of
+secret variables $H$ and public variables $L$), and $\Delta_H \subseteq
+\dists_H$ be a set of distributions over secret states.
+%
+We say that program $\stmt$ is $\varepsilon$-\emph{adversarially
+  private} w.r.t. $\Delta_H$ iff for all adversary beliefs $\delta_H
+\in \Delta_H$, all secret variables $x \in H$, and all possible
+outputs $\sigma_o \in O$, that $\delta_H(\{x\}) \leq e^{\varepsilon}\,
+\delta'_H(\{x\})$.  Here, $\delta'_H =
+\project{(\evalp{\stmt}{(\delta_H \times \dot{\sigma}_L)}) |
+  \sigma_o}{H}$; that is, it is the revised adversary belief after
+seeing that public output state of $\stmt$ is $\sigma_o$.
+\end{definition}
+
+This definition says that query $\stmt$ is acceptable when the output
+of $S$ increases only by a small multiplicative factor an adversary's
+certainty that some variable $x$ is in the secret input state, for all
+adversaries whose prebeliefs are characterized by $\Delta_H$.  Rastogi
+and Suciu show that defining $\Delta_H$ to be the class of
+\emph{planar, total sub-modular} (or $PTLM$) distributions renders an
+adversarial privacy definition equivalent to differential privacy.
+Among other conditions, $PTLM$ distributions require fixed-sized
+databases (which comes by construction in our setting), and require
+the probability of one tuple's presence to not be positively
+correlated with another's.  We can transfer this latter condition to
+our setting by requiring that for all $\delta \in \Delta_H$, and all
+$x_1,x_2 \in H$, we have $\delta(\{x_1\}) \delta(\{x_2\}) \leq
+\delta(\{x_1,x_2\})$.
+
+Comparing Definition~\ref{def:adv-privacy} to
+Definition~\ref{def:threshold} we can see that the former makes a
+\emph{relative} assertion about the increased certainty of any one of
+a \emph{set} of possible adversarial beliefs, while the latter makes
+an \emph{absolute} assertion about the certainty of a \emph{single}
+adversarial belief.  The absolute threshold of our definition is
+appealing, as is the more flexible prebelief, which allows positive
+correlations among state variables.  On the other hand, our definition
+assumes we have correctly modeled the adversary's belief.  While this
+is possible in some cases, e.g., when demographic information is
+available, differential privacy is appealing in that it is robust a
+much larger number of adversaries, i.e., all those whose prebeliefs
+are in $PTLM$.
+
+Unfortunately, this strong privacy guarantee seems to come at strong
+cost to utility.  For example, deterministic queries are effectively
+precluded, eliminating some possibly useful applications.  
+For the application of social
+networks, Machanavajjhala et al.~\cite{machanavajjhala11personal} have
+shown that good private social recommendations are feasible only for a
+small subset of the users in the social network or for a lenient
+setting of privacy parameters.  We can see the utility loss in our
+motivating scenario as well.  Consider the birthday query from
+Example~\ref{ex:bday}.  Bob's birthday being/not being in the query
+range influences the output of the query only by 1 (assuming yes/no is
+1/0). One could add an appropriate amount of (Laplacian) noise to the
+query answer to hide what the true answer was and make the query
+differentially private. However, this noise would be so large compared
+to the original range $\{0,1\}$ that the query becomes essentially
+useless---the user would be receiving a birthday announcement most
+days.\footnote{By our calculations, with privacy parameter $\varepsilon =
+  0.1$ recommended by Dwork~\cite{diffpriv}, the probability the query
+  returns the correct result is approximately $0.5249$.}  
+
+By contrast, our approach permits answering (deterministic or
+randomized) queries exactly if the release of information is below the
+threshold.  Moreover, by tracking beliefs between queries, there is no
+artificial limit on the number of queries since we can track the
+released information exactly.  Differential privacy imposes an artificial
+limit on the number of queries because the post-query, revised beliefs
+of the adversary are not computed.  Rather, each query conservatively
+adds up to $\varepsilon$ to an adversary's certainty about a tuple,
+and since the precise release is not computed, we must assume the
+worst.  Eventually, performing further queries will pose too great of a risk.
+
+As mentioned in the previous section, we could gain some of the
+privacy advantages of differential privacy by modeling a (larger) set
+of beliefs rather than a single one.  Our abstractions $\ppolys$ and
+$\ppowers$ already model sets of distributions, rather than a single
+distribution, so it remains interesting future work to exploit this
+representation toward increasing privacy.
+
+\subsection{Probabilistic programming}
+The core of our methodology relies on probabilistic computation. A
+variety of tools exist for specifying random processes as computer
+programs and performing inference on them.
+
+Implementations based on partial sampling \cite{goodman08church,
+  park08sampling} or full enumeration \cite{radul07probscheme} of the
+state space are unsuitable in our setting. Such tools are either too
+inefficient or too imprecise. Works based on smarter representations
+of probability distributions are promising alternatives. Projects
+based on algebraic decision diagrams \cite{claret12bayesian},
+graphical models \cite{milch05blog}, and factor graphs
+\cite{borgstrom11measure, pfeffer07ibal} translate programs into
+convenient structures and take advantage of efficient algorithms for
+their manipulation or inference.
+
+Our implementation for probabilistic computation and inference differs
+from existing works in two main ways. Firstly, we are capable of
+approximation and hence can trade off precision for performance, while
+maintaining soundness in terms of a strong security policy. The second
+difference is the nature of our representation of probability
+distributions. Our work is based on numerical abstractions: intervals,
+octagons, and polyhedra. These abstractions are especially well suited
+for analysis of imperative programs with numeric variables and linear
+conditionals. Other probabilistic languages
+might serve as better choices when nominal, rather than numeric,
+variables are used in queries. The comparative study of the power and effectiveness
+of various representations in probabilistic computation is a topic of
+our ongoing research.
+
+We are not the first to propose probabilistic abstract
+interpretation. Monniaux~\cite{Monniaux_these} gives an abstract
+interpretation for probabilistic programs based on over-approximating
+probabilities of points. Di Pierro describes abstract interpretation
+for probabilistic lambda calculus
+\cite{dipierro05probabilistic}. Smith~\cite{smith08probabilistic}
+describes probabilistic abstract interpretation for verification of
+quantitative program properties. Cousot~\cite{cousot12probabilistic}
+unifies these and other probabilistic program analysis tools. However,
+these do not deal with sound distribution conditioning, the unique
+element of our approach, which is crucial for belief-based information
+flow analysis.
+
+% Following the flow of our example from Section~\ref{sec:overview},
+% when advertiser $X$ submits Example~\ref{ex:specyear}, a result of
+% $\strue$ will lead $X$ to believe that $1980$ (Bob's actual birthday)
+% is a less likely birth year ($1/11814 \times 268 = 0.023$) than he
+% previously thought ($1/37 = 0.027$).  Suppose we are using $X$'s
+% modeled belief (call it $\delta_X$) to also model $Y$'s knowledge,
+% where $Y$ would otherwise give $1980$ has probability $1/37$ (i.e., if
+% we were modeling $Y$'s knowledge separately as $\delta_Y$).  If Bob's
+% threshold for his birth year is $t_{yr} = 0.03$, then under $\delta_X$
+% a query \mwh{need to choose a query in which we'd reject under
+%   $\delta_Y$ but not under $\delta_X$}.
+
+% One way to address this problem is to allow only deterministic
+% queries.  Then there is no misinformation.  Obviously doing this
+% reduces the system's expressive power.  Another possibility is to
+% force knowledge to be monotonic: if an accepted query Q would cause
+% the posterior certainty to be reduced, we do not change the modeled
+% belief, but leave it as is.  I haven't thought carefully about the
+% ramifications of doing so, though.  I suspect the result is simply
+% conservative, but I need to think harder about whether it's unsafe.
+
+% So, in short, I think that DP has problems with collusion, but these
+% problems are entirely in terms of utility, not performance or
+% safety.  That is, DP, can have a global privacy budget and while
+% using such a mechanism will severely limit utility, it will not harm
+% privacy.  In our case, we could model many belief sets to avoid the
+% safety problems, but at an enormous performance cost, and at some
+% cost to utility (the same flavor as DP, i.e., if principals were not
+% really colluding).  Or, we could ignore the possibility of collusion
+% to regain performance and utility, but impose some risk on safety.
+
+% But there is a key difference to your approach: [25,26] use *conditional* min-entropy as a measure, which is (in some sense) the expected min-entropy over all possible choices of secrets. An iterative application (and summing conditional min-entropy, as suggested above) implicitly assumes that the secret is freshly chosen in each run. While this is a sound over-approximation of what the adversary may learn, its knowledge will never level off (as it may do in your approach). This is a clear advantage of the belief-based approach.
+
+%%In any case, we believe there is much to be said for both approaches, and hope that this paper serves as another useful step on the path toward practical privacy-preserving computation.
+
+
+%%For example, if a client
+%%wants to determine what proportion of Facebook users are male, this
+%%query will be permitted, as the removal of a particular user's data
+%%will not significantly affect the result.  However in the course of
+%%computing this result, substantial access to individual user data is
+%%required.   In the absence of a system for secure multi-party
+%%computation \cite{fairplaymp}, the agent computing the result must
+%%have full access to gender information for each user, so that the
+%%number of male users and female users can be determined.  Such queries
+%%would leak too much individual information.
+
+%%Thus, it would appear that we need a trusted third party to execute
+%5these queries.  However, in our approach one can use the probabilistic conditional
+%%\textsf{pif} to permit certain types of data aggregation.  For our
+%%Facebook gender example, an estimate of the proportion of users who
+%%are male can be obtained by executing the query below.  We assume that
+%%gender is encoded as a binary value, where 0 represents ``male.''
+
+%%\[\spif{0.6}{output := gender}{output := not(gender)}\]
+
+%% This gives the client imperfect information about each user, but this
+%5information is still useful in aggregate. For 60\% of the queries, the
+%%client will get the correct gender.  If all users are male, the client would
+%%expect 60\% of the queries to return 0.  If all users are female, the client
+%%would expect 40\% of the queries to return 0.  The percentage in between
+%%correspond to varying percentages of male users, with the crossover point
+%%being 50\%---if more than 50\% of the queries return 0, then there are likely
+%%to be more males than females (where the likelihood depends on the number
+%%of users that are sampled).
+
+%%Second, our approach investigates a knowledge-based policy that succinctly captures the semantics of the information that has thus far been revealed to a querier via one or more queries. While differential privacy allows the queried entity to cumulatively track loss in privacy over one or more queries~\cite{PINQ-SIGMOD09}, it fails to consider semantic overlap between such queries $-$ thereby weakening the tightness of their estimates.
+
+
+%% to pass the individual privacy
+%%monitoring \sbmcomment{better term for this?} system described
+%%here.
+
+
+
+%% Recent advances have explored the notion of adversarial privacy~\cite{rastogi09relationship} to partially bridge this semantic gap by explicitly modeling the adversary's belief on the input dataset. In their setting privacy is defined by the closeness between the posterior and prior distribution on the likelihood of a tuple after seeing the output of query. Their approach is shown to offer tighter estimates by proving that adversarial privacy under a bounded belief model subsumes differential privacy. While their approach quantitatively estimates privacy loss wrt to the querier's belief (as against differential privacy that is agnostic to the querier's belief), they fail to capture the semantics of the information released via one or more queries. Further, similar to differential privacy, adversarial privacy is designed to operate on aggregate data from multiple individuals.
+
+%%Differential privacy~\cite{diffpriv}: works on aggregate data, not on
+%%individual data; fixed number of possible queries allowed until the
+%%data must be destroyed (cannot even answer the same query twice).  By
+%%contrast, our approach models semantic knowledge, so you can ask the
+%%same question in different ways and still get an answer.
+
+%%Also want to talk about Rastogi and Suciu's stuff.
+
+%%Backes et al.~\cite{backes09automatic} model information leakage in a program as (the size of) an equivalence relationship between the set of input and output symbols. While their approach quantifies per-program entropy measures, they also fail to offer fine-grained (per query) semantically richer approach to track information release.
+
+%%\mwh{More rambling below}
+
+%%Diffpriv different in that they don't model belief explicitly, but they do have a privacy ``budget'' $\epsilon$.  In effect this is a counter of the amount of knowledge they are willing to let an attacker gain.  While they are not required to model a belief explicitly, which is an advantage, they need to have the assumed level of knowledge in mind in order to set $\epsilon$.  A disadvantage of the indirect modeling of knowledge is that it is difficult to reason how much a query $q$ overlaps with a prior query $q'$.  As such, the default is to presume all queries reveal (equivalent) knowledge, and so there is a fixed number of queries a particular principal may pose.  Also, equally vulnerable to collusion as our approach.  I wonder: how does diffpriv handle changing values?  Work on declassification/anonymization: picks values to release in advance, so less flexibility for the querier.  In scenarios like SMC, this could be a showstopper.  But this is simpler to implement and resistant to collusion.  Could imagine combining pro-active anonymization with belief-based policies.
+
+%%\mwh{Taken from introduction, to work in here}:
+
+
+%%Returning exact results is in contrast to approaches like differential privacy~\cite{diffpriv}
+%%that, while also limiting which queries may be performed, must add
+%%noise to increase uncertainty, since knowledge is not modeled
+%%directly.
+
+%%\todo{Mention limitations somewhere: what about collusion?
+%%  What if you get the belief models wrong?  How to deal with
+%%  non-discrete data, or fixed-length loops?}
+
+%%\mwh{Work the following into the discussion of differential privacy?}
+
+
+
+%%\mwh{and more ...}
+
+%%Differential privacy guarantees that privacy is preserved by ensuring
+%%that sufficient data aggregation occurs.  
+
+%%\sbmcomment{Would be good to make this more formal.  What are the equations
+%%that yield the likely percentage of males and the confidence in this estimate?}
+

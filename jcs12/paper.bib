@@ -1,0 +1,710 @@
+@string{inproc  = "Proceedings of the "}
+@string{invited = "Invited paper, "}
+
+@string{acm  = "ACM"}
+@string{ieee = "IEEE"}
+
+@string{csf     = ieee # " Computer Security Foundations Symposium (CSF)"}
+@string{sap     = ieee # " Symposium on Security and Privacy (S\&P)"}
+@string{ccs     = acm # " Conference on Computer and Communications Security (CCS)"}
+@string{pods    = acm # " SIGMOD Symposium on Principles of Database Systems (PODS)"}
+@string{sigmod  = acm # " SIGMOD Conference on Management of Data (SIGMOD)"}
+@string{sigcomm = acm # " SIGCOMM Conference on Applications, Technologies, Architectures, and Protocols for Computer Communications (SIGCOMM)"}
+
+@string{pldi = acm # " SIGPLAN Conference on Programming Language Design and Implementation (PLDI)"}
+@string{popl = acm # " SIGPLAN Conference on Principles of Programming Languages (POPL)"}
+@string{plas = acm # " SIGPLAN Workshop on Programming Languages and Analysis for Security (PLAS)"}
+
+@string{uai       = "Conference on Uncertainty in Artificial Intelligence (UAI)"}
+@string{sas       = "Static Analysis Symposium (SAS)"}
+@string{fossacs   = "Conference on Foundations of Software Science and Computation Structures (FoSSaCS)"}
+@string{imc       = "Internet Measurement Conference (IMC)"}
+@string{usenixsec = "USENIX Security Symposium"}
+@string{asian     = "Asian Computing Science Conference (ASIAN)"}
+@string{dls       = "Dynamic Languages Symposium (DLS)"}
+@string{esop      = "European Symposium on Programming (ESOP)"}
+@string{ijcai     = "International Joint Conference on Artificial Intelligence (IJCAI)"}
+
+@string{toplas = acm # " Transactions on Programming Languages and Systems (TOPLAS)"}
+@string{jlc    = "Journal of Logic and Computation"}
+@string{jcss   = "Journal of Computer and System Sciences"}
+@string{jcs    = "Journal of Computer Security"}
+@string{ijsttt = "International Journal on Software Tools for Technology Transfer"}
+@string{cacm   = "Communications of the " # acm}
+@string{entcs  = "Electronic Notes in Theoretical Computer Science"}
+
+@string{lncs   = "Lecture Notes in Computer Science"}
+
+@string{wcre  = "Working Conference on Reverse Engineering (WCRE)"}
+@string{wpes  = "Workshop on Privacy in the Electronic Society (WPES)"}
+@string{dsl   = "Working Conference on Domain Specific Languages (DSL)"}
+@string{wmccs = "Workshop on Mobile Cloud Computing \& Services: Social Networks and Beyond"}
+
+@string{sefm = ieee # " International Conference on Software Engineering and Formal Methods (SEFM)"}
+%month=nov, 
+%pages={31--40}, 
+@INPROCEEDINGS{cortesi08widening, 
+author={Cortesi, Agostino}, 
+booktitle=inproc # sefm,
+title={Widening Operators for Abstract Interpretation}, 
+year={2008}, 
+}
+
+@string{focs = ieee # " Symposium on Foundations of Computer Science (FOCS)"}
+%  pages = "162--167",
+@inproceedings{Yao86,
+  author = "Andrew Chi-Chih Yao",
+  title = "How to Generate and Exchange Secrets",
+  booktitle = inproc # focs,
+  year = {1986},
+}
+
+@misc{dnt,
+  key = {dnt},
+  title = {Do Not Track},
+  publisher = {Electronic Frontier Foundation},
+  howpublished = {\url{https://www.eff.org/issues/do-not-track}},
+  year = 2012
+}
+
+%%% NSDI
+
+@inproceedings{privad,
+  title = {Privad: Practical Privacy in Online Advertising},
+  author = {Saikat Guha and Bin Cheng and Paul Francis},
+  booktitle = inproc # {Symposium on Networked Systems Design and Implementation (NSDI)},
+  month = mar,
+  year = 2011,
+}
+
+%%% VLDB
+
+%  month = apr,
+% journal = {Proc. VLDB Endow.},
+% issue_date = {April 2011},
+% volume = {4},
+% number = {7},
+% pages = {440--450},
+@inproceedings{machanavajjhala11personal,
+ author = {Machanavajjhala, Ashwin and Korolova, Aleksandra and Sarma, Atish Das},
+ title = {Personalized social recommendations: accurate or private},
+ booktitle = inproc # " International Conference on Very Large Data Bases (VLDB)",
+ year = {2011},
+} 
+
+%%% NordSec
+
+% month = oct,
+@inproceedings{boda11fingerprint,
+title = {User Tracking on the Web via Cross-Browser Fingerprinting},
+author = {K\'aroly Boda and \'Ad\'am M\'at\'e F\"oldes and G\'abor Gy\"orgy Guly\'as and S\'andor Imre},
+booktitle = inproc # {Nordic Conference in Secure IT Systems (NordSec)}, 
+year = 2011
+}
+
+%%% CCS
+
+% pages = {286--296},
+% location = {Alexandria, Virginia, USA},
+% doi = {http://doi.acm.org/10.1145/1315245.1315282},
+% publisher = {ACM},
+% address = {New York, NY, USA}
+@inproceedings{koepfbasin07,
+ author = {Boris K{\"o}pf and David Basin},
+ title = {{An Information-Theoretic Model for Adaptive Side-Channel Attacks}},
+ booktitle = inproc # ccs,
+ year = {2007},
+ isbn = {978-1-59593-703-2},
+ }
+
+%%% Symposium on Programming
+
+@string{isp = "International Symposium on Programming"}
+
+% http://bugseng.com/products/ppl/documentation/ppl.bib
+%  Address = "Paris, France",
+%  Publisher = "Dunod, Paris, France",
+% Editor = "B. Robinet",
+%    Pages = "106--130",
+@InProceedings{cousot76static,
+  Author = "Cousot, Patrick and Cousot, Radhia",
+  Title = "Static Determination of Dynamic Properties of Programs",
+  Booktitle = inproc # "Second " # isp,
+  Year = 1976,
+  Abstract = "In high level languages, compile time type verifications are
+              usually incomplete, and dynamic coherence checks must be
+              inserted in object code. For example, in PASCAL one must
+              dynamically verify that the values assigned to subrange type
+              variables, or index expressions lie between two bounds, or
+              that pointers are not \texttt{nil}, ...
+              We present here a general algorithm allowing most of these
+              certifications to be done at compile time.",
+  URL = "http://www.di.ens.fr/~cousot/publications.www/CousotCousot-ISOP-76-Dunod-p106--130-1976.pdf"
+}
+
+@InProceedings{cousot79systematic,
+  Author = "Cousot, Patrick and Cousot, Radhia",
+  Title = "Systematic Design of Program Analysis Frameworks",
+  Booktitle = inproc # "Sixth " # isp,
+  Year = 1979,
+}
+
+%%% WCRE
+
+% http://bugseng.com/products/ppl/documentation/ppl.bib
+%  Publisher = "IEEE Computer Society Press",
+%  Address = "Stuttgart, Germany",
+%  Pages = "310--319",
+@InProceedings{mine01octagon,
+  Author = "Min\'e, Antoine",
+  Title  = "The Octagon Abstract Domain",
+  Booktitle = inproc # wcre,
+  Year = 2001,
+  Abstract = "This article presents a new numerical abstract domain
+              for static analysis by abstract interpretation. It
+              extends our previously proposed DBM-based numerical
+              abstract domain and allows us to represent invariants of
+              the form ($\pm x \pm y \leq c$), where $x$ and $y$ are
+              program variables and $c$ is a real constant. We focus
+              on giving an efficient representation based on
+              Difference-Bound Matrices---$\mathcal{O}(n^2)$ memory
+              cost, where $n$ is the number of variables---and
+              graph-based algorithms for all common abstract
+              operators---$\mathcal{O}(n^3)$ time cost. This includes
+              a normal form algorithm to test equivalence of
+              representation and a widening operator to compute least
+              fixpoint approximations."
+}
+
+%%% PLAS
+
+%   month = jun,
+@inproceedings{mardziel12smc,
+  title = {Knowledge-Oriented Secure Multiparty Computation},
+  author = {Piotr Mardziel and Michael Hicks and Jonathan Katz and Mudhakar Srivatsa},
+  booktitle = inproc # plas,
+  year = 2012,
+} 
+
+%%% PODS
+
+@inproceedings{kenthapadi05simulatable,
+  author = {Kenthapadi, Krishnaram and Mishra, Nina and Nissim, Kobbi},
+  title = {Simulatable Auditing},
+  booktitle = inproc # pods,
+  keywords = {Data Privacy},
+  year = {2005},
+  ps_link = {http://www.cs.bgu.ac.il/\~kobbi/papers/SimulatableAuditing.ps}
+}
+
+@inproceedings{rastogi09relationship,
+ author = {Rastogi, Vibhor and Hay, Michael and Miklau, Gerome and Suciu, Dan},
+ title = {Relationship privacy: output perturbation for queries with joins},
+ booktitle = inproc # pods,
+ year = {2009},
+} 
+
+%%% POPL
+
+@inproceedings{necula97pcc,
+ author = {Necula, George C.},
+ title = {Proof-carrying code},
+ booktitle = inproc # popl,
+ year = {1997},
+ pages = {106--119},
+} 
+
+@inproceedings{CousotCousot77,
+   author =    {Cousot, Patrick and Cousot, Radhia},
+   title =     {Abstract interpretation: a unified lattice model for static 
+                analysis of programs by construction or approximation of 
+                fixpoints},
+   optpages =     {238--252},
+   booktitle = inproc # popl,
+   year =      1977,
+}
+
+%   optpages =     {84--97},
+%   optbooktitle = {Conference Record of the Fifth Annual ACM SIGPLAN-SIGACT 
+%                Symposium on Principles of Programming Languages},
+%   optaddress =   {Tucson, Arizona},
+%   optpublisher = {ACM Press, New York, NY},
+@inproceedings{CousotHalbwachs78-POPL,
+   author =    {Cousot, Patrick and Halbwachs, Nicolas},
+   title =     {Automatic discovery of linear restraints among variables of
+                a program},
+   booktitle = inproc # popl,
+   year =      1978,
+}
+
+@inproceedings{malacaria2007looping,
+ author = {Malacaria, Pasquale},
+ title = {Assessing security threats of looping constructs},
+ booktitle = inproc # popl,
+ year = {2007},
+} 
+
+@inproceedings{gordon13model,
+ title = {A Model-Learner Pattern for Bayesian Reasoning},
+ author = {Andrew D. Gordon and Mihhail Aizatulin and Johannes Borgstroem and Guillaume Claret and Thore Graepel and Aditya Nori and Sriram Rajamani and Claudio Russo},
+ booktitle = inproc # popl,
+ year = {2013},
+}
+
+%%% CSF
+
+%  month = jun,
+@inproceedings{mardziel11belief,
+  title = {Dynamic Enforcement of Knowledge-based Security Policies},
+  author = {Mardziel, Piotr and Magill, Stephen and Hicks, Michael and Srivatsa, Mudhakar},
+  booktitle = inproc # csf,
+  year = 2011,
+}
+
+%optmonth = jul, 
+%optpages = {3--14}, 
+%optISSN = {1063-6900},
+@INPROCEEDINGS{kopf:rybalchenko, 
+author = {K\"opf, Boris and Rybalchenko, Andrey}, 
+booktitle = inproc # csf, 
+title = {Approximation and Randomization for Quantitative Information-Flow Analysis},  
+year = {2010}, 
+}
+
+%%% DLS
+
+@inproceedings{radul07probscheme,
+ author = {Radul, Alexey},
+ title = {Report on the probabilistic language {Scheme}},
+ booktitle = inproc # dls,
+ year = {2007},
+} 
+
+%%% SAS
+
+% journal = lncs,
+%  number = {1824},
+%  pages = {322--339},
+@inproceedings{monniaux00prob,
+  author = {David Monniaux},
+  title = {Abstract interpretation of probabilistic semantics},
+  booktitle = inproc # sas,
+  year = 2000
+}
+
+%%% SIGMOD
+
+@inproceedings{PINQ-SIGMOD09,
+author = {McSherry, Frank D.},
+title = {Privacy Integrated Queries},
+booktitle = inproc # sigmod,
+year = {2009}
+}
+
+%%% FOSSACS
+
+@inproceedings{smith09foundations,
+ author = {Smith, Geoffrey},
+ title = {On the Foundations of Quantitative Information Flow},
+ booktitle = inproc # fossacs,
+ year = {2009},
+} 
+
+%%% DSL
+
+@inproceedings{kiselyov09embedded,
+ author = {Kiselyov, Oleg and Shan, Chung-Chieh},
+ title = {Embedded Probabilistic Programming},
+ booktitle = inproc # dsl,
+ year = {2009},
+} 
+
+%%% UAI
+
+@inproceedings{goodman08church,
+  author    = {Noah D. Goodman and
+               Vikash K. Mansinghka and
+               Daniel M. Roy and
+               Keith Bonawitz and
+               Joshua B. Tenenbaum},
+  title     = {Church: a language for generative models},
+  booktitle = inproc # uai,
+  year      = {2008},
+}
+
+%%% WMCCS
+
+%  month = jun
+@inproceedings{prpl,
+  title = {{PrPl}: a Decentralized Social Networking Infrastructure},
+  author = {Seok-Won Seong and Jiwon Seo and Matthew Nasielski and Debangsu Sengupta and Sudheendra Hangal and Seng Keat Teh and Ruven Chu and Ben Dodson and Monica S. Lam},
+  booktitle = inproc # wmccs,
+  note = {Invited Paper},
+  year = 2010,
+}
+
+%%% IMC
+
+@inproceedings{guha10,
+  title = {Challenges in Measuring Online Advertising Systems},
+  author = {Saikat Guha and Bin Cheng and Paul Francis},
+  booktitle = inproc # imc,
+  year = 2010
+}
+
+%%% SIGCOMM
+
+% location = {Barcelona, Spain},
+@inproceedings{persona,
+ author = {Baden, Randy and Bender, Adam and Spring, Neil and Bhattacharjee, Bobby and Starin, Daniel},
+ title = {Persona: an online social network with user-defined privacy},
+ booktitle = inproc # sigcomm,
+ year = {2009},
+}
+
+
+%%% USENIX SECURITY
+
+@inproceedings{xbook,
+title = {{xBook}: Redesigning Privacy Control in Social Networking Platforms},
+author = {Kapil Singh and Sumeer Bhola and Wenke Lee},
+booktitle = inproc # usenixsec,
+year = 2009
+}
+
+%%% WPES
+
+% optisbn = {1-59593-556-8},
+% optpages = {77--80},
+% optlocation = {Alexandria, Virginia, USA},
+% optdoi = {http://doi.acm.org/10.1145/1179601.1179615},
+% optpublisher = {ACM},
+% optaddress = {New York, NY, USA},
+@inproceedings{golle06revisiting,
+ author = {Golle, Philippe},
+ title = {Revisiting the uniqueness of simple demographics in the US population},
+ booktitle = inproc # wpes,
+ year = {2006},
+}
+
+%  pages = {49--60},
+@inproceedings{rial11smart,
+ author = {Rial, Alfredo and Danezis, George},
+ title = {Privacy-preserving smart metering},
+ booktitle = inproc # wpes,
+ year = {2011},
+} 
+
+%%% PLDI
+
+%   optaddress = {Tucson, AZ, USA},
+%   optmonth = {June~9--11,},
+%   optpages = {193--205},
+@inproceedings{McCamantE2008,
+   author = {Stephen McCamant and Michael D. Ernst},
+   title = {Quantitative information flow as network flow capacity},
+   booktitle = inproc # pldi,
+   year = {2008}
+}
+
+%%% SAP
+
+@inproceedings{shokri11quantifying,
+author = {Reza Shokri and George Theodorakopoulos and Jean-Yves Le Boudec and Jean-Pierre Hubaux},
+title = {{Quantifying Location Privacy}},
+booktitle = inproc # sap,
+year = {2011},
+pages = {247--262},
+}
+
+@inproceedings{backes09automatic,
+ author = {Michael Backes and Boris K{\"o}pf and Andrey Rybalchenko},
+ title  = {Automatic Discovery and Quantification of Information Leaks},
+ booktitle = inproc # sap,
+ year  = {2009},
+}
+
+%%% ASIAN
+
+@INPROCEEDINGS{Popeea06inferringdisjunctive,
+    author = {Corneliu Popeea and {Wei-ngan} Chin},
+    title = {Inferring disjunctive postconditions},
+    booktitle = inproc # asian,
+    year = {2006}
+}
+
+%%% ESOP
+
+% pages = {77--96},
+% series = {ESOP'11/ETAPS'11},
+% address = {Berlin, Heidelberg},
+% location = {Saarbr\&\#252;cken, Germany},
+% publisher = {Springer-Verlag},
+@inproceedings{borgstrom11measure,
+ author = {Borgstr\"{o}m, Johannes and Gordon, Andrew D. and Greenberg, Michael and Margetson, James and Van Gael, Jurgen},
+ title = {Measure transformer semantics for Bayesian machine learning},
+ booktitle = inproc # esop,
+ year = {2011},
+ isbn = {978-3-642-19717-8},
+ numpages = {20},
+ url = {http://dl.acm.org/citation.cfm?id=1987211.1987216},
+ acmid = {1987216},
+}
+
+@inproceedings{cousot12probabilistic,
+author = "Patrick Cousot and Michael Monerau",
+title = "Probabilistic Abstract Interpretation",
+booktitle = inproc # esop,
+year = 2012,
+}
+
+%%% IJCAI
+
+%    pages = {1352--1359}
+@INPROCEEDINGS{milch05blog,
+    author = {Brian Milch and Bhaskara Marthi and Stuart Russell and David Sontag and Daniel L. Ong and Andrey Kolobov},
+    title = {Blog: Probabilistic models with unknown objects},
+    booktitle = inproc # ijcai,
+    year = {2005},
+}
+
+%%%%%% JORNALS
+
+%%% JLC
+
+@article{dipierro05probabilistic,
+ author = {Di Pierro, Alessandra and Hankin, Chris and Wiklicky, Herbert},
+ title = {Probabilistic Lambda-calculus and Quantitative Program Analysis},
+ volume = {15},
+ number = {2},
+ year = {2005},
+ pages = {159--179},
+ journal = jlc,
+}
+
+@article{clark2005QIF,
+ author = {Clark, David and Hunt, Sebastian and Malacaria, Pasquale},
+ title = {Quantitative Information Flow, Relations and Polymorphic Types},
+ journal = jlc,
+ volume = {15},
+ issue = {2},
+ year = {2005},
+ pages = {181--199},
+} 
+
+%%% ENTCS
+
+% publisher = {Elsevier Science Publishers B. V.},
+% address = {Amsterdam, The Netherlands, The Netherlands},
+% keywords = {Probabilistic abstract interpretation, Probabilistic semantics, Truncated normal distributions, Widening operators},
+% issue_date = {December, 2008},
+% month = dec,
+
+@article{smith08probabilistic,
+ author = {Smith, Michael J. A.},
+ title = {Probabilistic Abstract Interpretation of Imperative Programs using Truncated Normal Distributions},
+ journal = entcs,
+ volume = {220},
+ number = {3},
+ year = {2008},
+ issn = {1571-0661},
+ pages = {43--59},
+ numpages = {17},
+ url = {http://dx.doi.org/10.1016/j.entcs.2008.11.018},
+ doi = {10.1016/j.entcs.2008.11.018},
+ acmid = {1480256},
+} 
+
+% publisher = {Elsevier Science Publishers B. V.},
+% address = {Amsterdam, The Netherlands, The Netherlands},
+% keywords = {Abstraction, Information Flow, Language, Measurement, Security},
+% month = {November},
+% issn = {1571-0661},
+% numpages = {23},
+% doi = {10.1016/j.entcs.2009.10.009},
+% acmid = {1640572},
+@article{Mu:2009:inverval-qif,
+ author = {Mu, Chunyan and Clark, David},
+ title = {An Interval-based Abstraction for Quantifying Information Flow},
+ journal = entcs,
+ volume = {253},
+ number = {3},
+ year = {2009},
+ pages = {119--141},
+} 
+
+%%% CACM
+
+% month = jan,
+@article{diffpriv,
+ author = {Dwork, Cynthia},
+ title = {A firm foundation for private data analysis},
+ journal = cacm,
+ volume = {54},
+ number = {1},
+ year = {2011},
+ pages = {86--95},
+}
+
+%%% JCS
+
+% optissn = {0926-227X},
+% optpublisher = {IOS Press},
+% optaddress = {Amsterdam, The Netherlands, The Netherlands},
+@article{clarkson09quantifying,
+ author = {Clarkson, Michael R. and Myers, Andrew C. and Schneider, Fred B.},
+ title = {Quantifying information flow with beliefs},
+ journal = jcs,
+ volume = {17},
+ number = {5},
+ pages = {655--701},
+ year = {2009},
+}
+
+%%% TOPLAS
+
+@article{park08sampling,
+ author = {Park, Sungwoo and Pfenning, Frank and Thrun, Sebastian},
+ title = {A probabilistic language based on sampling functions},
+ journal = toplas,
+ volume = {31},
+ number = {1},
+ year = {2008},
+ pages = {4:1--4:46},
+} 
+
+%%% JCSS
+
+@article{kozen81semantics,
+  volume  = "22",
+  number  = "3",
+  title   = "Semantics of probabilistic programs",
+  author  = "Dexter Kozen",
+  year    = "1981",
+  pages   = "328--350",
+  journal = jcss
+}
+
+%%% IJSTTT
+
+@article{bagnara06powerset,
+ author = {Bagnara, Roberto and Hill, Patricia M. and Zaffanella, Enea},
+ title = {Widening operators for powerset domains},
+ journal = ijsttt,
+ volume = {8},
+ number = {4},
+ year = {2006},
+ pages = {449--466},
+}
+
+%%%%%% books/collections
+
+%  publisher =    {MIT Press},
+@InCollection{pfeffer07ibal,
+  author =    {Avi Pfeffer},
+  editor =    {Lise Getoor and Benjamin Taskar},
+  booktitle = {Statistical Relational Learning}, 
+  title =     {The Design and Implementation of {IBAL}: A General-Purpose Probabilistic Language},
+  year =      {2007},
+  publisher = {MIT Press}
+}
+
+%%%%%% technical reports
+
+@techreport{census90,
+ title = {Simple Demographics Often Identify People Uniquely},
+ author = {Sweeney, Latanya},
+ number = {LIDAP-WP4},
+ institution = {Carnegie Mellon University, School of Computer Science, Data Privacy Laboratory},
+ year = {2000},
+}
+
+@techreport{claret12bayesian,
+ title = {Bayesian Inference for Probabilistic Programs via Symbolic Execution},
+ author = {Claret, Guillaume and Rajamani, Sriram K. and Nori, Aditya V. and Gordon, Andrew D. and Borgstroem, Johannes},
+ number = {MSR-TR-2012-86},
+ institution = {Microsoft Research},
+year = 2012
+}
+
+%  month = apr,
+@techreport{TR,
+  title = {Dynamic Enforcement of Knowledge-based Security Policies},
+  author = {Mardziel, Piotr and Magill, Stephen and Hicks, Michael and Srivatsa, Mudhakar},
+  number = {CS-TR-4978},
+  institution = {University of Maryland Department of Computer Science},
+  year = 2011,
+}
+
+%%%%%% thesis
+
+%  note = {R\'esum\'e \'etendu en fran\'cais. Contents in English.},
+@phdthesis{Monniaux_these,
+  author = {David Monniaux},
+  title = {Analyse de programmes probabilistes par
+                  interpr\'etation abstraite},
+  school = {Universit\'e {P}aris {IX} {D}auphine},
+  year = 2001,
+  type = {Th\`ese de doctorat},
+  pdf = {http://www-verimag.imag.fr/~monniaux/biblio/Monniaux_these.pdf},
+  category = {thes},
+  oclc = {495477941}
+}
+
+%%%%%% internet references
+
+@misc{parma,
+  title = {{PPL}: The {Parma} Polyhedral Library},
+  howpublished = {\url{http://www.cs.unipr.it/ppl/}},
+  year = 2011
+}
+
+@misc{wedding-case-study,
+  title = {Facebook Ads: Case Studies},
+  howpublished = {\url{http://www.facebook.com/advertising/?campaign_id=402047449186}},
+  year = 2011
+}
+
+@misc{visitbritain-case-study,
+  title = {Facebook Ads: A Guide to Targeting and Reporting},
+  howpublished = {\url{http://www.openforum.com/articles/facebook-ads-a-guide-to-targeting-and-reporting-adele-cooper}},
+  year = 2011
+}
+
+@misc{latte,
+  author = {De Loera, Jesus A. and Haws, David and Hemmecke, Raymond and Huggins, Peter and Tauzer, Jeremy and Yoshida, Ruriko},
+  title = {LattE},
+  howpublished = {\url{http://www.math.ucdavis.edu/latte}},
+  year = 2008,
+}
+
+@misc{facebook-tos,
+  title = {Statement of Rights and Responsibilities},
+  howpublished = {\url{http://www.facebook.com/terms.php}},
+  month = oct,
+  day = 4,
+  year = 2010
+}
+
+@misc{facebook-demographics,
+  title = {Facebook Demographics and Statistics Report 2010},
+  howpublished = {\url{http://www.istrategylabs.com/2010/01/facebook-demographics-and-statistics-} \url{report-2010-145-growth-in-1-year}},
+  year = 2010
+}
+
+@misc{facebook-apps,
+  title = "Facebook Developers",
+  howpublished = {\url{http://developers.facebook.com}},
+  note = {see the \url{policy} and \url{docs/guides/canvas} directories for privacy information},
+  year = 2011
+}
+
+@article{myspace-data,
+  title = {Mypace User Data For Sale},
+  author = {David Worthington},
+  journal = {PC World on-line},
+  month = mar,
+  day = 17,
+  year = 2010,
+  note = {\url{http://www.pcworld.com/article/191716/myspace_user_data_for_sale.html}}
+}

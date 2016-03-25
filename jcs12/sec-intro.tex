@@ -1,0 +1,218 @@
+\section{Introduction}
+
+% MWH: Changed the first paragraph to reflect these observations: I
+% don't believe third-party apps do the targeted ads, Facebook does.
+% Also, I don't think we should indicate that Facebook might be trusted.
+% We want to lump it with apps as possibly untrusted.  That's what the
+% myspace data comment, and the EULA comment, was about.
+
+Facebook, Twitter, Flickr, and other successful on-line services
+enable users to easily foster and maintain relationships by sharing
+information with friends and fans.  These services store users'
+personal information and use it to customize the user experience and
+to generate revenue.  For example, Facebook third-party applications
+are granted access to a user's ``basic'' data (which includes name,
+profile picture, gender, networks, user ID, and list of
+friends~\cite{facebook-apps}) to implement services like birthday
+announcements and horoscopes, while Facebook selects ads based on age,
+gender, and even sexual preference~\cite{guha10}.  Unfortunately, once
+personal information is collected, users have limited control over how
+it is used.  For example, Facebook's EULA grants Facebook a
+non-exclusive license to any content a user posts~\cite{facebook-tos}.
+MySpace, another social network site, has begun to sell its
+users' data~\cite{myspace-data}.
+
+Some researchers have proposed that, to keep tighter control over
+their data, users could use a storage server (e.g., running on their
+home network) that handles personal data requests, and only responds
+when a request is deemed safe~\cite{prpl,persona}.  The question is:
+which requests are safe?
+% The standard answer is to defer to some kind of user-determined
+% access control policy.
+While deferring to user-defined access control policies seems an
+obvious approach, such policies are unnecessarily restrictive when the
+goal is to maximize the customized personal experience.  To see why,
+consider two example applications: a horoscope or ``happy birthday''
+application that operates on birth month and day, and a music
+recommendation algorithm that considers birth year (age).  Access
+control at the granularity of the entire birth date could preclude
+both of these applications, while choosing only to release birth year
+or birth day precludes access to one application or the other.  But in
+fact the user may not care much about these particular bits of
+information, but rather about what can be deduced from them.  For
+example, it has been reported that zip code, birth date, and gender
+are sufficient information to uniquely identify 87\% of Americans in
+the 1990 U.S. census \cite{census90} and 63\% in the 2000 census
+\cite{golle06revisiting}. So the user may be perfectly happy to reveal
+any one of these bits of information as long as a querier gains no
+better than a $1 / n$ chance to guess the entire group, for some
+parameter $n$.
+
+This paper explores the design and implementation for enforcing what
+we call \emph{knowledge-based security policies}.  In our model, a
+user $U$'s agent responds to queries involving secret data.  For each
+querying principal $Q$, the agent maintains a probability distribution
+over $U$'s secret data, representing $Q$'s \emph{belief} of the data's
+likely values.  For example, to mediate queries from a social
+networking site $X$, user $U$'s agent may model $X$'s otherwise
+uninformed knowledge of $U$'s birthday according to a likely
+demographic: the birth month and day are uniformly distributed, while
+the birth year is most likely between 1956 and
+1992~\cite{facebook-demographics}.  Each querier $Q$ is also assigned
+a knowledge-based policy, expressed as a set of thresholds, each
+applying to a different group of (potentially overlapping) data.  For
+example, $U$'s policy for $X$ might be a threshold of $1/100$ for the
+entire tuple $(\var{birthdate},\var{zipcode},\var{gender})$, and $1/5$
+for just birth date.  $U$'s agent refuses any queries that it
+determines could increase $Q$'s ability to guess a secret above the
+assigned threshold.  If deemed safe, $U$'s agent returns the query's
+(exact) result and updates $Q$'s modeled belief appropriately.
+%(We touch upon the risk of colluding queriers shortly.)
+
+Throughout the paper we use users' personal information protection
+when interacting with services like Facebook (or its advertisers) as a
+running example, but knowledge-based security policies have other
+applications as well.  For example, they can be used to decide whether
+a principal should participate in a \emph{secure multiparty
+  computation} involving multiple principals each with its own
+secrets, such as their current location or available resources.  We
+have explored this application in some detail in recent
+work~\cite{mardziel12smc}.  Knowledge-based policies could also be
+used to protect against browser fingerprinting, which aims to uniquely
+identify individuals based on environmental indicators visible to
+Javascript programs~\cite{boda11fingerprint}. Users could set a
+threshold policy over the tuple of the most sensitive indicators, and
+prevent the execution of the Javascript program (or execute only a
+modified version) if the threshold is exceeded.  Another example would
+be application to privacy-preserving smart
+metering~\cite{rial11smart}.  Here, the proposal is that rather than
+report fine-grained power usage information back to the power company,
+which could compromise privacy, the pricing algorithm is run locally
+on the meter, with only the final charge returned.  Our work could be
+combined with this work to ensure that knowledge that can be inferred
+from the output indeed preserves privacy sufficiently.  We elaborate
+on these and other examples in Section~\ref{sec:future-work}.
+
+To implement our model, we need (1) an algorithm to check whether
+answering a query could violate a knowledge-based policy, (2) a method
+for revising a querier's belief according to the answer that is given,
+and (3) means to implement (1) and (2) efficiently.  We build on the
+work of Clarkson et al.~\cite{clarkson09quantifying} (reviewed in
+Section~\ref{sec:belief}), which works out the theoretical basis for
+(2).  The main contributions of this
+paper, therefore, in addition to the idea of knowledge-based policies,
+are our solutions to (1) and (3). 
+
+Given a means to revise querier beliefs based on prior answers, it
+seems obvious how to check that a query does not reveal too much: $U$
+runs the query, tentatively revises $Q$'s belief based on the result,
+and then responds with the answer only if $Q$'s revised belief about
+the secrets does not exceed the prescribed thresholds.  Unfortunately,
+with this approach the decision to accept or reject depends on the actual secret,
+so a rejection could leak information.  We give an example in the next
+section that shows how the entire secret could be revealed.
+Therefore, we propose that a query should be rejected if there exists
+\emph{any} possible secret value that could induce an output whereby
+the revised belief would exceed the threshold.  This idea is described
+in detail in Section~\ref{sec:policy}.
+
+The foundational elements of our approach, belief tracking and
+revision, can be implemented using languages for probabilistic
+computation.  However, existing languages of this
+variety---IBAL~\cite{pfeffer07ibal}, Church~\cite{goodman08church},
+Fun~\cite{borgstrom11measure}, and several other
+systems~\cite{radul07probscheme,park08sampling,kiselyov09embedded,milch05blog}---
+are problematic because they are either unsound or too inefficient.
+Systems that use \emph{exact} inference have no flexibility of approximation to efficiently handle large or complex state
+spaces. %; e.g., Probabilistic Scheme
+%uses sampling, which we show in Section~\ref{sec:enum} is
+%prohibitively slow.  
+Systems that use approximate inference are more
+efficient, but the nature of the approximation is under-specified, and
+thus there is no guarantee of soundness.
+
+We have developed an implementation based on abstract
+interpretation~\cite{CousotCousot77} that is capable of approximate
+inference, but is sound relative to our policies.  In particular, our
+implementation ensures that, despite the use of abstraction, the
+probabilities we ascribe to the querier's belief are never less than
+the true probabilities.  At the center of our implementation is a new
+abstract domain we call a 
+\emph{probabilistic polyhedra}, described in
+Section~\ref{sec:absinterp}, which extends the standard convex
+polyhedron abstract domain~\cite{CousotHalbwachs78-POPL} with measures
+of probability.  We represent beliefs as a set of probabilistic
+polyhedra (as developed in Section~\ref{sec:probset}). Our approach
+can easily be adapted to any abstract
+domain that supports certain common operations; our implementation
+includes support for intervals
+\cite{cousot76static} and octagons \cite{mine01octagon}.
+
+While some prior work has explored probabilistic abstract
+interpretation~\cite{monniaux00prob}, this work does not support
+belief revision, which is required to track how observation of outputs
+affects a querier's belief.  Support for revision requires that we
+maintain both under- and over-approximations of probabilities in the querier's belief,
+whereas prior work deals only with over-approximation.  We have
+developed an implementation of our approach based on
+Parma~\cite{parma}, an abstract interpretation library, and
+LattE~\cite{latte}, a tool for counting the integer points contained
+in a polygon.  We discuss the implementation in Section~\ref{sec:impl}
+along with some experimental measurements of its performance.  We find
+that the varying the number of polyhedra permitted for performing
+belief tracking constitutes a useful precision/performance tradeoff,
+and that reasonable performance can be had while maintaining good
+precision.
+
+Knowledge-based policies aim to ensure that an attacker's knowledge of
+a secret does not increase much when learning the result of a query.
+Much prior work aims to enforce similar properties by tracking
+information leakage quantitatively~\cite{McCamantE2008,
+  smith09foundations, backes09automatic, kopf:rybalchenko,
+  rastogi09relationship}. Our approach is more precise (but also more
+resource-intensive) because it maintains an on-line model of adversary
+knowledge.  An alternative to knowledge-based privacy is
+\emph{differential privacy}~\cite{diffpriv} (DP), which requires that
+a query over a database of individuals' records produces roughly the
+same answer whether a particular individual's data is in the database
+or not---the possible knowledge of the querier, and the impact of the
+query's result on it, need not be directly considered.  As such, DP
+avoids the danger of mismodeling a querier's knowledge and as a result
+inappropriately releasing information.  DP also need not maintain a
+per-querier belief representation for answering subsequent queries.
+% DP also ensures a high degree
+% of compositionality, which provides some assurance against collusion.
+However, DP applies once an individual has released his personal data
+to a trusted third party's database, a release we are motivated to
+avoid. Moreover, applying DP to queries over an individual's data,
+rather than a population, introduces so much noise that the results
+are often useless.  We discuss these issues along with other related
+work in Section~\ref{sec:related}.
+
+A preliminary version of this paper was published at
+CSF'11~\cite{mardziel11belief}.  The present version expands the
+formal description of probabilistic polyhedra and details of their
+implementation, and expands our experimental evaluation.  We
+have refined some definitions to improve performance (e.g., the forget
+operation in Section~\ref{sec:forget}) and implemented two new
+abstract domains (Section~\ref{sec:simpler}).  We have also expanded
+our benchmark suite to include several additional programs
+(Section~\ref{sec:benchmarks} and Appendix~\ref{appendix:queries}).
+We discuss the performance/precision tradeoffs across the different
+domains/benchmarks (Section~\ref{sec:perf-analysis}).  Proofs, omitted
+for space reasons, appear in a companion technical
+report~\cite{TR}.
+
+% In summary, this paper makes two contributions:
+% \begin{itemize}
+% \item We propose the use of knowledge-based security policies for
+%   protecting private information.  We show how to implement such a
+%   policy safely using what amounts to min-entropy.
+
+% \item We propose a means of implementing knowledge-based policies
+%   based on abstract interpretation, using a novel construct called a
+%   probabilistic polyhedron.  We prove our approach is sound and we
+%   show its cost improves that of state-of-the-art
+%   approaches.
+% \end{itemize}
+
