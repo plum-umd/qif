@@ -427,6 +427,55 @@ struct
       done;
       list_of_queue queue_done
 
+  let statesets_get_exact_intersections
+      (ssl: (stateset list)): ((stateset*(stateset list)) list) =
+    (* Same as above, except it takes in only the list of statesets,
+       and returns a disjoint stateset for each disjoint regions (along
+       with a list of input regions that overlap it *)
+    
+    let queue = ref (Queue.create ()) in
+    let queue_copy = ref (Queue.create ()) in
+    let queue_done = (Queue.create ()) in
+      List.iter (fun i -> Queue.add (i, [i]) !queue) ssl;
+      while (not (Queue.is_empty !queue)) do
+	let expandedref = ref false in
+	let (p1temp, notes1temp) = Queue.pop !queue in
+	let p1ref = ref p1temp in
+	let notes1ref = ref notes1temp in
+	  while (not (Queue.is_empty !queue)) do
+	    (*printf "queue = %d, queue copy = %d, queue done = %d\n"
+	      (Queue.length !queue)
+	      (Queue.length !queue_copy)
+	      (Queue.length queue_done);
+	    printf "p1ref = \n"; P.print_region !p1ref;
+	    printf "queue=\n";
+	    List.iter (fun (p, n) -> printf "(%d): " (List.length n); P.print_region p; printf "\n") (list_of_queue !queue);
+	    flush Pervasives.stdout;*)
+
+	    let (p2, notes2) = Queue.pop !queue in
+	    if P.regions_are_disjoint !p1ref.bound p2.bound then
+	      Queue.add (p2, notes2) !queue_copy
+	    else
+	      (let (inp1, inp2, inboth) = stateset_intersect_partition !p1ref p2 in
+	       List.iter
+		 (fun p -> Queue.add (p, !notes1ref) !queue_copy
+		 ) inp1;
+	       List.iter
+		 (fun p -> Queue.add (p, notes2) !queue_copy
+		 ) inp2;
+	       p1ref := inboth;
+	       notes1ref := List.append !notes1ref notes2;
+	       expandedref := true)
+	  done;
+	Queue.add (!p1ref, !notes1ref) queue_done;
+	(*printf "done (contains pieces from %d polies):\n" (List.length !notes1ref);
+	  P.print_region !p1ref;*)
+	let queue_temp = !queue in
+	queue := !queue_copy;
+	queue_copy := queue_temp
+      done;
+      list_of_queue queue_done
+        
   let _union_and_return r1 r2 =
     let r1 = P.copy_region r1 in
       P.union_regions_assign r1 r2;
