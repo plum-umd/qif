@@ -147,7 +147,7 @@ struct
       (ss1, ss2)
       
   let _check_consistency ss =
-    if (not (P.get_dimensions ss.bound = ss.dim)) or
+    if (not (P.get_dimensions ss.bound = ss.dim)) ||
       (not (ss.dim = Bimap.length ss.varmap)) then
 	(print_stateset ss; printf "\n";
 	 printf "space_dimension = %d\n" (P.get_dimensions ss.bound);
@@ -376,7 +376,14 @@ struct
 
   exception Break_loop
 
-  let statesets_exact_intersections (ssl: (stateset * 'a) list) =
+  let statesets_exact_intersections (ssl: (stateset * 'a) list): (('a list) list) =
+    (* Takes a set of statesets, with each have some associated but
+       unused data value, and produces a list (one for each disjoint
+       region) of sets of data values that came from the input regions
+       that they overlap. You can specify the data value as the region
+       as well which will give you a list of (a set of regions) where
+       each element of the list represents a disjoint region. *)
+    
     let queue = ref (Queue.create ()) in
     let queue_copy = ref (Queue.create ()) in
     let queue_done = (Queue.create ()) in
@@ -456,6 +463,9 @@ struct
 
   let statesets_intersect_partition (ssl1: (stateset * 'a) list) (ssl2: (stateset * 'a) list) :
       ((stateset * 'a) list) * ((stateset * 'a) list) * ((stateset * 'a * 'a) list) =
+    (* Partition the set of input statesets A and B into three
+       disjoint pieces: 1. those overlapping A, 2. those overlapping B,
+       3. those overlapping both . *)
 
     match (ssl1, ssl2) with
       | ([], _) -> ([], ssl2, [])

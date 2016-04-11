@@ -210,8 +210,8 @@ let main () =
 	  ifdebug (printf "maximum complexity encountered = %d\n" !Globals.max_complexity);
 	  ifbench (Globals.close_bench ());
 	  Globals.bench_latte_close ();
-(*	  printf "simplification steps: %d\n" !Globals.simplify_steps;
-	  printf "no errors\n"*)
+	  printf "simplification steps: %d\n" !Globals.simplify_steps;
+	  printf "no errors\n"
     with 
       | e ->
 	  Unix.chdir Globals.original_dir;
